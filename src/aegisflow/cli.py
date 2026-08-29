@@ -54,7 +54,7 @@ def _add_detection_arguments(parser: argparse.ArgumentParser) -> None:
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="aegisflow", description="AegisFlow passive traffic replay")
+    parser = argparse.ArgumentParser(prog="drastha", description="Drastha passive traffic replay")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     replay = subparsers.add_parser("replay", help="replay an existing Zeek conn.log JSONL file")
@@ -120,6 +120,13 @@ def _parser() -> argparse.ArgumentParser:
     exfil.add_argument("--minimum-outbound-ratio", type=float, default=8.0)
     exfil.add_argument("--baseline-multiplier", type=float, default=4.0)
     exfil.add_argument("--cooldown", type=float, default=600.0)
+    exfil.add_argument(
+        "--database",
+        default=os.getenv("DRASTHA_DB") or os.getenv("AEGISFLOW_DB"),
+        help="optional repository used to restore and save detector state",
+    )
+    exfil.add_argument("--state-key", default="detector.exfiltration.outbound")
+    exfil.add_argument("--reset-state", action="store_true")
 
     correlate = subparsers.add_parser("correlate-alerts", help="combine detector alerts into incidents")
     correlate.add_argument("--input", required=True, action="append", type=Path)
@@ -128,8 +135,13 @@ def _parser() -> argparse.ArgumentParser:
     correlate.add_argument("--window", type=float, default=900.0)
     correlate.add_argument(
         "--database",
-        default=os.getenv("AEGISFLOW_DB"),
-        help="optional SQLite path or PostgreSQL URL; defaults to AEGISFLOW_DB",
+        default=os.getenv("DRASTHA_DB") or os.getenv("AEGISFLOW_DB"),
+        help="optional SQLite path or PostgreSQL URL; defaults to DRASTHA_DB",
+    )
+    correlate.add_argument(
+        "--reset-correlation-state",
+        action="store_true",
+        help="ignore existing repository alerts when building correlation state",
     )
 
     feedback = subparsers.add_parser("record-feedback", help="create a validated analyst-feedback record")
@@ -325,6 +337,16 @@ def _run_exfil(input_path: Path, args: argparse.Namespace) -> int:
         ),
         approved_backup_destinations=set(args.approved_backup_destination),
     )
+    repository = repository_from_url(args.database) if args.database else None
+    state_restored = False
+    if repository is not None:
+        if args.reset_state:
+            repository.delete_runtime_state(args.state_key)
+        else:
+            state = repository.get_runtime_state(args.state_key)
+            if state is not None:
+                detector.restore_state(state)
+                state_restored = True
     events = alerts = 0
 
     def observed_events():
@@ -339,11 +361,15 @@ def _run_exfil(input_path: Path, args: argparse.Namespace) -> int:
         for alert in run_pipeline(observed_events(), [detector]):
             output.write(json.dumps(alert.to_dict(), sort_keys=True) + "\n")
             alerts += 1
+    if repository is not None:
+        repository.put_runtime_state(args.state_key, detector.export_state(), time.time())
     report = {
         "events_processed": events,
         "alerts_emitted": alerts,
         "approved_backup_destinations": sorted(set(args.approved_backup_destination)),
-        "baseline_scope": "in_memory_per_source",
+        "baseline_scope": "persistent_repository" if repository is not None else "in_memory_per_source",
+        "state_restored": state_restored,
+        "state_saved": repository is not None,
     }
     if args.report_output:
         args.report_output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -353,6 +379,14 @@ def _run_exfil(input_path: Path, args: argparse.Namespace) -> int:
 
 def _correlate_alerts(args: argparse.Namespace) -> int:
     store = IncidentStore(args.window)
+    repository = repository_from_url(args.database) if args.database else None
+    restored_alert_records = (
+        repository.list_alerts()
+        if repository is not None and not args.reset_correlation_state
+        else []
+    )
+    for record in restored_alert_records:
+        store.process(alert_from_dict(record))
     alert_records: list[dict] = []
     for path in args.input:
         with path.open("r", encoding="utf-8") as stream:
@@ -378,9 +412,11 @@ def _correlate_alerts(args: argparse.Namespace) -> int:
         "highest_risk_score": max((incident.risk_score for incident in incidents), default=0),
         "scoring": "deterministic_policy_v1",
         "automatic_persistence": args.database is not None,
+        "correlation_state_restored": bool(restored_alert_records),
+        "restored_alerts": len(restored_alert_records),
     }
-    if args.database:
-        persisted = repository_from_url(args.database).import_records(
+    if repository is not None:
+        persisted = repository.import_records(
             [incident.to_dict() for incident in incidents], alert_records
         )
         report["persisted"] = persisted

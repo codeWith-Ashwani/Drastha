@@ -71,6 +71,21 @@ class ExfiltrationDetectorTests(unittest.TestCase):
             ))
         self.assertEqual(alerts, [])
 
+    def test_baseline_and_windows_survive_detector_restart(self):
+        first_process = self.detector()
+        self.seed_baseline(first_process)
+
+        restarted_process = self.detector()
+        restarted_process.restore_state(first_process.export_state())
+        alerts = []
+        for index in range(3):
+            alerts.extend(restarted_process.process(
+                flow(10 + index, 1100 + index * 10, "198.51.100.88", 500_000, 1_000)
+            ))
+
+        self.assertEqual(len(alerts), 1)
+        self.assertEqual(alerts[0].subtype, "outbound_volume_anomaly")
+
 
 if __name__ == "__main__":
     unittest.main()

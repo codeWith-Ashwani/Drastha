@@ -47,6 +47,9 @@ class KeyedSlidingWindow(Generic[K, T]):
     def values(self, key: K) -> tuple[TimedValue[T], ...]:
         return tuple(self._windows.get(key, ()))
 
+    def items(self) -> tuple[tuple[K, tuple[TimedValue[T], ...]], ...]:
+        return tuple((key, tuple(values)) for key, values in self._windows.items())
+
     def clear(self) -> None:
         self._windows.clear()
         self._latest_timestamp.clear()

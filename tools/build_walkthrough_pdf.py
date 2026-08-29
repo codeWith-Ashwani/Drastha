@@ -49,8 +49,8 @@ class WalkthroughDoc(BaseDocTemplate):
             leftMargin=18 * mm,
             topMargin=20 * mm,
             bottomMargin=18 * mm,
-            title="AegisFlow Build Walkthrough - Sprints 0 to 5",
-            author="AegisFlow SIH Team",
+            title="Drastha Build Walkthrough - Sprints 0 to 5",
+            author="Drastha SIH Team",
             subject="Cumulative engineering walkthrough",
         )
         frame = Frame(self.leftMargin, self.bottomMargin, self.width, self.height, id="main")
@@ -64,7 +64,7 @@ class WalkthroughDoc(BaseDocTemplate):
             canvas.line(18 * mm, height - 13 * mm, width - 18 * mm, height - 13 * mm)
             canvas.setFont("Helvetica-Bold", 8)
             canvas.setFillColor(NAVY)
-            canvas.drawString(18 * mm, height - 10 * mm, "AEGISFLOW")
+            canvas.drawString(18 * mm, height - 10 * mm, "DRASTHA")
             canvas.setFont("Helvetica", 8)
             canvas.setFillColor(MUTED)
             canvas.drawRightString(width - 18 * mm, height - 10 * mm, "SIH Engineering Walkthrough")
@@ -126,7 +126,7 @@ def styles():
 def cover(sty):
     panel = Table(
         [[
-            Paragraph("AEGISFLOW", sty["cover_title"]),
+            Paragraph("DRASTHA", sty["cover_title"]),
         ], [
             Paragraph("Passive AI-Assisted Cyber-Threat Detection", sty["cover_subtitle"]),
         ]],
@@ -254,7 +254,7 @@ def markdown_story(text: str, sty):
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     source = root / "docs" / "BUILD_WALKTHROUGH.md"
-    destination = root / "output" / "pdf" / "AegisFlow_Build_Walkthrough_Latest.pdf"
+    destination = root / "output" / "pdf" / "Drastha_Build_Walkthrough_Latest.pdf"
     destination.parent.mkdir(parents=True, exist_ok=True)
     sty = styles()
     story = cover(sty)

@@ -1,4 +1,4 @@
-# AegisFlow implementation roadmap
+# Drastha implementation roadmap
 
 ## Delivery principle
 
@@ -112,4 +112,3 @@ Owners: QA/documentation and team lead, with all members rehearsed.
 4. Implement capture and replay health metrics.
 5. Add separate SYN and UDP flood detectors with threat cards.
 6. Create the CICDDoS2019 manifest without committing data files.
-

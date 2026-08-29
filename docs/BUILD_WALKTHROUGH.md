@@ -1,18 +1,18 @@
-# AegisFlow Build Walkthrough
+# Drastha Build Walkthrough
 
 ## SIH project engineering report - Sprints 0 to 5
 
-**Project:** AegisFlow - Passive AI-Assisted Cyber-Threat Detection  
+**Project:** Drastha - Passive AI-Assisted Cyber-Threat Detection
 **Report snapshot:** 29 August 2026  
 **Current build state:** Sprint 5 demonstrable prototype complete
 **Verification:** 51 automated tests passing
 
 ## 1. What we are building
 
-AegisFlow observes copied network traffic on the monitoring side of a one-way or
+Drastha observes copied network traffic on the monitoring side of a one-way or
 passively monitored network. It does not send packets back toward the protected
 network. Zeek converts packet captures into structured connection, DNS, and
-encrypted-session metadata. AegisFlow then applies transparent statistical
+encrypted-session metadata. Drastha then applies transparent statistical
 detectors and focused machine-learning models to produce evidence-rich alerts.
 
 ```text
@@ -52,7 +52,7 @@ work. Smoke-test metrics are never presented as operational accuracy.
 
 Zeek is designed for Linux. The development computer runs Windows, so Ubuntu WSL 2
 is used as the Linux runtime. Zeek 8.0.10 is installed at `/opt/zeek/bin/zeek`.
-AegisFlow itself runs on Windows and calls Zeek through a tested WSL bridge.
+Drastha itself runs on Windows and calls Zeek through a tested WSL bridge.
 
 The bridge performs these operations automatically:
 
@@ -61,7 +61,7 @@ The bridge performs these operations automatically:
    `/mnt/c/project/capture.pcap`.
 3. Run Zeek inside Ubuntu.
 4. Write logs back into the Windows project directory.
-5. Feed the generated JSON logs to AegisFlow detectors.
+5. Feed the generated JSON logs to Drastha detectors.
 
 The real sample `/home/shukl/zeek-test/sample.pcap` completed this full path. Zeek
 produced `conn.log`, `dns.log`, `ssl.log`, and capture-filter telemetry.
@@ -335,7 +335,7 @@ That gap was acceptable for a staged demo but not for a continuous monitoring pa
 
 ### What changed
 
-- `correlate-alerts` now reads `--database` or `AEGISFLOW_DB`.
+- `correlate-alerts` now reads `--database` or `DRASTHA_DB`.
 - After correlation, alerts and incidents are upserted into SQLite or PostgreSQL.
 - Replaying the same alert IDs is idempotent, so it does not create duplicates.
 - Detector reprocessing updates machine-produced evidence but does not overwrite the
@@ -414,7 +414,7 @@ recovery, and a formal threat model.
 
 ## Appendix A - Repeatable commands
 
-From the `aegisflow` directory, set `PYTHONPATH=src` for the current shell.
+From the project directory, set `PYTHONPATH=src` for the current shell.
 
 ### Test everything
 
@@ -480,7 +480,7 @@ python -m aegisflow.cli correlate-alerts `
 To persist automatically, set the repository before running the same command:
 
 ```powershell
-$env:AEGISFLOW_DB = "output/aegisflow.db"
+$env:DRASTHA_DB = "output/drastha.db"
 ```
 
 ### Build and run the analyst console
@@ -491,8 +491,8 @@ cd web
 pnpm install
 pnpm run build
 cd ..
-$env:AEGISFLOW_ROOT = (Get-Location).Path
-$env:AEGISFLOW_WEB = (Join-Path (Get-Location).Path "web/dist")
+$env:DRASTHA_ROOT = (Get-Location).Path
+$env:DRASTHA_WEB = (Join-Path (Get-Location).Path "web/dist")
 python -m uvicorn aegisflow.api:app --host 127.0.0.1 --port 8000
 ```
 

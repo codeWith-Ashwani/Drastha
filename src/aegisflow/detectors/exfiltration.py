@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import statistics
 from collections import defaultdict, deque
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from hashlib import sha256
+from typing import Any
 
 from aegisflow.detectors.base import Detector
 from aegisflow.models import Alert, Evidence, NetworkEvent
@@ -48,6 +49,52 @@ class ExfiltrationDetector(Detector):
         )
         self._destination_first_seen: dict[tuple[str, str], float] = {}
         self._last_alert: dict[tuple[str, str], float] = {}
+
+    def export_state(self) -> dict[str, Any]:
+        return {
+            "version": 1,
+            "detector_id": self.detector_id,
+            "source_baselines": {
+                source: list(values) for source, values in self._source_baselines.items()
+            },
+            "destination_first_seen": [
+                {"src_ip": key[0], "dst_ip": key[1], "timestamp": timestamp}
+                for key, timestamp in self._destination_first_seen.items()
+            ],
+            "last_alert": [
+                {"src_ip": key[0], "dst_ip": key[1], "timestamp": timestamp}
+                for key, timestamp in self._last_alert.items()
+            ],
+            "windows": [
+                {
+                    "src_ip": key[0],
+                    "dst_ip": key[1],
+                    "events": [asdict(item.value) for item in values],
+                }
+                for key, values in self._windows.items()
+            ],
+        }
+
+    def restore_state(self, state: dict[str, Any]) -> None:
+        if state.get("version") != 1 or state.get("detector_id") != self.detector_id:
+            raise ValueError("incompatible exfiltration detector state")
+        self._windows.clear()
+        self._source_baselines.clear()
+        self._destination_first_seen.clear()
+        self._last_alert.clear()
+        for source, values in state.get("source_baselines", {}).items():
+            self._source_baselines[source].extend(int(value) for value in values)
+        for item in state.get("destination_first_seen", []):
+            self._destination_first_seen[(item["src_ip"], item["dst_ip"])] = float(
+                item["timestamp"]
+            )
+        for item in state.get("last_alert", []):
+            self._last_alert[(item["src_ip"], item["dst_ip"])] = float(item["timestamp"])
+        for window in state.get("windows", []):
+            key = (window["src_ip"], window["dst_ip"])
+            for record in window.get("events", []):
+                event = NetworkEvent(**record)
+                self._windows.add(key, event.timestamp, event)
 
     def process(self, event: NetworkEvent) -> list[Alert]:
         if event.dst_ip in self.approved_backup_destinations:
@@ -144,7 +191,7 @@ class ExfiltrationDetector(Detector):
             ),
             limitations=(
                 "Approved backups and bulk uploads can resemble exfiltration and require allowlisting.",
-                "The Sprint 4 baseline is local in-memory history and resets when the process restarts.",
+                "The baseline survives restarts only when a Drastha repository is configured.",
                 "NAT and incomplete observation can distort device attribution and byte ratios.",
             ),
         )

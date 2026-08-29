@@ -26,7 +26,7 @@ class FeedbackRequest(BaseModel):
 
 
 def _repository() -> IncidentRepository:
-    database = os.getenv("AEGISFLOW_DB", "output/aegisflow.db")
+    database = os.getenv("DRASTHA_DB") or os.getenv("AEGISFLOW_DB", "output/drastha.db")
     return repository_from_url(database)
 
 
@@ -43,7 +43,7 @@ def _load_demo(repository: IncidentRepository, root: Path) -> dict[str, int]:
 def create_app(repository: IncidentRepository | None = None) -> FastAPI:
     store = repository or _repository()
     app = FastAPI(
-        title="AegisFlow Analyst API",
+        title="Drastha Analyst API",
         version="0.2.0",
         description="Offline-first incident review API for passive network monitoring.",
     )
@@ -118,21 +118,21 @@ def create_app(repository: IncidentRepository | None = None) -> FastAPI:
         if incident is None:
             raise HTTPException(status_code=404, detail="incident not found")
         return {
-            "format": "aegisflow-incident-v1",
+            "format": "drastha-incident-v1",
             "exported_at": time.time(),
             "incident": incident,
         }
 
     @app.post("/api/demo/load")
     def load_demo() -> dict[str, Any]:
-        root = Path(os.getenv("AEGISFLOW_ROOT", Path.cwd()))
+        root = Path(os.getenv("DRASTHA_ROOT") or os.getenv("AEGISFLOW_ROOT", Path.cwd()))
         try:
             loaded = _load_demo(store, root)
         except OSError as exc:
             raise HTTPException(status_code=500, detail=f"demo files unavailable: {exc}") from exc
         return {"loaded": loaded, "metrics": store.metrics()}
 
-    frontend = Path(os.getenv("AEGISFLOW_WEB", "web/dist"))
+    frontend = Path(os.getenv("DRASTHA_WEB") or os.getenv("AEGISFLOW_WEB", "web/dist"))
     if frontend.exists():
         @app.get("/{path:path}", include_in_schema=False)
         def dashboard(path: str) -> FileResponse:

@@ -68,7 +68,7 @@ class ZeekRunner:
 
 
 class WSLZeekRunner:
-    """Run a Linux Zeek installation from the Windows AegisFlow process."""
+    """Run a Linux Zeek installation from the Windows Drastha process."""
 
     def __init__(
         self,

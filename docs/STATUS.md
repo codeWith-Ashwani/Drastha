@@ -1,4 +1,4 @@
-# AegisFlow build status
+# Drastha build status
 
 Last updated: 30 August 2026
 
@@ -16,10 +16,11 @@ Last updated: 30 August 2026
 
 - [x] Limitation 1: removed the manual correlation-to-database import step.
 - [x] `correlate-alerts` now persists automatically when `--database` or
-  `AEGISFLOW_DB` is configured.
+  `DRASTHA_DB` is configured.
 - [x] Verified against PostgreSQL in Docker: 2 alerts produced 1 critical incident.
 - [x] Reprocessing remained idempotent and preserved the analyst's `investigating` status.
-- [ ] Limitation 2: persist detector baselines and streaming correlation state across restarts.
+- [x] Limitation 2: exfiltration baselines, active windows, and cooldowns persist across restarts.
+- [x] Limitation 3: correlation restores prior alerts and merges related alerts across separate runs.
 
 ## Sprint 0 acceptance checklist
 
@@ -42,7 +43,7 @@ Last updated: 30 August 2026
 ```powershell
 python -m unittest discover -s tests -v
 $env:PYTHONPATH = "src"
-python -m aegisflow.cli replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-threshold 5
+drastha replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-threshold 5
 ```
 
 ## Current limitations
@@ -145,7 +146,7 @@ python -m aegisflow.cli replay --input examples/zeek_conn_scan.jsonl --port-thre
 - [x] Responsive React/TypeScript dashboard production build
 - [x] Docker Compose topology for API, dashboard, and PostgreSQL
 - [x] Local smoke test: healthy API, 1 incident, 2 alerts, risk score 100
-- [x] Fifty-one total automated tests passing
+- [x] Fifty-five total automated tests passing
 - [x] Docker Compose runtime verification with a healthy PostgreSQL container
 - [x] Containerized API verified in PostgreSQL mode with persistent demo import
 - [x] Containerized dashboard returned HTTP 200 on `127.0.0.1:8000`

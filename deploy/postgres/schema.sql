@@ -33,3 +33,9 @@ CREATE TABLE IF NOT EXISTS analyst_feedback (
 );
 CREATE INDEX IF NOT EXISTS idx_feedback_incident
     ON analyst_feedback(incident_id, timestamp DESC);
+
+CREATE TABLE IF NOT EXISTS runtime_state (
+    state_key TEXT PRIMARY KEY,
+    payload TEXT NOT NULL,
+    updated_at DOUBLE PRECISION NOT NULL
+);

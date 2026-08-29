@@ -23,7 +23,7 @@ def train_and_evaluate(
 
     training_count = sum(row.split == "train" for row in rows)
     test_count = sum(row.split == "test" for row in rows)
-    card = f"""# AegisFlow DNS DGA model card
+    card = f"""# Drastha DNS DGA model card
 
 ## Purpose
 

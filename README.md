@@ -1,6 +1,6 @@
-# AegisFlow
+# Drastha
 
-AegisFlow is a passive network-security analytics platform for one-way monitoring environments. The codebase is being built as a sequence of testable vertical slices.
+Drastha is a passive network-security analytics platform for one-way monitoring environments. The codebase is being built as a sequence of testable vertical slices.
 
 The current Sprint 0-5 implementation can:
 
@@ -24,7 +24,9 @@ The current Sprint 0-5 implementation can:
 - suppress approved backup destinations;
 - correlate cross-detector alerts into deterministic, evidence-rich incidents;
 - deduplicate repeated alert IDs and validate analyst-feedback dispositions.
-- automatically persist correlated alerts and incidents when `AEGISFLOW_DB` is set;
+- automatically persist correlated alerts and incidents when `DRASTHA_DB` is set;
+- restore exfiltration baselines, active windows, and cooldowns after process restarts;
+- restore prior alerts before correlation so multi-stage incidents can span separate runs;
 - persist incidents, alerts, statuses, and analyst feedback across restarts;
 - expose a FastAPI analyst service with health, queue, evidence, review, and export endpoints;
 - provide a responsive React/TypeScript incident dashboard;
@@ -34,33 +36,33 @@ It does not capture live traffic, decrypt payloads, or send any response toward 
 
 ## Quick start
 
-From the `aegisflow` directory:
+From the project directory:
 
 ```powershell
 python -m unittest discover -s tests -v
 $env:PYTHONPATH = "src"
-python -m aegisflow.cli replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-threshold 5
+drastha replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-threshold 5
 ```
 
 To save alerts:
 
 ```powershell
 $env:PYTHONPATH = "src"
-python -m aegisflow.cli replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-threshold 5 --output output/recon_alerts.jsonl
+drastha replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-threshold 5 --output output/recon_alerts.jsonl
 ```
 
 Sprint 1 DDoS replay:
 
 ```powershell
 $env:PYTHONPATH = "src"
-python -m aegisflow.cli replay --input examples/zeek_conn_ddos.jsonl --detectors ddos --syn-threshold 5 --udp-packet-threshold 500 --output output/sprint1_demo_alerts.jsonl --health-output output/sprint1_health.json
+drastha replay --input examples/zeek_conn_ddos.jsonl --detectors ddos --syn-threshold 5 --udp-packet-threshold 500 --output output/sprint1_demo_alerts.jsonl --health-output output/sprint1_health.json
 ```
 
 Check raw-PCAP readiness:
 
 ```powershell
 $env:PYTHONPATH = "src"
-python -m aegisflow.cli check-zeek
+drastha check-zeek
 ```
 
 On Windows, `auto` mode uses Zeek installed inside WSL. A custom distribution or
@@ -71,44 +73,48 @@ Once Zeek is installed:
 
 ```powershell
 $env:PYTHONPATH = "src"
-python -m aegisflow.cli pcap --input path/to/capture.pcap --zeek-output output/zeek --output output/pcap_alerts.jsonl --health-output output/pcap_health.json
+drastha pcap --input path/to/capture.pcap --zeek-output output/zeek --output output/pcap_alerts.jsonl --health-output output/pcap_health.json
 ```
 
 Train and evaluate the Sprint 2 demonstration DNS model:
 
 ```powershell
 $env:PYTHONPATH = "src"
-python -m aegisflow.cli train-dns --dataset examples/dns_training_demo.csv --model-output output/models/dns_dga_demo.json --metrics-output output/dns_model_metrics.json --model-card-output output/DNS_MODEL_CARD.md
+drastha train-dns --dataset examples/dns_training_demo.csv --model-output output/models/dns_dga_demo.json --metrics-output output/dns_model_metrics.json --model-card-output output/DNS_MODEL_CARD.md
 ```
 
 Replay the DNS threat demonstration:
 
 ```powershell
 $env:PYTHONPATH = "src"
-python -m aegisflow.cli dns-replay --input examples/zeek_dns_threats.jsonl --model output/models/dns_dga_demo.json --output output/sprint2_dns_alerts.jsonl --report-output output/sprint2_dns_report.json
+drastha dns-replay --input examples/zeek_dns_threats.jsonl --model output/models/dns_dga_demo.json --output output/sprint2_dns_alerts.jsonl --report-output output/sprint2_dns_report.json
 ```
 
 Replay the Sprint 3 C2 beacon demonstration:
 
 ```powershell
 $env:PYTHONPATH = "src"
-python -m aegisflow.cli c2-replay --input examples/zeek_conn_beacon.jsonl --encrypted-input examples/zeek_ssl_beacon.jsonl --output output/sprint3_c2_alerts.jsonl --report-output output/sprint3_c2_report.json
+drastha c2-replay --input examples/zeek_conn_beacon.jsonl --encrypted-input examples/zeek_ssl_beacon.jsonl --output output/sprint3_c2_alerts.jsonl --report-output output/sprint3_c2_report.json
 ```
 
 Replay Sprint 4 exfiltration behaviour and correlate it with the C2 alert:
 
 ```powershell
 $env:PYTHONPATH = "src"
-python -m aegisflow.cli exfil-replay --input examples/zeek_conn_exfil.jsonl --output output/sprint4_exfil_alerts.jsonl --report-output output/sprint4_exfil_report.json
-python -m aegisflow.cli correlate-alerts --input output/sprint3_c2_alerts.jsonl --input output/sprint4_exfil_alerts.jsonl --output output/sprint4_incidents.jsonl --report-output output/sprint4_incident_report.json
+drastha exfil-replay --input examples/zeek_conn_exfil.jsonl --output output/sprint4_exfil_alerts.jsonl --report-output output/sprint4_exfil_report.json
+drastha correlate-alerts --input output/sprint3_c2_alerts.jsonl --input output/sprint4_exfil_alerts.jsonl --output output/sprint4_incidents.jsonl --report-output output/sprint4_incident_report.json
 ```
+
+Set `DRASTHA_DB` before `exfil-replay` to checkpoint its baseline and active
+window state. The next process restores that state automatically. Use
+`--reset-state` only when intentionally starting a new baseline.
 
 When the analyst database is configured, the same command writes directly to
 SQLite or PostgreSQL as part of correlation. No separate demo-import step is needed:
 
 ```powershell
-$env:AEGISFLOW_DB = "output/aegisflow.db"
-python -m aegisflow.cli correlate-alerts --input output/sprint3_c2_alerts.jsonl --input output/sprint4_exfil_alerts.jsonl --output output/sprint4_incidents.jsonl --report-output output/sprint4_incident_report.json
+$env:DRASTHA_DB = "output/drastha.db"
+drastha correlate-alerts --input output/sprint3_c2_alerts.jsonl --input output/sprint4_exfil_alerts.jsonl --output output/sprint4_incidents.jsonl --report-output output/sprint4_incident_report.json
 ```
 
 Replaying the same alerts is idempotent and does not reset an analyst's incident status.
@@ -121,8 +127,8 @@ cd web
 pnpm install
 pnpm run build
 cd ..
-$env:AEGISFLOW_ROOT = (Get-Location).Path
-$env:AEGISFLOW_WEB = (Join-Path (Get-Location).Path "web/dist")
+$env:DRASTHA_ROOT = (Get-Location).Path
+$env:DRASTHA_WEB = (Join-Path (Get-Location).Path "web/dist")
 python -m uvicorn aegisflow.api:app --host 127.0.0.1 --port 8000
 ```
 

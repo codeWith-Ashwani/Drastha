@@ -96,7 +96,7 @@ The analyst system stays on the monitoring side of the one-way boundary. It neve
 opens a connection toward the protected network. SQLite supports the fast local demo;
 the Docker topology uses the equivalent PostgreSQL schema for durable team use.
 The correlation command performs an idempotent upsert when `--database` or
-`AEGISFLOW_DB` is present. Reprocessing detector output updates evidence while retaining
+`DRASTHA_DB` is present. Reprocessing detector output updates evidence while retaining
 the analyst-owned incident status.
 
 ## Boundary assumptions

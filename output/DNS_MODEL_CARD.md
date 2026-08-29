@@ -1,4 +1,4 @@
-# AegisFlow DNS DGA model card
+# Drastha DNS DGA model card
 
 ## Purpose
 

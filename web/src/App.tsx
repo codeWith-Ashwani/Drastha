@@ -128,7 +128,7 @@ function App() {
   return <div className="shell">
     <header className="topbar">
       <div className="brand"><div className="brandmark"><ShieldCheck size={22} /></div>
-        <div><b>AegisFlow</b><span>Analyst Console</span></div></div>
+        <div><b>Drastha</b><span>Analyst Console</span></div></div>
       <div className="system-state"><Signal size={14} /><span>Passive sensor</span><b>ONLINE</b></div>
       <button className="icon-button" onClick={() => void refresh()} aria-label="Refresh queue"><RefreshCw size={17} /></button>
     </header>

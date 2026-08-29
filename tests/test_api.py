@@ -40,7 +40,7 @@ class AnalystAPITests(unittest.TestCase):
         )
         self.assertEqual(review.status_code, 201)
         exported = self.client.get("/api/incidents/incident-1/export").json()
-        self.assertEqual(exported["format"], "aegisflow-incident-v1")
+        self.assertEqual(exported["format"], "drastha-incident-v1")
         self.assertEqual(exported["incident"]["status"], "investigating")
 
     def test_invalid_status_and_missing_incident_are_visible(self) -> None:

@@ -1,0 +1,8 @@
+{
+  "alerts_emitted": 0,
+  "approved_backup_destinations": [],
+  "baseline_scope": "persistent_repository",
+  "events_processed": 8,
+  "state_restored": true,
+  "state_saved": true
+}

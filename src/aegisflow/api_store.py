@@ -40,6 +40,11 @@ CREATE TABLE IF NOT EXISTS analyst_feedback (
 );
 CREATE INDEX IF NOT EXISTS idx_feedback_incident
     ON analyst_feedback(incident_id, timestamp DESC);
+CREATE TABLE IF NOT EXISTS runtime_state (
+    state_key TEXT PRIMARY KEY,
+    payload TEXT NOT NULL,
+    updated_at REAL NOT NULL
+);
 """
 
 
@@ -182,6 +187,13 @@ class IncidentRepository:
         incident["feedback"] = [dict(item) for item in feedback_rows]
         return incident
 
+    def list_alerts(self) -> list[dict[str, Any]]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT payload FROM alerts ORDER BY window_start, alert_id"
+            ).fetchall()
+        return [json.loads(row["payload"]) for row in rows]
+
     def set_status(self, incident_id: str, status: str, updated_at: float) -> bool:
         if status not in self.VALID_STATUSES:
             raise ValueError(f"invalid incident status: {status}")
@@ -233,6 +245,32 @@ class IncidentRepository:
             "feedback_records": reviewed,
             "average_risk_score": round(float(average_risk), 1),
         }
+
+    def get_runtime_state(self, state_key: str) -> dict[str, Any] | None:
+        with self._connect() as connection:
+            row = connection.execute(
+                "SELECT payload FROM runtime_state WHERE state_key = ?", (state_key,)
+            ).fetchone()
+        return json.loads(row["payload"]) if row is not None else None
+
+    def put_runtime_state(
+        self, state_key: str, payload: dict[str, Any], updated_at: float
+    ) -> None:
+        with self._connect() as connection:
+            connection.execute(
+                """INSERT INTO runtime_state(state_key, payload, updated_at)
+                VALUES (?, ?, ?)
+                ON CONFLICT(state_key) DO UPDATE SET
+                    payload=excluded.payload, updated_at=excluded.updated_at""",
+                (state_key, json.dumps(payload, sort_keys=True), updated_at),
+            )
+
+    def delete_runtime_state(self, state_key: str) -> bool:
+        with self._connect() as connection:
+            cursor = connection.execute(
+                "DELETE FROM runtime_state WHERE state_key = ?", (state_key,)
+            )
+        return cursor.rowcount > 0
 
     @staticmethod
     def _insert_feedback(connection: Any, record: dict[str, Any]) -> None:

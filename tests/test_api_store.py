@@ -53,6 +53,7 @@ class IncidentRepositoryTests(unittest.TestCase):
         self.assertEqual(len(self.store.list_incidents()), 1)
         detail = self.store.get_incident("incident-1")
         self.assertEqual(detail["alerts"][0]["alert_id"], "alert-1")
+        self.assertEqual(self.store.list_alerts(), [ALERT])
 
     def test_status_and_feedback_persist(self) -> None:
         self.store.import_records([INCIDENT], [ALERT])
@@ -75,6 +76,13 @@ class IncidentRepositoryTests(unittest.TestCase):
         self.store.set_status("incident-1", "investigating", 130.0)
         self.store.import_records([INCIDENT], [ALERT])
         self.assertEqual(self.store.get_incident("incident-1")["status"], "investigating")
+
+    def test_runtime_state_round_trip_and_delete(self) -> None:
+        state = {"version": 1, "values": [10, 20, 30]}
+        self.store.put_runtime_state("detector.test", state, 140.0)
+        self.assertEqual(self.store.get_runtime_state("detector.test"), state)
+        self.assertTrue(self.store.delete_runtime_state("detector.test"))
+        self.assertIsNone(self.store.get_runtime_state("detector.test"))
 
     def test_queue_filters_and_metrics(self) -> None:
         self.store.import_records([INCIDENT], [ALERT])

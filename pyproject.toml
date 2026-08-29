@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "aegisflow"
+name = "drastha"
 version = "0.2.0"
 description = "Passive cyber-threat analytics for unidirectional networks"
 requires-python = ">=3.11"
@@ -18,7 +18,7 @@ api = [
 ]
 
 [project.scripts]
-aegisflow = "aegisflow.cli:main"
+drastha = "aegisflow.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

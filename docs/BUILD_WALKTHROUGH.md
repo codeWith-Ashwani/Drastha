@@ -1,11 +1,11 @@
 # AegisFlow Build Walkthrough
 
-## SIH project engineering report - Sprints 0 to 4
+## SIH project engineering report - Sprints 0 to 5
 
 **Project:** AegisFlow - Passive AI-Assisted Cyber-Threat Detection  
 **Report snapshot:** 29 August 2026  
 **Current build state:** Sprint 5 demonstrable prototype complete
-**Verification:** 42 automated tests passing
+**Verification:** 51 automated tests passing
 
 ## 1. What we are building
 
@@ -43,6 +43,7 @@ Copied network traffic or PCAP
 | Sprint 2 | DNS ingestion, DGA model, DNS-tunnelling detector | Prototype complete | Threat fixture: 21 events, 2 alerts |
 | Sprint 3 | C2 beacon detection and TLS/QUIC metadata context | Prototype complete | Beacon fixture: 8 events, 1 alert |
 | Sprint 4 | Exfiltration detection, incident correlation, scoring and feedback | Prototype complete | C2 + exfiltration: 2 alerts, 1 critical incident |
+| Sprint 5 | Persistent analyst API, dashboard, Docker, and PostgreSQL | Complete | Healthy dashboard; restart-safe incident storage |
 
 Production dataset acquisition and deployment-specific calibration remain future
 work. Smoke-test metrics are never presented as operational accuracy.
@@ -315,7 +316,7 @@ reports that a return path is not required.
 - Demonstration import persisted 1 incident, 2 alerts, and 1 feedback record.
 - The incident queue returned the critical multi-stage incident at risk score 100.
 - Queue, detail, status, feedback, error, and export workflows passed API tests.
-- The complete suite now contains 49 passing automated tests.
+- The complete suite now contains 51 passing automated tests.
 - Docker Desktop 4.88.1, Engine 29.7.2, and Compose 5.4.0 were verified.
 - PostgreSQL and analyst-console containers started successfully and stayed healthy.
 - The containerized API reported `postgresql` storage, imported 1 incident, 2 alerts,
@@ -324,7 +325,37 @@ reports that a return path is not required.
 - The risk-100 incident remained available after separate API and PostgreSQL
   container restarts, confirming volume-backed persistence.
 
-## 10. What is rule-based and what is machine learning
+## 10. Limitation fix 1 - automatic incident persistence
+
+### Problem
+
+Previously, detectors wrote alerts to JSON files and correlation produced an incident
+file, but the analyst database needed a separate import or **Load demo data** action.
+That gap was acceptable for a staged demo but not for a continuous monitoring path.
+
+### What changed
+
+- `correlate-alerts` now reads `--database` or `AEGISFLOW_DB`.
+- After correlation, alerts and incidents are upserted into SQLite or PostgreSQL.
+- Replaying the same alert IDs is idempotent, so it does not create duplicates.
+- Detector reprocessing updates machine-produced evidence but does not overwrite the
+  analyst-owned incident status.
+- The command report records whether persistence ran, which backend was used, and the
+  number of alerts and incidents persisted.
+
+### End-to-end proof
+
+The rebuilt Docker deployment processed two fresh alerts for source `10.0.0.77`:
+one periodic C2 alert and one outbound-exfiltration alert. Correlation automatically
+created incident `9c4d8ea38d6860645e61` in PostgreSQL with risk score 100 and critical
+severity. It appeared through the dashboard API without calling `/api/demo/load`.
+
+The incident was then marked `investigating` and the same alert pair was processed
+again. PostgreSQL still contained two total incidents, the new incident still had
+two alerts, and its status remained `investigating`. This proves both idempotency and
+safe preservation of analyst work.
+
+## 11. What is rule-based and what is machine learning
 
 | Threat | Current method | Why |
 |---|---|---|
@@ -340,9 +371,9 @@ reports that a return path is not required.
 A separate ML model is therefore not trained for every attack. Models are introduced
 only when labelled data and learned patterns add value beyond transparent rules.
 
-## 11. Verification summary
+## 12. Verification summary
 
-The current suite contains 49 automated tests. It covers:
+The current suite contains 51 automated tests. It covers:
 
 - valid and malformed Zeek connection and DNS records;
 - Windows-to-WSL path translation and Zeek invocation;
@@ -355,8 +386,10 @@ The current suite contains 49 automated tests. It covers:
   deduplication, deterministic scoring, and analyst feedback.
 - database idempotency, persistence, filtering, workflow validation, API health,
   queue-to-detail navigation, review, error responses, and incident export.
+- automatic SQLite/PostgreSQL persistence from correlation and analyst-status
+  preservation during reprocessing.
 
-## 12. Current limitations
+## 13. Current limitations
 
 - DGA metrics use a tiny synthetic dataset; production data is not yet acquired.
 - The base-domain function uses a two-label approximation until a reviewed public
@@ -364,14 +397,16 @@ The current suite contains 49 automated tests. It covers:
 - Current thresholds require environment-specific calibration.
 - Encrypted payloads and ordinary DNS-over-HTTPS contents are not inspected.
 - NAT can combine multiple devices behind one source address.
-- Detection-time correlation is still in memory; correlated incidents become durable
-  after import into the analyst repository.
+- Alert correlation within one command run is still in memory, but completed incidents
+  and their alerts are now persisted automatically to SQLite or PostgreSQL.
+- Detector baselines and unfinished streaming correlation windows do not yet survive a
+  detector-process restart.
 - Incident weights are transparent initial policy values, not calibrated operational risk.
 - Authentication and role-based permissions are not included in the SIH prototype.
 - Authentication and secret management must be strengthened before using the Docker
   topology outside an isolated demonstration environment.
 
-## 13. Next sprint
+## 14. Next sprint
 
 Sprint 6 will replace remaining assumptions with reproducible per-threat metrics,
 latency and throughput benchmarks, loss/skew/malformed-input testing, restart
@@ -440,6 +475,12 @@ python -m aegisflow.cli correlate-alerts `
   --input output/sprint4_exfil_alerts.jsonl `
   --output output/sprint4_incidents.jsonl `
   --report-output output/sprint4_incident_report.json
+```
+
+To persist automatically, set the repository before running the same command:
+
+```powershell
+$env:AEGISFLOW_DB = "output/aegisflow.db"
 ```
 
 ### Build and run the analyst console

@@ -113,8 +113,7 @@ class IncidentRepository:
                         src_ip=excluded.src_ip, first_seen=excluded.first_seen,
                         last_seen=excluded.last_seen, risk_score=excluded.risk_score,
                         severity=excluded.severity, confidence=excluded.confidence,
-                        status=excluded.status, payload=excluded.payload,
-                        updated_at=excluded.updated_at""",
+                        payload=excluded.payload, updated_at=excluded.updated_at""",
                     (
                         incident["incident_id"], incident["src_ip"], incident["first_seen"],
                         incident["last_seen"], incident["risk_score"], incident["severity"],
@@ -259,6 +258,14 @@ class IncidentRepository:
 def read_jsonl(path: str | Path) -> list[dict[str, Any]]:
     with Path(path).open("r", encoding="utf-8") as stream:
         return [json.loads(line) for line in stream if line.strip()]
+
+
+def repository_from_url(database: str | Path) -> IncidentRepository:
+    value = str(database)
+    if value.startswith(("postgres://", "postgresql://")):
+        from aegisflow.postgres_store import PostgreSQLIncidentRepository
+        return PostgreSQLIncidentRepository(value)
+    return IncidentRepository(value)
 
 
 def _scalar(row: Any) -> Any:

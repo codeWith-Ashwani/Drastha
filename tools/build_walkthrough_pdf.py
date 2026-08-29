@@ -91,10 +91,12 @@ def styles():
         "h1": ParagraphStyle(
             "H1", parent=base["Heading1"], fontName="Helvetica-Bold", fontSize=18,
             leading=23, textColor=NAVY, spaceBefore=7 * mm, spaceAfter=3 * mm,
+            keepWithNext=True,
         ),
         "h2": ParagraphStyle(
             "H2", parent=base["Heading2"], fontName="Helvetica-Bold", fontSize=13,
             leading=17, textColor=TEAL, spaceBefore=5 * mm, spaceAfter=2 * mm,
+            keepWithNext=True,
         ),
         "body": ParagraphStyle(
             "Body", parent=base["BodyText"], fontName="Helvetica", fontSize=9.4,
@@ -143,7 +145,7 @@ def cover(sty):
         [
             ["REPORT", "SIH Engineering Build Walkthrough"],
             ["COVERAGE", "Sprints 0 to 5"],
-            ["STATUS", "49 automated tests passing"],
+            ["STATUS", "51 automated tests passing"],
             ["SNAPSHOT", "30 August 2026"],
         ],
         colWidths=[34 * mm, 134 * mm],

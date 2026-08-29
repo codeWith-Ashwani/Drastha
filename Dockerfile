@@ -11,6 +11,7 @@ COPY pyproject.toml README.md ./
 COPY src/ ./src/
 RUN pip install --no-cache-dir ".[api]"
 COPY --from=web-build /web/dist ./web/dist
+COPY examples/ ./examples/
 COPY output/ ./output/
 EXPOSE 8000
 CMD ["uvicorn", "aegisflow.api:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,6 +1,6 @@
 {
   "alerts_loaded": 2,
-  "automated_tests_passing": 49,
+  "automated_tests_passing": 51,
   "dashboard_production_build": true,
   "docker_compose_version": "5.4.0",
   "docker_desktop_version": "4.88.1",
@@ -15,5 +15,11 @@
   "target_durable_storage": "postgresql",
   "postgresql_container_healthy": true,
   "incident_preserved_after_api_restart": true,
-  "incident_preserved_after_database_restart": true
+  "incident_preserved_after_database_restart": true,
+  "automatic_correlation_persistence_verified": true,
+  "automatic_persistence_backend": "postgresql",
+  "automatic_persistence_alerts": 2,
+  "automatic_persistence_incidents": 1,
+  "automatic_persistence_idempotent": true,
+  "analyst_status_preserved_after_reprocessing": true
 }

@@ -9,6 +9,7 @@ from contextlib import nullcontext
 from pathlib import Path
 from typing import TextIO
 
+from aegisflow.api_store import repository_from_url
 from aegisflow.detectors import (
     C2BeaconDetector,
     C2Config,
@@ -125,6 +126,11 @@ def _parser() -> argparse.ArgumentParser:
     correlate.add_argument("--output", required=True, type=Path)
     correlate.add_argument("--report-output", type=Path)
     correlate.add_argument("--window", type=float, default=900.0)
+    correlate.add_argument(
+        "--database",
+        default=os.getenv("AEGISFLOW_DB"),
+        help="optional SQLite path or PostgreSQL URL; defaults to AEGISFLOW_DB",
+    )
 
     feedback = subparsers.add_parser("record-feedback", help="create a validated analyst-feedback record")
     feedback.add_argument("--incident-id", required=True)
@@ -347,7 +353,7 @@ def _run_exfil(input_path: Path, args: argparse.Namespace) -> int:
 
 def _correlate_alerts(args: argparse.Namespace) -> int:
     store = IncidentStore(args.window)
-    alert_count = 0
+    alert_records: list[dict] = []
     for path in args.input:
         with path.open("r", encoding="utf-8") as stream:
             for line_number, line in enumerate(stream, start=1):
@@ -356,25 +362,40 @@ def _correlate_alerts(args: argparse.Namespace) -> int:
                     continue
                 try:
                     record = json.loads(stripped)
-                    store.process(alert_from_dict(record))
+                    alert = alert_from_dict(record)
+                    store.process(alert)
+                    alert_records.append(alert.to_dict())
                 except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
                     raise ValueError(f"{path}: line {line_number}: invalid alert: {exc}") from exc
-                alert_count += 1
     incidents = store.all()
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("w", encoding="utf-8") as stream:
         for incident in incidents:
             stream.write(json.dumps(incident.to_dict(), sort_keys=True) + "\n")
     report = {
-        "alerts_processed": alert_count,
+        "alerts_processed": len(alert_records),
         "incidents_created": len(incidents),
         "highest_risk_score": max((incident.risk_score for incident in incidents), default=0),
         "scoring": "deterministic_policy_v1",
+        "automatic_persistence": args.database is not None,
     }
+    if args.database:
+        persisted = repository_from_url(args.database).import_records(
+            [incident.to_dict() for incident in incidents], alert_records
+        )
+        report["persisted"] = persisted
+        report["database_backend"] = (
+            "postgresql" if str(args.database).startswith(("postgres://", "postgresql://"))
+            else "sqlite"
+        )
     if args.report_output:
         args.report_output.parent.mkdir(parents=True, exist_ok=True)
         args.report_output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(f"correlated alerts={alert_count}; incidents={len(incidents)}", file=sys.stderr)
+    print(
+        f"correlated alerts={len(alert_records)}; incidents={len(incidents)}; "
+        f"persisted={args.database is not None}",
+        file=sys.stderr,
+    )
     return 0
 
 
@@ -421,7 +442,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "pcap":
             result = _build_zeek_runner(args).process_pcap(args.input, args.zeek_output)
             return _run_jsonl(result.conn_log, args)
-    except (OSError, ValueError, ZeekRecordError, ZeekUnavailableError, ZeekExecutionError) as exc:
+    except (OSError, RuntimeError, ValueError, ZeekRecordError, ZeekUnavailableError, ZeekExecutionError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     return 1

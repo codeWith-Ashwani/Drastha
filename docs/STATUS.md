@@ -12,6 +12,15 @@ Last updated: 30 August 2026
 - Sprint 5: complete; SQLite and PostgreSQL/Docker deployment paths verified
 - Sprints 6-7: planned
 
+## Limitation burn-down
+
+- [x] Limitation 1: removed the manual correlation-to-database import step.
+- [x] `correlate-alerts` now persists automatically when `--database` or
+  `AEGISFLOW_DB` is configured.
+- [x] Verified against PostgreSQL in Docker: 2 alerts produced 1 critical incident.
+- [x] Reprocessing remained idempotent and preserved the analyst's `investigating` status.
+- [ ] Limitation 2: persist detector baselines and streaming correlation state across restarts.
+
 ## Sprint 0 acceptance checklist
 
 - [x] Python package and repository structure
@@ -136,11 +145,13 @@ python -m aegisflow.cli replay --input examples/zeek_conn_scan.jsonl --port-thre
 - [x] Responsive React/TypeScript dashboard production build
 - [x] Docker Compose topology for API, dashboard, and PostgreSQL
 - [x] Local smoke test: healthy API, 1 incident, 2 alerts, risk score 100
-- [x] Forty-nine total automated tests passing
+- [x] Fifty-one total automated tests passing
 - [x] Docker Compose runtime verification with a healthy PostgreSQL container
 - [x] Containerized API verified in PostgreSQL mode with persistent demo import
 - [x] Containerized dashboard returned HTTP 200 on `127.0.0.1:8000`
 - [x] Incident survived separate API and PostgreSQL container restarts
+- [x] Correlation automatically persists alerts and incidents to SQLite/PostgreSQL
+- [x] Re-import preserves analyst status and does not create duplicates
 - [ ] Authentication and role-based access control before multi-user deployment
 
 ## Next sprint

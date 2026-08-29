@@ -1,0 +1,13 @@
+{
+  "alerts_processed": 2,
+  "automatic_persistence": true,
+  "database_backend": "postgresql",
+  "highest_risk_score": 100,
+  "incidents_created": 1,
+  "persisted": {
+    "alerts": 2,
+    "feedback": 0,
+    "incidents": 1
+  },
+  "scoring": "deterministic_policy_v1"
+}

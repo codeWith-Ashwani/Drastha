@@ -24,6 +24,7 @@ The current Sprint 0-5 implementation can:
 - suppress approved backup destinations;
 - correlate cross-detector alerts into deterministic, evidence-rich incidents;
 - deduplicate repeated alert IDs and validate analyst-feedback dispositions.
+- automatically persist correlated alerts and incidents when `AEGISFLOW_DB` is set;
 - persist incidents, alerts, statuses, and analyst feedback across restarts;
 - expose a FastAPI analyst service with health, queue, evidence, review, and export endpoints;
 - provide a responsive React/TypeScript incident dashboard;
@@ -102,6 +103,16 @@ python -m aegisflow.cli exfil-replay --input examples/zeek_conn_exfil.jsonl --ou
 python -m aegisflow.cli correlate-alerts --input output/sprint3_c2_alerts.jsonl --input output/sprint4_exfil_alerts.jsonl --output output/sprint4_incidents.jsonl --report-output output/sprint4_incident_report.json
 ```
 
+When the analyst database is configured, the same command writes directly to
+SQLite or PostgreSQL as part of correlation. No separate demo-import step is needed:
+
+```powershell
+$env:AEGISFLOW_DB = "output/aegisflow.db"
+python -m aegisflow.cli correlate-alerts --input output/sprint3_c2_alerts.jsonl --input output/sprint4_exfil_alerts.jsonl --output output/sprint4_incidents.jsonl --report-output output/sprint4_incident_report.json
+```
+
+Replaying the same alerts is idempotent and does not reset an analyst's incident status.
+
 Run the Sprint 5 analyst console locally:
 
 ```powershell
@@ -131,5 +142,7 @@ Docker Desktop or Docker Engine installed.
 - The sample thresholds and seven-event throughput figure are smoke-test values, not production benchmarks.
 - Docker Compose is verified on Windows with Docker Desktop 4.88.1, Docker Engine
   29.7.2, Compose 5.4.0, and the PostgreSQL 16 Alpine image.
+- Automatic correlation-to-database persistence is verified against the PostgreSQL
+  Docker deployment; a repeated run preserved the analyst status and created no duplicate.
 
 See [docs/STATUS.md](docs/STATUS.md) for current progress and [docs/SPRINTS.md](docs/SPRINTS.md) for the full implementation plan and acceptance criteria.

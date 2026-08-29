@@ -70,6 +70,12 @@ class IncidentRepositoryTests(unittest.TestCase):
         self.assertEqual(detail["status"], "investigating")
         self.assertEqual(detail["feedback"][0]["disposition"], "needs_review")
 
+    def test_reimport_does_not_reset_analyst_status(self) -> None:
+        self.store.import_records([INCIDENT], [ALERT])
+        self.store.set_status("incident-1", "investigating", 130.0)
+        self.store.import_records([INCIDENT], [ALERT])
+        self.assertEqual(self.store.get_incident("incident-1")["status"], "investigating")
+
     def test_queue_filters_and_metrics(self) -> None:
         self.store.import_records([INCIDENT], [ALERT])
         self.assertEqual(len(self.store.list_incidents(status="open", severity="high")), 1)

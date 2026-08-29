@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from aegisflow.api_store import IncidentRepository, read_jsonl
+from aegisflow.api_store import IncidentRepository, read_jsonl, repository_from_url
 
 
 class StatusUpdate(BaseModel):
@@ -27,10 +27,7 @@ class FeedbackRequest(BaseModel):
 
 def _repository() -> IncidentRepository:
     database = os.getenv("AEGISFLOW_DB", "output/aegisflow.db")
-    if database.startswith(("postgres://", "postgresql://")):
-        from aegisflow.postgres_store import PostgreSQLIncidentRepository
-        return PostgreSQLIncidentRepository(database)
-    return IncidentRepository(database)
+    return repository_from_url(database)
 
 
 def _load_demo(repository: IncidentRepository, root: Path) -> dict[str, int]:

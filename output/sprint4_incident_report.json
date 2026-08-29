@@ -1,0 +1,6 @@
+{
+  "alerts_processed": 2,
+  "highest_risk_score": 100,
+  "incidents_created": 1,
+  "scoring": "deterministic_policy_v1"
+}

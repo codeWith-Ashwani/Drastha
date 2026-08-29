@@ -1,4 +1,4 @@
-# Sprint 0-3 architecture
+# Sprint 0-4 architecture
 
 ```text
 PCAP -> Zeek (when installed)
@@ -59,6 +59,22 @@ Zeek ssl.log / quic.log --> metadata context + anomaly score
 
 Encrypted metadata can enrich confidence and evidence but cannot trigger an alert
 without repeated timing and size behaviour.
+
+```text
+NetworkEvent --> outbound byte window + source baseline --> Exfiltration Alert
+                                                             |
+Recon / DDoS / DNS / C2 alerts -------------------------------+
+                                                             v
+                                  IncidentStore by source and time
+                                                             |
+                              deterministic score + deduplication
+                                                             |
+                                                             v
+                              Incident + AnalystFeedback contract
+```
+
+Incident confidence, deterministic risk score, and policy severity are stored as
+separate values. Approved backups are suppressed before exfiltration alert creation.
 
 ## Boundary assumptions
 

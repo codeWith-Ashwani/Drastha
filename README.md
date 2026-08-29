@@ -2,7 +2,7 @@
 
 AegisFlow is a passive network-security analytics platform for one-way monitoring environments. The codebase is being built as a sequence of testable vertical slices.
 
-The current Sprint 0-3 implementation can:
+The current Sprint 0-4 implementation can:
 
 - replay Zeek `conn.log` JSON lines;
 - normalize them into a shared network-event contract;
@@ -20,6 +20,10 @@ The current Sprint 0-3 implementation can:
 - detect periodic C2-like callbacks using interval, jitter and size consistency;
 - enrich C2 evidence with TLS/QUIC metadata without decrypting payloads;
 - guarantee that a fingerprint alone cannot trigger a C2 alert.
+- detect outbound-volume anomalies using byte direction and a per-source baseline;
+- suppress approved backup destinations;
+- correlate cross-detector alerts into deterministic, evidence-rich incidents;
+- deduplicate repeated alert IDs and validate analyst-feedback dispositions.
 
 It does not capture live traffic, decrypt payloads, or send any response toward the monitored network.
 
@@ -86,10 +90,18 @@ $env:PYTHONPATH = "src"
 python -m aegisflow.cli c2-replay --input examples/zeek_conn_beacon.jsonl --encrypted-input examples/zeek_ssl_beacon.jsonl --output output/sprint3_c2_alerts.jsonl --report-output output/sprint3_c2_report.json
 ```
 
+Replay Sprint 4 exfiltration behaviour and correlate it with the C2 alert:
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m aegisflow.cli exfil-replay --input examples/zeek_conn_exfil.jsonl --output output/sprint4_exfil_alerts.jsonl --report-output output/sprint4_exfil_report.json
+python -m aegisflow.cli correlate-alerts --input output/sprint3_c2_alerts.jsonl --input output/sprint4_exfil_alerts.jsonl --output output/sprint4_incidents.jsonl --report-output output/sprint4_incident_report.json
+```
+
 ## Current boundaries
 
 - Raw-PCAP execution requires an external Zeek installation; the adapter fails clearly when it is absent.
-- Reconnaissance, initial DDoS, DNS, and C2 beacon detectors are implemented; exfiltration and cross-detector correlation are later sprints.
+- Reconnaissance, initial DDoS, DNS, C2 beacon, exfiltration, and cross-detector incident correlation are implemented; persistent API and dashboard workflows are later sprints.
 - The DNS model is trained on a tiny synthetic fixture to verify the pipeline. Production claims require licensed, versioned datasets and deployment-specific calibration.
 - DNS-over-HTTPS is not visible from ordinary Zeek DNS logs unless telemetry is collected before encryption.
 - Confidence is a transparent heuristic pending calibration on labelled data.

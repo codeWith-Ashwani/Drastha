@@ -49,7 +49,7 @@ class WalkthroughDoc(BaseDocTemplate):
             leftMargin=18 * mm,
             topMargin=20 * mm,
             bottomMargin=18 * mm,
-            title="AegisFlow Build Walkthrough - Sprints 0 to 3",
+            title="AegisFlow Build Walkthrough - Sprints 0 to 4",
             author="AegisFlow SIH Team",
             subject="Cumulative engineering walkthrough",
         )
@@ -142,8 +142,8 @@ def cover(sty):
     summary = Table(
         [
             ["REPORT", "SIH Engineering Build Walkthrough"],
-            ["COVERAGE", "Sprints 0 to 3"],
-            ["STATUS", "35 automated tests passing"],
+            ["COVERAGE", "Sprints 0 to 4"],
+            ["STATUS", "42 automated tests passing"],
             ["SNAPSHOT", "29 August 2026"],
         ],
         colWidths=[34 * mm, 134 * mm],

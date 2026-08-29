@@ -84,3 +84,35 @@ class Alert:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
+class Incident:
+    incident_id: str
+    src_ip: str
+    first_seen: float
+    last_seen: float
+    alert_ids: tuple[str, ...]
+    detector_ids: tuple[str, ...]
+    threat_types: tuple[str, ...]
+    confidence: float
+    risk_score: int
+    severity: str
+    scoring_factors: tuple[Evidence, ...]
+    status: str = "open"
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
+class AnalystFeedback:
+    feedback_id: str
+    incident_id: str
+    disposition: str
+    analyst: str
+    timestamp: float
+    notes: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)

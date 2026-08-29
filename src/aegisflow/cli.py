@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from contextlib import nullcontext
 from pathlib import Path
 from typing import TextIO
@@ -15,6 +16,8 @@ from aegisflow.detectors import (
     DNSDetector,
     DDoSConfig,
     DDoSDetector,
+    ExfiltrationConfig,
+    ExfiltrationDetector,
     ReconConfig,
     ReconDetector,
 )
@@ -22,6 +25,7 @@ from aegisflow.detectors.base import Detector
 from aegisflow.dns_model import DNSNgramModel
 from aegisflow.dns_training import train_and_evaluate
 from aegisflow.health import ReplayHealth
+from aegisflow.incidents import FeedbackStore, IncidentStore, alert_from_dict
 from aegisflow.ingestion.zeek_dns import read_dns_jsonl
 from aegisflow.ingestion.zeek_encrypted import build_encrypted_metadata_index, read_encrypted_jsonl
 from aegisflow.ingestion.zeek_jsonl import ZeekRecordError, read_conn_jsonl
@@ -103,6 +107,35 @@ def _parser() -> argparse.ArgumentParser:
     c2.add_argument("--maximum-interval-cv", type=float, default=0.15)
     c2.add_argument("--maximum-size-cv", type=float, default=0.20)
     c2.add_argument("--cooldown", type=float, default=300.0)
+
+    exfil = subparsers.add_parser("exfil-replay", help="replay conn.log for outbound exfiltration behaviour")
+    exfil.add_argument("--input", required=True, type=Path)
+    exfil.add_argument("--output", type=Path)
+    exfil.add_argument("--report-output", type=Path)
+    exfil.add_argument("--approved-backup-destination", action="append", default=[])
+    exfil.add_argument("--window", type=float, default=300.0)
+    exfil.add_argument("--minimum-flows", type=int, default=3)
+    exfil.add_argument("--minimum-outbound-bytes", type=int, default=1_000_000)
+    exfil.add_argument("--minimum-outbound-ratio", type=float, default=8.0)
+    exfil.add_argument("--baseline-multiplier", type=float, default=4.0)
+    exfil.add_argument("--cooldown", type=float, default=600.0)
+
+    correlate = subparsers.add_parser("correlate-alerts", help="combine detector alerts into incidents")
+    correlate.add_argument("--input", required=True, action="append", type=Path)
+    correlate.add_argument("--output", required=True, type=Path)
+    correlate.add_argument("--report-output", type=Path)
+    correlate.add_argument("--window", type=float, default=900.0)
+
+    feedback = subparsers.add_parser("record-feedback", help="create a validated analyst-feedback record")
+    feedback.add_argument("--incident-id", required=True)
+    feedback.add_argument(
+        "--disposition", required=True,
+        choices=("confirmed_malicious", "benign", "needs_review"),
+    )
+    feedback.add_argument("--analyst", required=True)
+    feedback.add_argument("--notes", default="")
+    feedback.add_argument("--timestamp", type=float)
+    feedback.add_argument("--output", required=True, type=Path)
     return parser
 
 
@@ -270,6 +303,96 @@ def _run_c2(input_path: Path, args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_exfil(input_path: Path, args: argparse.Namespace) -> int:
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+    if args.report_output:
+        args.report_output.parent.mkdir(parents=True, exist_ok=True)
+    detector = ExfiltrationDetector(
+        ExfiltrationConfig(
+            window_seconds=args.window,
+            minimum_flows=args.minimum_flows,
+            minimum_outbound_bytes=args.minimum_outbound_bytes,
+            minimum_outbound_ratio=args.minimum_outbound_ratio,
+            baseline_multiplier=args.baseline_multiplier,
+            cooldown_seconds=args.cooldown,
+        ),
+        approved_backup_destinations=set(args.approved_backup_destination),
+    )
+    events = alerts = 0
+
+    def observed_events():
+        nonlocal events
+        for event in read_conn_jsonl(input_path):
+            events += 1
+            yield event
+
+    output_context = args.output.open("w", encoding="utf-8") if args.output else nullcontext(sys.stdout)
+    with output_context as stream:
+        output: TextIO = stream
+        for alert in run_pipeline(observed_events(), [detector]):
+            output.write(json.dumps(alert.to_dict(), sort_keys=True) + "\n")
+            alerts += 1
+    report = {
+        "events_processed": events,
+        "alerts_emitted": alerts,
+        "approved_backup_destinations": sorted(set(args.approved_backup_destination)),
+        "baseline_scope": "in_memory_per_source",
+    }
+    if args.report_output:
+        args.report_output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(f"processed {input_path}; exfil_events={events}; alerts={alerts}", file=sys.stderr)
+    return 0
+
+
+def _correlate_alerts(args: argparse.Namespace) -> int:
+    store = IncidentStore(args.window)
+    alert_count = 0
+    for path in args.input:
+        with path.open("r", encoding="utf-8") as stream:
+            for line_number, line in enumerate(stream, start=1):
+                stripped = line.strip()
+                if not stripped:
+                    continue
+                try:
+                    record = json.loads(stripped)
+                    store.process(alert_from_dict(record))
+                except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+                    raise ValueError(f"{path}: line {line_number}: invalid alert: {exc}") from exc
+                alert_count += 1
+    incidents = store.all()
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    with args.output.open("w", encoding="utf-8") as stream:
+        for incident in incidents:
+            stream.write(json.dumps(incident.to_dict(), sort_keys=True) + "\n")
+    report = {
+        "alerts_processed": alert_count,
+        "incidents_created": len(incidents),
+        "highest_risk_score": max((incident.risk_score for incident in incidents), default=0),
+        "scoring": "deterministic_policy_v1",
+    }
+    if args.report_output:
+        args.report_output.parent.mkdir(parents=True, exist_ok=True)
+        args.report_output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(f"correlated alerts={alert_count}; incidents={len(incidents)}", file=sys.stderr)
+    return 0
+
+
+def _record_feedback(args: argparse.Namespace) -> int:
+    store = FeedbackStore()
+    feedback = store.record(
+        args.incident_id,
+        args.disposition,
+        args.analyst,
+        args.timestamp if args.timestamp is not None else time.time(),
+        args.notes,
+    )
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(feedback.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(f"recorded feedback={feedback.feedback_id} for incident={feedback.incident_id}", file=sys.stderr)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
@@ -283,6 +406,12 @@ def main(argv: list[str] | None = None) -> int:
             return _run_dns(args.input, args)
         if args.command == "c2-replay":
             return _run_c2(args.input, args)
+        if args.command == "exfil-replay":
+            return _run_exfil(args.input, args)
+        if args.command == "correlate-alerts":
+            return _correlate_alerts(args)
+        if args.command == "record-feedback":
+            return _record_feedback(args)
         if args.command == "train-dns":
             metrics = train_and_evaluate(
                 args.dataset, args.model_output, args.metrics_output, args.model_card_output

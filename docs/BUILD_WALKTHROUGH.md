@@ -1,11 +1,11 @@
 # AegisFlow Build Walkthrough
 
-## SIH project engineering report - Sprints 0 to 3
+## SIH project engineering report - Sprints 0 to 4
 
 **Project:** AegisFlow - Passive AI-Assisted Cyber-Threat Detection  
 **Report snapshot:** 29 August 2026  
-**Current build state:** Sprint 3 demonstrable prototype complete  
-**Verification:** 35 automated tests passing
+**Current build state:** Sprint 4 demonstrable prototype complete
+**Verification:** 42 automated tests passing
 
 ## 1. What we are building
 
@@ -42,6 +42,7 @@ Copied network traffic or PCAP
 | Sprint 1 | WSL Zeek bridge, real PCAP processing, SYN/UDP flood detection | Complete | Real PCAP: 12 connections processed |
 | Sprint 2 | DNS ingestion, DGA model, DNS-tunnelling detector | Prototype complete | Threat fixture: 21 events, 2 alerts |
 | Sprint 3 | C2 beacon detection and TLS/QUIC metadata context | Prototype complete | Beacon fixture: 8 events, 1 alert |
+| Sprint 4 | Exfiltration detection, incident correlation, scoring and feedback | Prototype complete | C2 + exfiltration: 2 alerts, 1 critical incident |
 
 Production dataset acquisition and deployment-specific calibration remain future
 work. Smoke-test metrics are never presented as operational accuracy.
@@ -204,7 +205,62 @@ requires timing and size evidence. Payloads are never decrypted.
 - Size variation: 0.0.
 - Real sample: 12 connections, 2 TLS records, and zero C2 alerts.
 
-## 8. What is rule-based and what is machine learning
+## 8. Sprint 4 walkthrough - exfiltration and incidents
+
+### Goal
+
+Detect suspicious outbound transfer behaviour and combine related detector alerts
+into one inspectable incident without treating ordinary backups as attacks.
+
+### Exfiltration detection logic
+
+The detector maintains a small per-source history and groups flows by source and
+destination inside a sliding window. It measures:
+
+- total outbound bytes;
+- outbound-to-inbound byte ratio;
+- average outbound bytes per flow;
+- comparison against the source's prior median flow size;
+- destination age as supporting context.
+
+An alert requires large outbound volume, a strongly outbound direction, and a clear
+increase over the source baseline. Destination novelty is evidence, not a sole
+trigger. Approved backup destinations are excluded through an explicit allowlist.
+
+### Incident correlation and scoring
+
+Alerts from the same source inside a configurable time window are correlated into a
+single incident. Every incident retains all contributing alert IDs, detector IDs,
+threat types, first and last timestamps, and deterministic scoring factors.
+
+Risk score version 1 contains three inspectable components:
+
+1. Fixed weights for each distinct threat category.
+2. A cross-detector bonus for a multi-stage story.
+3. A bounded confidence contribution worth at most 20 points.
+
+Confidence and severity remain separate. Replaying the same alert ID is idempotent
+and does not duplicate an incident contribution.
+
+### Analyst feedback
+
+Validated feedback records support `confirmed_malicious`, `benign`, and
+`needs_review` dispositions. Each record includes an incident ID, analyst label,
+timestamp, notes, and deterministic feedback ID. The in-memory prototype defines the
+contract that the Sprint 5 database and API will persist.
+
+### Demonstration result
+
+- Synthetic exfiltration input: 8 connection events.
+- Output: one outbound-volume anomaly alert.
+- Observed outbound bytes: 1,530,000.
+- Outbound-to-inbound ratio: 510.0.
+- Source baseline median: 11,000 bytes per flow.
+- C2 plus exfiltration correlation: 2 alerts became 1 critical incident.
+- Incident risk score: 100 with all scoring components retained.
+- Approved backup, balanced download, deduplication, and feedback validation tests pass.
+
+## 9. What is rule-based and what is machine learning
 
 | Threat | Current method | Why |
 |---|---|---|
@@ -214,13 +270,15 @@ requires timing and size evidence. Payloads are never decrypted.
 | DNS tunnelling | Behavioural window | Repetition and subdomain diversity matter more than one name |
 | C2 beaconing | Timing and size statistics | Periodicity can be measured without payload access |
 | TLS/QUIC fingerprint | Supporting metadata only | Fingerprints are not reliable proof of malware by themselves |
+| Outbound exfiltration | Statistical baseline and directional ratios | Volume alone is insufficient without direction and source history |
+| Incident scoring | Deterministic policy | Analysts must be able to reproduce every risk-score component |
 
 A separate ML model is therefore not trained for every attack. Models are introduced
 only when labelled data and learned patterns add value beyond transparent rules.
 
-## 9. Verification summary
+## 10. Verification summary
 
-The current suite contains 35 automated tests. It covers:
+The current suite contains 42 automated tests. It covers:
 
 - valid and malformed Zeek connection and DNS records;
 - Windows-to-WSL path translation and Zeek invocation;
@@ -229,8 +287,10 @@ The current suite contains 35 automated tests. It covers:
 - benign contacts, hosted-service domains, scheduled traffic, variable transfers,
   allowlists, and fingerprint-only suppression;
 - dataset leakage checks and model probability bounds.
+- exfiltration baselines, outbound ratios, approved backups, correlation,
+  deduplication, deterministic scoring, and analyst feedback.
 
-## 10. Current limitations
+## 11. Current limitations
 
 - DGA metrics use a tiny synthetic dataset; production data is not yet acquired.
 - The base-domain function uses a two-label approximation until a reviewed public
@@ -239,14 +299,13 @@ The current suite contains 35 automated tests. It covers:
 - Encrypted payloads and ordinary DNS-over-HTTPS contents are not inspected.
 - NAT can combine multiple devices behind one source address.
 - There is no persistent incident database, analyst API, or dashboard yet.
-- Threat correlation and calibrated incident scoring begin in Sprint 4.
+- Exfiltration baselines and incident records are in memory and reset on restart.
+- Incident weights are transparent initial policy values, not calibrated operational risk.
 
-## 11. Next sprint
+## 12. Next sprint
 
-Sprint 4 will add exfiltration behaviour, incident correlation, deterministic scoring,
-alert deduplication, and analyst-feedback structures. Approved backup traffic will be
-tested so that high outbound volume alone does not automatically become an
-exfiltration incident.
+Sprint 5 will add a FastAPI analyst service, persistent incident storage, and the
+first dashboard workflow for queue, evidence, health, feedback, and export.
 
 ## Appendix A - Repeatable commands
 
@@ -292,4 +351,23 @@ python -m aegisflow.cli c2-replay `
   --encrypted-input examples/zeek_ssl_beacon.jsonl `
   --output output/sprint3_c2_alerts.jsonl `
   --report-output output/sprint3_c2_report.json
+```
+
+### Replay exfiltration behaviour
+
+```powershell
+python -m aegisflow.cli exfil-replay `
+  --input examples/zeek_conn_exfil.jsonl `
+  --output output/sprint4_exfil_alerts.jsonl `
+  --report-output output/sprint4_exfil_report.json
+```
+
+### Correlate C2 and exfiltration alerts
+
+```powershell
+python -m aegisflow.cli correlate-alerts `
+  --input output/sprint3_c2_alerts.jsonl `
+  --input output/sprint4_exfil_alerts.jsonl `
+  --output output/sprint4_incidents.jsonl `
+  --report-output output/sprint4_incident_report.json
 ```

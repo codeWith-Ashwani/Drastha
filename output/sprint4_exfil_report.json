@@ -1,0 +1,6 @@
+{
+  "alerts_emitted": 1,
+  "approved_backup_destinations": [],
+  "baseline_scope": "in_memory_per_source",
+  "events_processed": 8
+}

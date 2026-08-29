@@ -1,0 +1,8 @@
+{
+  "analyst": "demo-analyst",
+  "disposition": "confirmed_malicious",
+  "feedback_id": "263f1db887cf72789404",
+  "incident_id": "fbb366f932c0aa03c47d",
+  "notes": "Synthetic multi-stage demo verified.",
+  "timestamp": 2110.0
+}

@@ -8,7 +8,8 @@ Last updated: 29 August 2026
 - Sprint 1: complete; real PCAP processed through Zeek 8.0.10 in WSL
 - Sprint 2: demonstrable prototype complete; production dataset calibration remains future work
 - Sprint 3: demonstrable prototype complete; CTU-13 holdout acquisition remains future work
-- Sprints 4-7: planned
+- Sprint 4: demonstrable prototype complete; persistent storage and calibration remain future work
+- Sprints 5-7: planned
 
 ## Sprint 0 acceptance checklist
 
@@ -100,5 +101,24 @@ python -m aegisflow.cli replay --input examples/zeek_conn_scan.jsonl --port-thre
 
 ## Next sprint
 
-Sprint 4 will add exfiltration features, incident-level correlation, deterministic
-scoring, deduplication, and analyst-feedback structures.
+## Sprint 4 acceptance checklist
+
+- [x] Outbound volume, direction ratio and per-source baseline features
+- [x] Recently observed destination context without novelty-only alerting
+- [x] Approved backup destination suppression
+- [x] Balanced-download benign test
+- [x] Evidence-rich outbound-volume anomaly alert
+- [x] Time- and source-based cross-detector incident correlation
+- [x] Every contributing alert and detector retained
+- [x] Deterministic risk-score components separated from confidence
+- [x] Alert-ID deduplication and idempotent replay
+- [x] Validated analyst-feedback contract
+- [x] Synthetic exfiltration replay: 8 events, 1 alert
+- [x] C2 plus exfiltration: 2 alerts, 1 critical incident, score 100
+- [x] Forty-two total automated tests passing
+- [ ] Persistent incident store, production baselines and policy calibration
+
+## Next sprint
+
+Sprint 5 will add the analyst API, persistent storage, and the first dashboard
+workflow for incident queue, evidence, health, feedback, and export.

@@ -26,6 +26,7 @@ output/real_*
 output/*.db
 web/node_modules/
 web/dist/
+*.tsbuildinfo
 
 # Packaging output
 build/

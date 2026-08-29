@@ -1,0 +1,19 @@
+{
+  "name": "dns-benign-domain-snapshot",
+  "manifest_version": "0.1-demo",
+  "status": "manifest-only",
+  "snapshot_date": "2026-08-29",
+  "demo_fixture": "examples/dns_training_demo.csv",
+  "demo_fixture_sha256": "080e165b3664e380314365a6128281ba1735b8e67dbb8ceca088fc07b75bf322",
+  "production_source": null,
+  "production_licence": null,
+  "production_sha256": null,
+  "required_review": [
+    "Choose a redistributable and versioned popularity/domain source.",
+    "Record the exact download date, URL, licence and SHA-256 digest.",
+    "Remove duplicates and normalize internationalized names consistently.",
+    "Keep domains from the same hosted-service family in one split.",
+    "Store the downloaded dataset outside source control."
+  ],
+  "note": "The committed CSV is a synthetic smoke-test fixture, not this production snapshot."
+}

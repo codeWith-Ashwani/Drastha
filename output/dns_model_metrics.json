@@ -1,0 +1,76 @@
+{
+  "accuracy": 1.0,
+  "confusion_matrix": {
+    "fn": 0,
+    "fp": 0,
+    "tn": 6,
+    "tp": 6
+  },
+  "examples": [
+    {
+      "domain": "cdn.jsdelivr.net",
+      "label": 0,
+      "probability": 0.049374
+    },
+    {
+      "domain": "assets.adobedtm.com",
+      "label": 0,
+      "probability": 8.7e-05
+    },
+    {
+      "domain": "githubusercontent.com",
+      "label": 0,
+      "probability": 0.0
+    },
+    {
+      "domain": "akamaized.net",
+      "label": 0,
+      "probability": 0.043261
+    },
+    {
+      "domain": "office.com",
+      "label": 0,
+      "probability": 0.000153
+    },
+    {
+      "domain": "example.com",
+      "label": 0,
+      "probability": 6.4e-05
+    },
+    {
+      "domain": "v8m2q6z9x4c7n1k5.biz",
+      "label": 1,
+      "probability": 0.61343
+    },
+    {
+      "domain": "t3y7u1i5o9p4a8s2.info",
+      "label": 1,
+      "probability": 0.840666
+    },
+    {
+      "domain": "b6n2m8v4c1x7z3q9.top",
+      "label": 1,
+      "probability": 0.7281
+    },
+    {
+      "domain": "f9g5h1j7k3l8p4o2.xyz",
+      "label": 1,
+      "probability": 0.7281
+    },
+    {
+      "domain": "d4s8a2q6w9e3r7t1.biz",
+      "label": 1,
+      "probability": 0.863898
+    },
+    {
+      "domain": "u7i3o9p5a1s8d4f6.info",
+      "label": 1,
+      "probability": 0.993029
+    }
+  ],
+  "f1": 1.0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "test_examples": 12,
+  "threshold": 0.5
+}

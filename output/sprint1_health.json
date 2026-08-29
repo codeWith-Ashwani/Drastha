@@ -1,0 +1,12 @@
+{
+  "alerts_emitted": 2,
+  "capture_loss_records": 0,
+  "capture_loss_visibility": "not_provided_by_conn_log",
+  "event_time_span_seconds": 2.2,
+  "events_processed": 7,
+  "first_event_timestamp": 1787932000.0,
+  "last_event_timestamp": 1787932002.2,
+  "out_of_order_events": 0,
+  "processing_events_per_second": 3039.118,
+  "wall_seconds": 0.0023032999597489834
+}

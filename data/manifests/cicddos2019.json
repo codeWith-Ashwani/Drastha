@@ -1,0 +1,31 @@
+{
+  "dataset_id": "CICDDoS2019",
+  "status": "not_downloaded",
+  "source": "https://www.unb.ca/cic/datasets/",
+  "purpose": [
+    "SYN flood evaluation",
+    "UDP flood evaluation",
+    "port-scan evaluation"
+  ],
+  "storage_policy": "Dataset files must remain outside Git under data/raw/CICDDoS2019.",
+  "verification_required": [
+    "Confirm current licence and terms before download.",
+    "Record download date and checksums.",
+    "Preserve original labels and capture provenance.",
+    "Do not map unknown/background traffic to benign without review."
+  ],
+  "split_policy": {
+    "method": "capture/day/scenario holdout",
+    "forbidden": "random row split across related flows",
+    "final_test": "Keep at least one complete capture or attack scenario untouched until final evaluation."
+  },
+  "metrics": [
+    "precision per subtype",
+    "recall per subtype",
+    "F1 per subtype",
+    "false-positive rate on benign captures",
+    "P50 and P95 alert latency",
+    "processing throughput"
+  ]
+}
+

@@ -1,0 +1,6 @@
+{
+  "alerts_emitted": 2,
+  "dga_model_loaded": true,
+  "encrypted_dns_visibility": "not_available_from_zeek_dns_log",
+  "events_processed": 21
+}

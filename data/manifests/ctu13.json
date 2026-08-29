@@ -1,0 +1,16 @@
+{
+  "name": "CTU-13 botnet traffic dataset",
+  "status": "manifest-only",
+  "source": "Stratosphere Laboratory, Czech Technical University",
+  "expected_use": "family/scenario holdout evaluation for C2 beacon detection",
+  "download_url": null,
+  "licence_reviewed": false,
+  "sha256": null,
+  "split_policy": [
+    "Keep complete capture scenarios together.",
+    "Do not place flows from one botnet capture in both training and test sets.",
+    "Report results per scenario and traffic class, not only pooled accuracy.",
+    "Retain benign scheduled-service examples for false-positive analysis."
+  ],
+  "note": "Dataset files are intentionally not committed. Complete licence and provenance review before download."
+}

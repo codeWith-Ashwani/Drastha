@@ -1,0 +1,7 @@
+{
+  "alerts_emitted": 1,
+  "encrypted_metadata_records": 8,
+  "events_processed": 8,
+  "fingerprint_only_alerting": false,
+  "payload_decryption": false
+}

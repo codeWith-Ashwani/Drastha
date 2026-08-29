@@ -2,7 +2,7 @@
 
 AegisFlow is a passive network-security analytics platform for one-way monitoring environments. The codebase is being built as a sequence of testable vertical slices.
 
-The current Sprint 0-4 implementation can:
+The current Sprint 0-5 implementation can:
 
 - replay Zeek `conn.log` JSON lines;
 - normalize them into a shared network-event contract;
@@ -24,6 +24,10 @@ The current Sprint 0-4 implementation can:
 - suppress approved backup destinations;
 - correlate cross-detector alerts into deterministic, evidence-rich incidents;
 - deduplicate repeated alert IDs and validate analyst-feedback dispositions.
+- persist incidents, alerts, statuses, and analyst feedback across restarts;
+- expose a FastAPI analyst service with health, queue, evidence, review, and export endpoints;
+- provide a responsive React/TypeScript incident dashboard;
+- run locally with SQLite or as an offline Docker Compose bundle with PostgreSQL.
 
 It does not capture live traffic, decrypt payloads, or send any response toward the monitored network.
 
@@ -98,14 +102,34 @@ python -m aegisflow.cli exfil-replay --input examples/zeek_conn_exfil.jsonl --ou
 python -m aegisflow.cli correlate-alerts --input output/sprint3_c2_alerts.jsonl --input output/sprint4_exfil_alerts.jsonl --output output/sprint4_incidents.jsonl --report-output output/sprint4_incident_report.json
 ```
 
+Run the Sprint 5 analyst console locally:
+
+```powershell
+python -m pip install -e ".[api]"
+cd web
+pnpm install
+pnpm run build
+cd ..
+$env:AEGISFLOW_ROOT = (Get-Location).Path
+$env:AEGISFLOW_WEB = (Join-Path (Get-Location).Path "web/dist")
+python -m uvicorn aegisflow.api:app --host 127.0.0.1 --port 8000
+```
+
+Open `http://127.0.0.1:8000`, then use **Load demo data** if the queue is empty.
+For the PostgreSQL deployment, run `docker compose up --build` on a machine with
+Docker Desktop or Docker Engine installed.
+
 ## Current boundaries
 
 - Raw-PCAP execution requires an external Zeek installation; the adapter fails clearly when it is absent.
-- Reconnaissance, initial DDoS, DNS, C2 beacon, exfiltration, and cross-detector incident correlation are implemented; persistent API and dashboard workflows are later sprints.
+- Reconnaissance, DDoS, DNS, C2 beacon, exfiltration, correlation, persistent API,
+  and dashboard workflows are implemented as demonstrable slices.
 - The DNS model is trained on a tiny synthetic fixture to verify the pipeline. Production claims require licensed, versioned datasets and deployment-specific calibration.
 - DNS-over-HTTPS is not visible from ordinary Zeek DNS logs unless telemetry is collected before encryption.
 - Confidence is a transparent heuristic pending calibration on labelled data.
 - Severity is policy-based and does not claim operational impact knowledge.
 - The sample thresholds and seven-event throughput figure are smoke-test values, not production benchmarks.
+- Docker files and the PostgreSQL schema are included, but Docker execution was not
+  verified on the current Windows host because Docker is not installed there.
 
 See [docs/STATUS.md](docs/STATUS.md) for current progress and [docs/SPRINTS.md](docs/SPRINTS.md) for the full implementation plan and acceptance criteria.

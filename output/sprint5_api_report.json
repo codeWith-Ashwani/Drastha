@@ -1,0 +1,14 @@
+{
+  "alerts_loaded": 2,
+  "automated_tests_passing": 49,
+  "dashboard_production_build": true,
+  "docker_runtime_verified": false,
+  "docker_runtime_limitation": "Docker is not installed on the current host.",
+  "feedback_records_loaded": 1,
+  "highest_risk_score": 100,
+  "incidents_loaded": 1,
+  "local_api_health": "healthy",
+  "return_path_required": false,
+  "storage_verified_locally": "sqlite",
+  "target_durable_storage": "postgresql"
+}

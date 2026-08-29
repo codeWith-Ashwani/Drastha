@@ -1,6 +1,6 @@
 # AegisFlow build status
 
-Last updated: 29 August 2026
+Last updated: 30 August 2026
 
 ## Overall
 
@@ -9,7 +9,8 @@ Last updated: 29 August 2026
 - Sprint 2: demonstrable prototype complete; production dataset calibration remains future work
 - Sprint 3: demonstrable prototype complete; CTU-13 holdout acquisition remains future work
 - Sprint 4: demonstrable prototype complete; persistent storage and calibration remain future work
-- Sprints 5-7: planned
+- Sprint 5: demonstrable prototype complete; Docker execution awaits a Docker-enabled host
+- Sprints 6-7: planned
 
 ## Sprint 0 acceptance checklist
 
@@ -120,5 +121,26 @@ python -m aegisflow.cli replay --input examples/zeek_conn_scan.jsonl --port-thre
 
 ## Next sprint
 
-Sprint 5 will add the analyst API, persistent storage, and the first dashboard
-workflow for incident queue, evidence, health, feedback, and export.
+## Sprint 5 acceptance checklist
+
+- [x] FastAPI service with generated OpenAPI contract
+- [x] Persistent incident, alert, status, and feedback repository
+- [x] SQLite local mode for a low-friction offline demonstration
+- [x] PostgreSQL schema and repository adapter
+- [x] Risk-prioritized incident queue with search and severity filter
+- [x] One-click queue-to-evidence workflow
+- [x] Attack timeline and evidence/provenance views
+- [x] Confidence displayed separately from policy severity and risk score
+- [x] Analyst status and disposition workflow
+- [x] Portable JSON incident export
+- [x] Responsive React/TypeScript dashboard production build
+- [x] Docker Compose topology for API, dashboard, and PostgreSQL
+- [x] Local smoke test: healthy API, 1 incident, 2 alerts, risk score 100
+- [x] Forty-nine total automated tests passing
+- [ ] Docker Compose runtime verification on a Docker-enabled host
+- [ ] Authentication and role-based access control before multi-user deployment
+
+## Next sprint
+
+Sprint 6 will add reproducible per-threat evaluation, latency and throughput
+benchmarks, malformed/loss/skew tests, restart recovery, and a formal threat model.

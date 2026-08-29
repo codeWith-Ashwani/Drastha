@@ -1,4 +1,4 @@
-# Sprint 0-4 architecture
+# Sprint 0-5 architecture
 
 ```text
 PCAP -> Zeek (when installed)
@@ -75,6 +75,22 @@ Recon / DDoS / DNS / C2 alerts -------------------------------+
 
 Incident confidence, deterministic risk score, and policy severity are stored as
 separate values. Approved backups are suppressed before exfiltration alert creation.
+
+```text
+Incident + Alert JSONL --> persistent repository --> FastAPI analyst service
+                                |                         |
+                         SQLite local demo          versioned REST API
+                         PostgreSQL Docker                |
+                                                          v
+                                           React/TypeScript console
+                                           queue -> evidence -> review
+                                                          |
+                                        status + feedback + JSON export
+```
+
+The analyst system stays on the monitoring side of the one-way boundary. It never
+opens a connection toward the protected network. SQLite supports the fast local demo;
+the Docker topology uses the equivalent PostgreSQL schema for durable team use.
 
 ## Boundary assumptions
 

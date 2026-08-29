@@ -49,7 +49,7 @@ class WalkthroughDoc(BaseDocTemplate):
             leftMargin=18 * mm,
             topMargin=20 * mm,
             bottomMargin=18 * mm,
-            title="AegisFlow Build Walkthrough - Sprints 0 to 4",
+            title="AegisFlow Build Walkthrough - Sprints 0 to 5",
             author="AegisFlow SIH Team",
             subject="Cumulative engineering walkthrough",
         )
@@ -72,7 +72,7 @@ class WalkthroughDoc(BaseDocTemplate):
         canvas.line(18 * mm, 12 * mm, width - 18 * mm, 12 * mm)
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(MUTED)
-        canvas.drawString(18 * mm, 8 * mm, "Snapshot: 29 August 2026")
+        canvas.drawString(18 * mm, 8 * mm, "Snapshot: 30 August 2026")
         canvas.drawRightString(width - 18 * mm, 8 * mm, f"Page {doc.page}")
         canvas.restoreState()
 
@@ -142,9 +142,9 @@ def cover(sty):
     summary = Table(
         [
             ["REPORT", "SIH Engineering Build Walkthrough"],
-            ["COVERAGE", "Sprints 0 to 4"],
-            ["STATUS", "42 automated tests passing"],
-            ["SNAPSHOT", "29 August 2026"],
+            ["COVERAGE", "Sprints 0 to 5"],
+            ["STATUS", "49 automated tests passing"],
+            ["SNAPSHOT", "30 August 2026"],
         ],
         colWidths=[34 * mm, 134 * mm],
     )

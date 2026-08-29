@@ -4,7 +4,7 @@
 
 **Project:** AegisFlow - Passive AI-Assisted Cyber-Threat Detection  
 **Report snapshot:** 29 August 2026  
-**Current build state:** Sprint 4 demonstrable prototype complete
+**Current build state:** Sprint 5 demonstrable prototype complete
 **Verification:** 42 automated tests passing
 
 ## 1. What we are building
@@ -260,7 +260,65 @@ contract that the Sprint 5 database and API will persist.
 - Incident risk score: 100 with all scoring components retained.
 - Approved backup, balanced download, deduplication, and feedback validation tests pass.
 
-## 9. What is rule-based and what is machine learning
+## 9. Sprint 5 walkthrough - analyst API and dashboard
+
+### Goal
+
+Turn detector output into a practical investigation workflow that an analyst can
+use without sending any traffic back toward the protected network.
+
+### Persistent analyst service
+
+The FastAPI service now provides versioned endpoints for:
+
+- service health and operational mode;
+- risk-prioritized incident queues with status and severity filters;
+- incident detail with every contributing alert, evidence item, and limitation;
+- incident status updates;
+- validated analyst feedback;
+- portable JSON incident export;
+- idempotent demonstration-data import.
+
+The local mode uses SQLite so the demo starts with minimal infrastructure. The
+repository creates indexes for the queue and investigation views and closes every
+database connection deterministically. A PostgreSQL adapter, explicit schema, and
+Docker Compose topology are included for the durable deployment path.
+
+### Analyst console
+
+The React and TypeScript console uses a compact security-operations layout. Its
+first view shows active, critical, average-risk, and reviewed metrics followed by a
+searchable incident queue. Selecting an incident opens the evidence drawer in one
+interaction. The drawer keeps three concepts visibly separate:
+
+- Risk score - deterministic policy priority from 0 to 100.
+- Severity - policy category used for triage.
+- Confidence - detector certainty, which is not operational impact.
+
+The analyst can inspect the attack timeline, source-to-destination route, raw
+evidence explanations, score components, and earlier feedback. They can then change
+workflow status, record a malicious/review/benign disposition, or download the full
+incident as JSON.
+
+### Offline and one-way operation
+
+The production frontend is compiled into static assets and served by the same API
+process. No external font, image, analytics, or cloud service is required at runtime.
+The Docker bundle contains the API, dashboard, and PostgreSQL database. Every
+component remains on the monitoring side and the API health response explicitly
+reports that a return path is not required.
+
+### Demonstration result
+
+- Production dashboard build completed successfully.
+- Local API health returned `healthy` in `passive_offline` mode.
+- Demonstration import persisted 1 incident, 2 alerts, and 1 feedback record.
+- The incident queue returned the critical multi-stage incident at risk score 100.
+- Queue, detail, status, feedback, error, and export workflows passed API tests.
+- The complete suite now contains 49 passing automated tests.
+- Docker execution is not claimed on this machine because Docker is not installed.
+
+## 10. What is rule-based and what is machine learning
 
 | Threat | Current method | Why |
 |---|---|---|
@@ -276,9 +334,9 @@ contract that the Sprint 5 database and API will persist.
 A separate ML model is therefore not trained for every attack. Models are introduced
 only when labelled data and learned patterns add value beyond transparent rules.
 
-## 10. Verification summary
+## 11. Verification summary
 
-The current suite contains 42 automated tests. It covers:
+The current suite contains 49 automated tests. It covers:
 
 - valid and malformed Zeek connection and DNS records;
 - Windows-to-WSL path translation and Zeek invocation;
@@ -289,8 +347,10 @@ The current suite contains 42 automated tests. It covers:
 - dataset leakage checks and model probability bounds.
 - exfiltration baselines, outbound ratios, approved backups, correlation,
   deduplication, deterministic scoring, and analyst feedback.
+- database idempotency, persistence, filtering, workflow validation, API health,
+  queue-to-detail navigation, review, error responses, and incident export.
 
-## 11. Current limitations
+## 12. Current limitations
 
 - DGA metrics use a tiny synthetic dataset; production data is not yet acquired.
 - The base-domain function uses a two-label approximation until a reviewed public
@@ -298,14 +358,18 @@ The current suite contains 42 automated tests. It covers:
 - Current thresholds require environment-specific calibration.
 - Encrypted payloads and ordinary DNS-over-HTTPS contents are not inspected.
 - NAT can combine multiple devices behind one source address.
-- There is no persistent incident database, analyst API, or dashboard yet.
-- Exfiltration baselines and incident records are in memory and reset on restart.
+- Detection-time correlation is still in memory; correlated incidents become durable
+  after import into the analyst repository.
 - Incident weights are transparent initial policy values, not calibrated operational risk.
+- Authentication and role-based permissions are not included in the SIH prototype.
+- Docker Compose is authored but could not be executed on the current host because
+  Docker is not installed.
 
-## 12. Next sprint
+## 13. Next sprint
 
-Sprint 5 will add a FastAPI analyst service, persistent incident storage, and the
-first dashboard workflow for queue, evidence, health, feedback, and export.
+Sprint 6 will replace remaining assumptions with reproducible per-threat metrics,
+latency and throughput benchmarks, loss/skew/malformed-input testing, restart
+recovery, and a formal threat model.
 
 ## Appendix A - Repeatable commands
 
@@ -370,4 +434,24 @@ python -m aegisflow.cli correlate-alerts `
   --input output/sprint4_exfil_alerts.jsonl `
   --output output/sprint4_incidents.jsonl `
   --report-output output/sprint4_incident_report.json
+```
+
+### Build and run the analyst console
+
+```powershell
+python -m pip install -e ".[api]"
+cd web
+pnpm install
+pnpm run build
+cd ..
+$env:AEGISFLOW_ROOT = (Get-Location).Path
+$env:AEGISFLOW_WEB = (Join-Path (Get-Location).Path "web/dist")
+python -m uvicorn aegisflow.api:app --host 127.0.0.1 --port 8000
+```
+
+Open `http://127.0.0.1:8000`. The first empty state provides a **Load demo data**
+button. On a Docker-enabled system, the PostgreSQL bundle starts with:
+
+```powershell
+docker compose up --build
 ```

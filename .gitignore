@@ -23,6 +23,9 @@ data/downloads/
 tmp/
 output/models/
 output/real_*
+output/*.db
+web/node_modules/
+web/dist/
 
 # Packaging output
 build/

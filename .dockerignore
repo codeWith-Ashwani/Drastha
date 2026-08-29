@@ -1,0 +1,8 @@
+.git
+.venv
+__pycache__
+*.pyc
+tmp
+output/pdf
+output/*.db
+web/node_modules

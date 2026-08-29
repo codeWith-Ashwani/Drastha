@@ -316,7 +316,13 @@ reports that a return path is not required.
 - The incident queue returned the critical multi-stage incident at risk score 100.
 - Queue, detail, status, feedback, error, and export workflows passed API tests.
 - The complete suite now contains 49 passing automated tests.
-- Docker execution is not claimed on this machine because Docker is not installed.
+- Docker Desktop 4.88.1, Engine 29.7.2, and Compose 5.4.0 were verified.
+- PostgreSQL and analyst-console containers started successfully and stayed healthy.
+- The containerized API reported `postgresql` storage, imported 1 incident, 2 alerts,
+  and 1 feedback record, and returned the risk-100 incident.
+- The containerized dashboard returned HTTP 200 at `127.0.0.1:8000`.
+- The risk-100 incident remained available after separate API and PostgreSQL
+  container restarts, confirming volume-backed persistence.
 
 ## 10. What is rule-based and what is machine learning
 
@@ -362,8 +368,8 @@ The current suite contains 49 automated tests. It covers:
   after import into the analyst repository.
 - Incident weights are transparent initial policy values, not calibrated operational risk.
 - Authentication and role-based permissions are not included in the SIH prototype.
-- Docker Compose is authored but could not be executed on the current host because
-  Docker is not installed.
+- Authentication and secret management must be strengthened before using the Docker
+  topology outside an isolated demonstration environment.
 
 ## 13. Next sprint
 

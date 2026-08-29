@@ -2,13 +2,18 @@
   "alerts_loaded": 2,
   "automated_tests_passing": 49,
   "dashboard_production_build": true,
-  "docker_runtime_verified": false,
-  "docker_runtime_limitation": "Docker is not installed on the current host.",
+  "docker_compose_version": "5.4.0",
+  "docker_desktop_version": "4.88.1",
+  "docker_engine_version": "29.7.2",
+  "docker_runtime_verified": true,
   "feedback_records_loaded": 1,
   "highest_risk_score": 100,
   "incidents_loaded": 1,
   "local_api_health": "healthy",
   "return_path_required": false,
-  "storage_verified_locally": "sqlite",
-  "target_durable_storage": "postgresql"
+  "storage_verified_locally": ["sqlite", "postgresql"],
+  "target_durable_storage": "postgresql",
+  "postgresql_container_healthy": true,
+  "incident_preserved_after_api_restart": true,
+  "incident_preserved_after_database_restart": true
 }

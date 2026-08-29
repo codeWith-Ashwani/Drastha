@@ -9,7 +9,7 @@ Last updated: 30 August 2026
 - Sprint 2: demonstrable prototype complete; production dataset calibration remains future work
 - Sprint 3: demonstrable prototype complete; CTU-13 holdout acquisition remains future work
 - Sprint 4: demonstrable prototype complete; persistent storage and calibration remain future work
-- Sprint 5: demonstrable prototype complete; Docker execution awaits a Docker-enabled host
+- Sprint 5: complete; SQLite and PostgreSQL/Docker deployment paths verified
 - Sprints 6-7: planned
 
 ## Sprint 0 acceptance checklist
@@ -137,7 +137,10 @@ python -m aegisflow.cli replay --input examples/zeek_conn_scan.jsonl --port-thre
 - [x] Docker Compose topology for API, dashboard, and PostgreSQL
 - [x] Local smoke test: healthy API, 1 incident, 2 alerts, risk score 100
 - [x] Forty-nine total automated tests passing
-- [ ] Docker Compose runtime verification on a Docker-enabled host
+- [x] Docker Compose runtime verification with a healthy PostgreSQL container
+- [x] Containerized API verified in PostgreSQL mode with persistent demo import
+- [x] Containerized dashboard returned HTTP 200 on `127.0.0.1:8000`
+- [x] Incident survived separate API and PostgreSQL container restarts
 - [ ] Authentication and role-based access control before multi-user deployment
 
 ## Next sprint

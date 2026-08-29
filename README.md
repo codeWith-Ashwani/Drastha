@@ -129,7 +129,7 @@ Docker Desktop or Docker Engine installed.
 - Confidence is a transparent heuristic pending calibration on labelled data.
 - Severity is policy-based and does not claim operational impact knowledge.
 - The sample thresholds and seven-event throughput figure are smoke-test values, not production benchmarks.
-- Docker files and the PostgreSQL schema are included, but Docker execution was not
-  verified on the current Windows host because Docker is not installed there.
+- Docker Compose is verified on Windows with Docker Desktop 4.88.1, Docker Engine
+  29.7.2, Compose 5.4.0, and the PostgreSQL 16 Alpine image.
 
 See [docs/STATUS.md](docs/STATUS.md) for current progress and [docs/SPRINTS.md](docs/SPRINTS.md) for the full implementation plan and acceptance criteria.

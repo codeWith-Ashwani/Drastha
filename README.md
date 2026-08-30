@@ -30,6 +30,8 @@ The current Sprint 0-5 implementation can:
 - persist incidents, alerts, statuses, and analyst feedback across restarts;
 - expose a FastAPI analyst service with health, queue, evidence, review, and export endpoints;
 - provide a responsive React/TypeScript incident dashboard;
+- present an SIH-ready attack-chain overview with capture-relative timestamps,
+  detector-grouped evidence, and responsive investigation workflows;
 - run locally with SQLite or as an offline Docker Compose bundle with PostgreSQL.
 
 It does not capture live traffic, decrypt payloads, or send any response toward the monitored network.

@@ -10,6 +10,7 @@ Last updated: 30 August 2026
 - Sprint 3: demonstrable prototype complete; CTU-13 holdout acquisition remains future work
 - Sprint 4: demonstrable prototype complete; persistent storage and calibration remain future work
 - Sprint 5: complete; SQLite and PostgreSQL/Docker deployment paths verified
+- Demo UI sprint: complete; judge-facing attack story and responsive investigation view verified
 - Sprints 6-7: planned
 
 ## Limitation burn-down
@@ -153,6 +154,10 @@ drastha replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-t
 - [x] Incident survived separate API and PostgreSQL container restarts
 - [x] Correlation automatically persists alerts and incidents to SQLite/PostgreSQL
 - [x] Re-import preserves analyst status and does not create duplicates
+- [x] Drastha judge-facing hero and C2-to-exfiltration attack-chain narrative
+- [x] Capture-relative timestamps replace misleading 1970 dates in synthetic demos
+- [x] Evidence grouped by contributing detector with visible threshold context
+- [x] Desktop and 390px mobile layouts visually verified
 - [ ] Authentication and role-based access control before multi-user deployment
 
 ## Next sprint

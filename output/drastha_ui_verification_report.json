@@ -1,0 +1,18 @@
+{
+  "product": "Drastha",
+  "sprint": "demo_ui",
+  "production_build": true,
+  "automated_tests_passing": 55,
+  "desktop_visual_review": true,
+  "mobile_width_tested_px": 390,
+  "mobile_visual_review": true,
+  "search_empty_state_verified": true,
+  "incident_drawer_verified": true,
+  "attack_chain_visible": [
+    "periodic_callback",
+    "outbound_anomaly",
+    "critical_correlated_incident"
+  ],
+  "synthetic_time_display": "capture_relative",
+  "pdf_updated": false
+}

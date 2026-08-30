@@ -13,9 +13,11 @@ from test_api_store import ALERT, INCIDENT
 class DemoReliabilityTests(unittest.TestCase):
     def build_demo_root(self, root: Path) -> None:
         output = root / "output"
+        models = output / "models"
         frontend = root / "web" / "dist"
-        output.mkdir(parents=True)
+        models.mkdir(parents=True)
         frontend.mkdir(parents=True)
+        (models / "dns_dga_demo.json").write_text("{}\n", encoding="utf-8")
         (frontend / "index.html").write_text("<html>Drastha</html>", encoding="utf-8")
         (output / "sprint4_incidents.jsonl").write_text(
             json.dumps(INCIDENT) + "\n", encoding="utf-8"

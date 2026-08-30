@@ -1,229 +1,573 @@
 # Drastha
 
-Drastha is a passive network-security analytics platform for one-way monitoring environments. The codebase is being built as a sequence of testable vertical slices.
+**Passive AI-assisted cyber-threat intelligence for one-way IP networks.**
 
-The current Sprint 0-5 implementation can:
+Drastha watches network metadata without sending packets back to the protected
+network. It detects suspicious behaviour, gives every finding a clear label and
+confidence score, connects related findings into incidents, calculates an
+investigation priority, and shows the supporting evidence on a dashboard.
 
-- replay Zeek `conn.log` JSON lines;
-- normalize them into a shared network-event contract;
-- track source fan-out in a sliding window;
-- detect vertical port scans and horizontal host scans;
-- detect SYN-flood and UDP-flood behaviour;
-- emit evidence-rich JSON alerts with confidence and severity.
-- report replay health, event span, ordering and processing rate;
-- invoke Zeek for raw-PCAP conversion when a Zeek executable is available.
-- parse Zeek `dns.log` JSON lines without forcing DNS fields into connection events;
-- detect DGA-like registered domains with an inspectable character 3-gram model;
-- detect DNS-tunnelling windows using volume, subdomain diversity, length and entropy;
-- enforce duplicate-domain and malicious-family separation between ML train/test splits;
-- generate measured model metrics and a limitation-focused model card.
-- detect periodic C2-like callbacks using interval, jitter and size consistency;
-- enrich C2 evidence with TLS/QUIC metadata without decrypting payloads;
-- guarantee that a fingerprint alone cannot trigger a C2 alert.
-- detect outbound-volume anomalies using byte direction and a per-source baseline;
-- suppress approved backup destinations;
-- correlate cross-detector alerts into deterministic, evidence-rich incidents;
-- deduplicate repeated alert IDs and validate analyst-feedback dispositions.
-- automatically persist correlated alerts and incidents when `DRASTHA_DB` is set;
-- restore exfiltration baselines, active windows, and cooldowns after process restarts;
-- restore prior alerts before correlation so multi-stage incidents can span separate runs;
-- persist incidents, alerts, statuses, and analyst feedback across restarts;
-- expose a FastAPI analyst service with health, queue, evidence, review, and export endpoints;
-- provide a responsive React/TypeScript incident dashboard;
-- present an SIH-ready attack-chain overview with capture-relative timestamps,
-  detector-grouped evidence, and responsive investigation workflows;
-- run locally with SQLite or as an offline Docker Compose bundle with PostgreSQL.
+The repository contains a complete offline SIH demonstration and the foundation
+of a production system. The SIH demo is complete; production hardening is still
+in progress.
 
-It does not capture live traffic, decrypt payloads, or send any response toward the monitored network.
+> Drastha is a defensive research prototype. Use it only with traffic and
+> systems that you are authorized to monitor. It does not automatically block
+> or attack another system.
 
-## Quick start
+## Contents
 
-From the project directory:
+- [What problem does Drastha solve?](#what-problem-does-drastha-solve)
+- [What can it detect?](#what-can-it-detect)
+- [How it works](#how-it-works)
+- [System requirements](#system-requirements)
+- [Clone and run on Windows](#clone-and-run-on-windows)
+- [Clone and run on Linux](#clone-and-run-on-linux)
+- [Run with Docker](#run-with-docker)
+- [How to use the dashboard](#how-to-use-the-dashboard)
+- [Analyse your own replay](#analyse-your-own-replay)
+- [Process a PCAP with Zeek](#process-a-pcap-with-zeek)
+- [Train the demonstration ML model](#train-the-demonstration-ml-model)
+- [Run the tests](#run-the-tests)
+- [Project structure](#project-structure)
+- [Current status and limitations](#current-status-and-limitations)
+- [Troubleshooting](#troubleshooting)
 
-```powershell
-python -m unittest discover -s tests -v
-$env:PYTHONPATH = "src"
-drastha replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-threshold 5
+## What problem does Drastha solve?
+
+Some critical networks use a network TAP or hardware data diode. Monitoring
+software can observe a copy of the traffic, but it must never communicate back
+to the protected network.
+
+Drastha is designed for that situation. It works with passively collected
+metadata such as:
+
+- source and destination addresses;
+- source and destination ports;
+- connection time and duration;
+- packet and byte counts;
+- DNS queries;
+- visible TLS or QUIC metadata;
+- connection state.
+
+It does not need to decrypt payloads, scan devices, inject packets, or open a
+return connection to the monitored network.
+
+## What can it detect?
+
+| Threat behaviour | Method | Evidence shown to the analyst |
+|---|---|---|
+| Vertical port scan | Behavioural fan-out analysis | Unique ports, target and time window |
+| Horizontal host scan | Behavioural fan-out analysis | Unique hosts, destination service and time window |
+| SYN flood | Traffic-rate analysis | Attempt count, incomplete ratio and source diversity |
+| UDP flood | Traffic-rate analysis | Packet volume, bytes and source diversity |
+| DGA-like domain | Character 3-gram Naive Bayes ML model | Model probability, domain and entropy context |
+| DNS tunnelling | Volume and entropy analysis | Query count, unique labels, length and entropy |
+| C2-style callback | Statistical timing analysis | Interval consistency, size consistency and connection count |
+| Possible data exfiltration | Adaptive baseline analysis | Outbound bytes, direction ratio and baseline comparison |
+
+Drastha deliberately uses a hybrid approach. ML is used where learning character
+patterns is useful. Clear statistical or behavioural methods are used where they
+are easier to explain and govern.
+
+## How it works
+
+```text
+Simulated stream, Zeek logs or PCAP
+                 |
+                 v
+        Passive normalization
+                 |
+                 v
+      Data quality validation
+                 |
+                 v
+  ML + behavioural threat detection
+                 |
+                 v
+  Label + confidence + evidence
+                 |
+                 v
+      Incident correlation
+                 |
+                 v
+ Transparent risk-priority scoring
+                 |
+                 v
+ SQLite/PostgreSQL -> API -> dashboard
 ```
 
-### Reliable SIH demo start
+The live demonstration streams 37 simulated DNS and connection observations
+one at a time. It produces four labelled findings and three incidents. The
+highest-priority incident combines a repeated callback with abnormal outbound
+transfer and receives a risk score of 100.
 
-Drastha's presentation path does not require Docker. It checks every required
-asset, resets a safe local SQLite demo database, loads the known attack story,
-and starts the API plus built dashboard with one command:
+Risk 100 means “investigate first.” It does **not** mean 100% certainty.
 
-On a fresh clone, run the one-time setup while internet is available:
+## System requirements
+
+### Required for the easiest local demo
+
+| Requirement | Minimum | Why it is needed |
+|---|---:|---|
+| Git | Recent version | Clone the repository |
+| Python | 3.11 or newer | Detection pipeline and API |
+| Node.js | 20 or newer | Build the dashboard |
+| pnpm or Corepack | Recent version | Install dashboard packages |
+| Browser | Current Chrome, Edge or Firefox | Open the dashboard |
+| Free disk space | About 2 GB recommended | Dependencies, build files and local database |
+| Memory | 4 GB recommended | Comfortable local demonstration |
+
+A GPU is **not required**.
+
+Internet access is required only for the first dependency installation. The
+normal SQLite demonstration works offline after setup.
+
+### Windows requirements
+
+- Windows 10 or Windows 11;
+- PowerShell 5.1 or newer;
+- Python added to `PATH`;
+- Node.js with Corepack or pnpm.
+
+WSL is optional. It is needed only when you want to process raw PCAP files with
+Zeek on Windows.
+
+### Linux requirements
+
+- A recent Linux distribution;
+- Python 3.11 or newer with `venv` support;
+- Node.js 20 or newer;
+- pnpm or Corepack.
+
+Zeek and Docker are optional.
+
+### Optional production-style tools
+
+- Docker Engine or Docker Desktop with Compose v2;
+- PostgreSQL 16 through the included Docker configuration;
+- Zeek 8 or a compatible recent release for raw PCAP conversion;
+- WSL2 with Ubuntu when using Zeek from Windows.
+
+## Clone and run on Windows
+
+### 1. Clone the repository
+
+```powershell
+git clone https://github.com/codeWith-Ashwani/Drastha.git
+cd Drastha
+```
+
+### 2. Run the one-time setup
+
+Keep the internet connected for this step:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/setup-demo.ps1
 ```
 
-On presentation day, no internet is required:
+The setup script:
+
+1. creates `.venv`;
+2. installs the Python API and detector dependencies;
+3. installs and builds the React dashboard;
+4. rehearses the complete demo twice.
+
+### 3. Start Drastha
 
 ```powershell
-$env:PYTHONPATH = "src"
-drastha demo-preflight --report-output output/drastha_demo_preflight.json
-drastha demo-serve --fresh
+powershell -ExecutionPolicy Bypass -File scripts/start-demo.ps1
 ```
 
-Open `http://127.0.0.1:8000`. The preflight report distinguishes required
-failures from optional capabilities such as Docker and Zeek. If Docker is not
-running, the same evidence, incident queue, and analyst workflow remain
-available through the SQLite offline fallback.
+Keep the PowerShell window open. The dashboard should open automatically at:
 
-The dashboard also includes **Analyse your own replay**. Judges can upload a
-Zeek connection replay as `.jsonl`, `.ndjson`, or a JSON array up to 5 MB. The
-local API validates the records, runs reconnaissance, flooding, C2-beacon and
-outbound-transfer checks, correlates findings, stores any incidents, and returns
-a plain-language evidence view. Use **Download a sample attack replay** in the
-dashboard for a known-good upload. Uploaded file contents are processed locally
-and are not retained as files.
+```text
+http://127.0.0.1:8000
+```
 
-Use **Start live IP simulation** to demonstrate the complete stated objective
-as a near-real-time stream. Drastha receives 37 passive DNS and connection
-observations one at a time over an accelerated demonstration clock. It emits a
-trained character n-gram DGA classification, a DNS-tunnelling finding, a
-statistical C2 callback finding and an adaptive-baseline exfiltration finding as
-their evidence thresholds are crossed. The monitoring-side event feed updates
-the dashboard with the label, method, confidence, evidence and evolving incident
-risk score. It never sends traffic to any endpoint represented in the stream.
+You can also right-click `scripts/start-demo.ps1` and choose **Run with
+PowerShell**.
 
-For the simplest Windows start, right-click `scripts/start-demo.ps1` and choose
-**Run with PowerShell**. It performs the preflight, opens the browser, and keeps
-the demo server running in the PowerShell window.
+## Clone and run on Linux
 
-To prepare the data without starting the server:
+The Windows scripts are the most thoroughly tested setup path. On Linux, run
+the equivalent commands manually:
+
+```bash
+git clone https://github.com/codeWith-Ashwani/Drastha.git
+cd Drastha
+
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e ".[api]"
+
+cd web
+corepack enable
+pnpm install --frozen-lockfile
+pnpm run build
+cd ..
+
+export PYTHONPATH="$PWD/src"
+python -m aegisflow.cli demo-rehearse --evaluation-iterations 50
+python -m aegisflow.cli demo-serve --fresh
+```
+
+Then open `http://127.0.0.1:8000`.
+
+If `corepack` is unavailable, install pnpm using the official pnpm
+installation instructions and repeat the dashboard commands.
+
+## Run with Docker
+
+Docker runs the dashboard and API with PostgreSQL. It is optional for the SIH
+demo.
 
 ```powershell
-drastha demo-prepare --fresh --report-output output/drastha_demo_prepare_report.json
+git clone https://github.com/codeWith-Ashwani/Drastha.git
+cd Drastha
+docker compose up --build
 ```
 
-Generate evidence for the judges with the same versioned fixtures:
+Open `http://127.0.0.1:8000`.
+
+Stop the containers with:
 
 ```powershell
-drastha evaluate-demo --iterations 250 --report-output output/drastha_evaluation_report.json
+docker compose down
 ```
 
-The report keeps reconnaissance, DDoS, DNS, C2, and exfiltration results
-separate and records detector-only timing. It deliberately labels these as
-synthetic scenario checks—not production accuracy or false-positive rates.
+The PostgreSQL data is stored in the `drastha-data` Docker volume. The password
+in `docker-compose.yml` is for the local demonstration only and must be replaced
+before any shared deployment.
 
-Before presenting, verify the complete path twice from a clean rehearsal database:
+## How to use the dashboard
 
-```powershell
-drastha demo-rehearse --evaluation-iterations 50
-```
+### Live one-way stream demonstration
 
-See `docs/DEMO_WALKTHROUGH.md` for the two-minute and five-minute presentation
-scripts, recovery steps, and judge-facing explanation of what is live versus simulated.
+1. Open the dashboard.
+2. Confirm **Sensor online**, **SQLite storage**, and **One-way monitoring**.
+3. Click **Start live IP simulation**.
+4. Watch records arrive one at a time.
+5. Observe the alerts appear while the stream is still running.
+6. Confirm the final result:
 
-To save alerts:
+   - 37 records analysed;
+   - 4 labelled alerts;
+   - 3 incidents;
+   - highest risk score 100.
 
-```powershell
-$env:PYTHONPATH = "src"
-drastha replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-threshold 5 --output output/recon_alerts.jsonl
-```
+The four findings demonstrate:
 
-Sprint 1 DDoS replay:
+- real inference from the trained DGA ML model;
+- DNS tunnelling analysis;
+- repeated C2-style callback detection;
+- abnormal outbound-transfer detection.
 
-```powershell
-$env:PYTHONPATH = "src"
-drastha replay --input examples/zeek_conn_ddos.jsonl --detectors ddos --syn-threshold 5 --udp-packet-threshold 500 --output output/sprint1_demo_alerts.jsonl --health-output output/sprint1_health.json
-```
+Click **Open scored intelligence** to see the attack timeline, confidence,
+observed values, comparisons, explanations, limitations and score calculation.
 
-Check raw-PCAP readiness:
+### Instant attack replay
+
+Use **Run instant replay** when you need a shorter demonstration. It runs the C2
+and exfiltration attack story immediately and stores one correlated incident.
+
+### Analyst workflow
+
+Open an incident to:
+
+- change the status;
+- record a malicious, benign or needs-review decision;
+- add investigation notes;
+- inspect every contributing alert;
+- export the complete incident as JSON.
+
+## Analyse your own replay
+
+The dashboard accepts a safe Zeek connection replay in one of these formats:
+
+- `.jsonl`;
+- `.ndjson`;
+- a `.json` array.
+
+Maximum upload size: 5 MB.
+
+Use **Download a sample attack replay** if you want a known-good example. Drag
+the file into **Analyse your own replay** or choose it using the file picker.
+
+The uploaded content is:
+
+1. validated;
+2. normalized;
+3. analysed by the configured detectors;
+4. correlated and scored;
+5. displayed as plain-language intelligence.
+
+The original uploaded file is not retained by the local application.
+
+Raw PCAP files are not accepted directly by the browser. Convert them through
+Zeek using the command-line path below.
+
+## Process a PCAP with Zeek
+
+### Check whether Zeek is available
+
+Activate the virtual environment first, then run:
 
 ```powershell
 $env:PYTHONPATH = "src"
 drastha check-zeek
 ```
 
-On Windows, `auto` mode uses Zeek installed inside WSL. A custom distribution or
-Zeek location can be selected with `--wsl-distro Ubuntu` and
-`--zeek-binary /opt/zeek/bin/zeek`.
+### Windows
 
-Once Zeek is installed:
-
-```powershell
-$env:PYTHONPATH = "src"
-drastha pcap --input path/to/capture.pcap --zeek-output output/zeek --output output/pcap_alerts.jsonl --health-output output/pcap_health.json
-```
-
-Train and evaluate the Sprint 2 demonstration DNS model:
+Install WSL2, Ubuntu and Zeek inside the Linux environment. Drastha's automatic
+mode will use the WSL Zeek executable when it is available.
 
 ```powershell
 $env:PYTHONPATH = "src"
-drastha train-dns --dataset examples/dns_training_demo.csv --model-output output/models/dns_dga_demo.json --metrics-output output/dns_model_metrics.json --model-card-output output/DNS_MODEL_CARD.md
+drastha pcap `
+  --input path\to\capture.pcap `
+  --zeek-output output\zeek `
+  --output output\pcap_alerts.jsonl `
+  --health-output output\pcap_health.json
 ```
 
-Replay the DNS threat demonstration:
+### Linux
+
+Install Zeek and ensure the `zeek` command is available on `PATH`, then run:
+
+```bash
+export PYTHONPATH="$PWD/src"
+drastha pcap \
+  --input path/to/capture.pcap \
+  --zeek-output output/zeek \
+  --output output/pcap_alerts.jsonl \
+  --health-output output/pcap_health.json
+```
+
+Only process captures that you are authorized to inspect. Raw `.pcap` and
+`.pcapng` files are ignored by Git so they are not accidentally committed.
+
+## Train the demonstration ML model
+
+The repository includes a versioned demonstration model so a fresh clone works
+immediately. To retrain it from the bundled dataset:
+
+### Windows PowerShell
 
 ```powershell
 $env:PYTHONPATH = "src"
-drastha dns-replay --input examples/zeek_dns_threats.jsonl --model output/models/dns_dga_demo.json --output output/sprint2_dns_alerts.jsonl --report-output output/sprint2_dns_report.json
+drastha train-dns `
+  --dataset examples/dns_training_demo.csv `
+  --model-output output/models/dns_dga_demo.json `
+  --metrics-output output/dns_model_metrics.json `
+  --model-card-output output/DNS_MODEL_CARD.md
 ```
 
-Replay the Sprint 3 C2 beacon demonstration:
+### Linux
 
-```powershell
-$env:PYTHONPATH = "src"
-drastha c2-replay --input examples/zeek_conn_beacon.jsonl --encrypted-input examples/zeek_ssl_beacon.jsonl --output output/sprint3_c2_alerts.jsonl --report-output output/sprint3_c2_report.json
+```bash
+export PYTHONPATH="$PWD/src"
+drastha train-dns \
+  --dataset examples/dns_training_demo.csv \
+  --model-output output/models/dns_dga_demo.json \
+  --metrics-output output/dns_model_metrics.json \
+  --model-card-output output/DNS_MODEL_CARD.md
 ```
 
-Replay Sprint 4 exfiltration behaviour and correlate it with the C2 alert:
+The bundled dataset is intentionally small. Its results prove that training,
+inference, leakage checks, metrics and model-card generation work. They are not
+a production accuracy claim.
+
+## Run the tests
+
+### Windows
 
 ```powershell
-$env:PYTHONPATH = "src"
-drastha exfil-replay --input examples/zeek_conn_exfil.jsonl --output output/sprint4_exfil_alerts.jsonl --report-output output/sprint4_exfil_report.json
-drastha correlate-alerts --input output/sprint3_c2_alerts.jsonl --input output/sprint4_exfil_alerts.jsonl --output output/sprint4_incidents.jsonl --report-output output/sprint4_incident_report.json
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Set `DRASTHA_DB` before `exfil-replay` to checkpoint its baseline and active
-window state. The next process restores that state automatically. Use
-`--reset-state` only when intentionally starting a new baseline.
+### Linux
 
-When the analyst database is configured, the same command writes directly to
-SQLite or PostgreSQL as part of correlation. No separate demo-import step is needed:
-
-```powershell
-$env:DRASTHA_DB = "output/drastha.db"
-drastha correlate-alerts --input output/sprint3_c2_alerts.jsonl --input output/sprint4_exfil_alerts.jsonl --output output/sprint4_incidents.jsonl --report-output output/sprint4_incident_report.json
+```bash
+source .venv/bin/activate
+python -m unittest discover -s tests -v
 ```
 
-Replaying the same alerts is idempotent and does not reset an analyst's incident status.
+The current repository contains 74 automated tests covering ingestion,
+detectors, ML training, correlation, persistence, API workflows, replay upload,
+near-real-time streaming, telemetry quality, PCAP integration and restart
+behaviour.
 
-For frontend development, run the Sprint 5 analyst console manually:
+Build the dashboard separately with:
 
-```powershell
-python -m pip install -e ".[api]"
+```bash
 cd web
-pnpm install
 pnpm run build
-cd ..
-$env:DRASTHA_ROOT = (Get-Location).Path
-$env:DRASTHA_WEB = (Join-Path (Get-Location).Path "web/dist")
-python -m uvicorn aegisflow.api:app --host 127.0.0.1 --port 8000
 ```
 
-Open `http://127.0.0.1:8000`, then use **Load demo data** if the queue is empty.
-For the PostgreSQL deployment, run `docker compose up --build` on a machine with
-Docker Desktop or Docker Engine installed.
+## Useful verification commands
 
-## Current boundaries
+Run the pre-presentation check:
 
-- Raw-PCAP execution requires an external Zeek installation; the adapter fails clearly when it is absent.
-- Reconnaissance, DDoS, DNS, C2 beacon, exfiltration, correlation, persistent API,
-  and dashboard workflows are implemented as demonstrable slices.
-- The DNS model is trained on a tiny synthetic fixture to verify the pipeline. Production claims require licensed, versioned datasets and deployment-specific calibration.
-- DNS-over-HTTPS is not visible from ordinary Zeek DNS logs unless telemetry is collected before encryption.
-- Confidence is a transparent heuristic pending calibration on labelled data.
-- Severity is policy-based and does not claim operational impact knowledge.
-- The sample thresholds and seven-event throughput figure are smoke-test values, not production benchmarks.
-- The repeatable evaluation report measures small in-memory synthetic fixtures;
-  packet capture, Zeek conversion, database, API, and UI latency are excluded.
-- Docker Compose is verified on Windows with Docker Desktop 4.88.1, Docker Engine
-  29.7.2, Compose 5.4.0, and the PostgreSQL 16 Alpine image.
-- Automatic correlation-to-database persistence is verified against the PostgreSQL
-  Docker deployment; a repeated run preserved the analyst status and created no duplicate.
+```powershell
+$env:PYTHONPATH = "src"
+drastha demo-preflight --report-output output/drastha_demo_preflight.json
+```
 
-See [docs/STATUS.md](docs/STATUS.md) for current progress and [docs/SPRINTS.md](docs/SPRINTS.md) for the full implementation plan and acceptance criteria.
+Run every controlled threat scenario and generate a report:
+
+```powershell
+$env:PYTHONPATH = "src"
+drastha evaluate-demo --iterations 250 `
+  --report-output output/drastha_evaluation_report.json
+```
+
+Rehearse the complete demo twice and check duplicate protection:
+
+```powershell
+$env:PYTHONPATH = "src"
+drastha demo-rehearse --evaluation-iterations 50
+```
+
+## Project structure
+
+```text
+Drastha/
+├── src/aegisflow/          Python ingestion, detectors, ML, API and storage
+│   ├── detectors/          Recon, DDoS, DNS, C2 and exfiltration detectors
+│   └── ingestion/          Zeek connection, DNS, TLS/QUIC and PCAP adapters
+├── web/                    React and TypeScript dashboard
+├── examples/               Safe, versioned demonstration traffic
+├── tests/                  Automated test suite
+├── output/                 Model, reports and demonstration evidence
+├── deploy/postgres/        PostgreSQL schema
+├── scripts/                Windows setup and start scripts
+├── docs/                   Architecture, status, sprints and demo guides
+├── Dockerfile              Container image definition
+├── docker-compose.yml      API, dashboard and PostgreSQL deployment
+└── pyproject.toml          Python package and dependency definition
+```
+
+The installed product command is named `drastha`. The internal Python package is
+still called `aegisflow` for compatibility with earlier development history.
+
+## API endpoints
+
+The FastAPI service exposes endpoints under `/api`, including:
+
+- `/api/health` — service and storage health;
+- `/api/incidents` — prioritized incident queue;
+- `/api/incidents/{id}` — complete evidence and timeline;
+- `/api/replays/analyse` — analyse a browser-uploaded replay;
+- `/api/stream/simulated` — monitoring-side near-real-time demonstration feed;
+- `/api/metrics` — incident summary metrics.
+
+FastAPI's generated API documentation is available at `/docs` when the static
+dashboard catch-all is not taking precedence in a custom development setup.
+
+## Passive-safety properties
+
+- No network-scanning function exists in the pipeline.
+- No detector sends packets to a monitored source or destination.
+- TLS and QUIC payloads are not decrypted.
+- Fingerprints can support context but cannot trigger a C2 alert alone.
+- Automatic blocking is intentionally outside the passive monitoring boundary.
+- Bad or excessively damaged telemetry is reported instead of silently accepted.
+
+## Current status and limitations
+
+### Completed for the SIH demonstration
+
+- passive simulated streaming;
+- Zeek JSONL ingestion and normalization;
+- raw PCAP-to-Zeek adapter;
+- ML, behavioural and statistical detection paths;
+- evidence-rich labelled alerts;
+- confidence, severity and transparent risk scoring;
+- cross-detector correlation;
+- SQLite and PostgreSQL persistence;
+- responsive analyst dashboard;
+- analyst review and evidence export;
+- Docker deployment;
+- offline setup, preflight and recovery workflow.
+
+### Still required for production
+
+- continuous live Zeek log following instead of the simulated dashboard stream;
+- licensed and versioned external datasets;
+- deployment-specific threshold and confidence calibration;
+- measured false-positive and false-negative rates;
+- queue backpressure, checkpoints and multi-sensor ordering;
+- sustained throughput, latency and resource testing;
+- authentication and role-based access control;
+- encryption, secret management and tamper-evident audit logs;
+- high availability, backups and upgrade testing;
+- SIEM/SOAR integration and operational governance.
+
+The current production-readiness estimate is approximately 40%. See
+[`docs/PRODUCTION_LIMITATIONS.md`](docs/PRODUCTION_LIMITATIONS.md) for the full
+backlog and [`docs/STATUS.md`](docs/STATUS.md) for verified progress.
+
+## Troubleshooting
+
+### Python is not found
+
+Install Python 3.11 or newer and enable **Add Python to PATH**, then open a new
+terminal.
+
+### PowerShell blocks the script
+
+Run it using the explicit bypass command:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/setup-demo.ps1
+```
+
+### pnpm is not found
+
+Install a current Node.js release, then run:
+
+```powershell
+corepack enable
+```
+
+Run the setup script again afterward.
+
+### Port 8000 is already in use
+
+```powershell
+$env:PYTHONPATH = "src"
+.\.venv\Scripts\python.exe -m aegisflow.cli demo-serve --fresh --port 8001
+```
+
+Then open `http://127.0.0.1:8001`.
+
+### Docker is unavailable
+
+Use the normal SQLite setup. Docker is not required for the dashboard, live
+simulation, upload analysis, evidence review or export.
+
+### Zeek or WSL is unavailable
+
+Use the included Zeek-style demonstration files. Zeek is required only for
+converting a new raw PCAP.
+
+### The incident does not appear
+
+Run **Start live IP simulation** again. Replaying the same evidence is safe and
+does not create duplicate incidents.
+
+### Full recovery and presentation guide
+
+See [`docs/FINAL_JUDGE_DEMO_GUIDE.md`](docs/FINAL_JUDGE_DEMO_GUIDE.md).
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Build walkthrough](docs/BUILD_WALKTHROUGH.md)
+- [Sprint plan](docs/SPRINTS.md)
+- [Current status](docs/STATUS.md)
+- [Production limitations](docs/PRODUCTION_LIMITATIONS.md)
+- [Final SIH demonstration guide](docs/FINAL_JUDGE_DEMO_GUIDE.md)

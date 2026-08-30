@@ -21,7 +21,8 @@ data/downloads/
 
 # Generated or machine-specific artifacts
 tmp/
-output/models/
+output/models/*
+!output/models/dns_dga_demo.json
 output/real_*
 output/*.db
 web/node_modules/

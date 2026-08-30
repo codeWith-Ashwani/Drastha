@@ -7,6 +7,12 @@
       "required": true
     },
     {
+      "detail": "output/models/dns_dga_demo.json",
+      "name": "output/models/dns_dga_demo.json",
+      "passed": true,
+      "required": true
+    },
+    {
       "detail": "output/sprint4_incidents.jsonl",
       "name": "output/sprint4_incidents.jsonl",
       "passed": true,
@@ -64,7 +70,7 @@
   "fallback_mode": "sqlite_offline",
   "product": "Drastha",
   "ready": true,
-  "required_passed": 8,
-  "required_total": 8,
+  "required_passed": 9,
+  "required_total": 9,
   "root": "."
 }

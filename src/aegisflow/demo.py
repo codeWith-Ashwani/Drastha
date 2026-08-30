@@ -22,6 +22,7 @@ from aegisflow.telemetry_quality import load_jsonl_resilient
 
 
 DEMO_FILES = (
+    "output/models/dns_dga_demo.json",
     "output/sprint4_incidents.jsonl",
     "output/sprint3_c2_alerts.jsonl",
     "output/sprint4_exfil_alerts.jsonl",

@@ -12,6 +12,8 @@
   "pipeline_stages_visible": 7,
   "pipeline_stage_counts_and_timings_visible": true,
   "implementation_details_abstracted": true,
+  "theme": "black_and_electric_blue",
+  "severity_colors_preserved": ["critical_red", "high_amber"],
   "attack_chain_visible": [
     "periodic_callback",
     "outbound_anomaly",

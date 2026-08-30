@@ -136,24 +136,31 @@ Point to the attack-chain card and say:
 
 ### 1:05–1:40 — run attack-to-detection pipeline
 
-Click **Replay attack**.
+Click **Start live IP simulation** for the strongest demonstration of the
+problem statement. Records arrive one at a time and labelled alerts appear as
+soon as evidence crosses a detector threshold. Point out the DGA alert's
+**Character n-gram ML model** method, then the statistical DNS-tunnel and C2
+findings and the adaptive-baseline outbound-transfer finding. The final view
+shows 37 records, four labelled alerts, three incidents and a highest correlated
+risk score of 100.
+
+Use **Run instant replay** when presentation time is limited.
 
 While it runs, say:
 
 > “This button is not playing an animation or loading a final screenshot. It
-> reparses the telemetry, runs the C2 and exfiltration detectors, correlates the
-> alerts and persists the resulting incident.”
+> receives individual simulated DNS and IP-flow observations, performs ML and
+> behavioural inference, scores related evidence and persists the resulting
+> intelligence.”
 
-Keep the **Attack-to-dashboard pipeline** in view while its seven stages appear
-sequentially. Point to each top-level stage:
+Keep the **One-way stream monitor** in view while records and alerts update.
+Then point to the five summarized stages:
 
-1. Passive ingestion — accepted one-way connection and TLS records.
-2. Quality validation — accepted/rejected counts and telemetry health.
-3. C2 timing analysis — alert count and measured stage time.
-4. Exfiltration analysis — alert count and measured stage time.
-5. Incident correlation — critical incident created from both alerts.
-6. Evidence persistence — incident and contributing evidence stored.
-7. Dashboard delivery — incident published through the analyst API.
+1. Receive stream — accepted passive DNS and connection records.
+2. Check data — validated each incoming observation.
+3. Detect and classify — produced labelled ML and behavioural findings.
+4. Score intelligence — correlated evidence and calculated investigation risk.
+5. Update dashboard — published the result for analyst review.
 
 Explain that judges are seeing the real execution result, counts and measured
 timings. Detector implementation and sensitive operational details remain
@@ -172,7 +179,7 @@ not full production PCAP-to-dashboard latency.
 
 ### 1:40–3:10 — investigate the incident
 
-Click **Investigate top incident**.
+Click **Open scored intelligence**.
 
 Show the following in order:
 
@@ -329,7 +336,7 @@ an optional extension, not a primary demo dependency.
 
 ### Incident does not appear
 
-Click **Replay attack**, wait for the completion message, then press the refresh
+Click **Run instant replay**, wait for the completion message, then press the refresh
 icon. If telemetry is unavailable, run:
 
 ```powershell

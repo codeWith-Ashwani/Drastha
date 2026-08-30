@@ -79,6 +79,15 @@ a plain-language evidence view. Use **Download a sample attack replay** in the
 dashboard for a known-good upload. Uploaded file contents are processed locally
 and are not retained as files.
 
+Use **Start live IP simulation** to demonstrate the complete stated objective
+as a near-real-time stream. Drastha receives 37 passive DNS and connection
+observations one at a time over an accelerated demonstration clock. It emits a
+trained character n-gram DGA classification, a DNS-tunnelling finding, a
+statistical C2 callback finding and an adaptive-baseline exfiltration finding as
+their evidence thresholds are crossed. The monitoring-side event feed updates
+the dashboard with the label, method, confidence, evidence and evolving incident
+risk score. It never sends traffic to any endpoint represented in the stream.
+
 For the simplest Windows start, right-click `scripts/start-demo.ps1` and choose
 **Run with PowerShell**. It performs the preflight, opens the browser, and keeps
 the demo server running in the PowerShell window.

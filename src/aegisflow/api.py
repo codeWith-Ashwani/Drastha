@@ -9,12 +9,13 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from aegisflow.api_store import IncidentRepository, read_jsonl, repository_from_url
 from aegisflow.demo import run_attack_story
 from aegisflow.upload_analysis import analyse_uploaded_replay
+from aegisflow.streaming_demo import stream_simulated_ip_traffic
 
 
 class StatusUpdate(BaseModel):
@@ -176,6 +177,21 @@ def create_app(repository: IncidentRepository | None = None) -> FastAPI:
         if not sample.is_file():
             raise HTTPException(status_code=404, detail="sample replay unavailable")
         return FileResponse(sample, filename="drastha-judge-attack-replay.jsonl")
+
+    @app.get("/api/stream/simulated")
+    def simulated_stream(
+        interval: float = Query(default=0.10, ge=0.0, le=1.0),
+    ) -> StreamingResponse:
+        root = Path(os.getenv("DRASTHA_ROOT") or os.getenv("AEGISFLOW_ROOT", Path.cwd()))
+        return StreamingResponse(
+            stream_simulated_ip_traffic(root, store, interval_seconds=interval),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+                "X-Drastha-Passive": "true",
+            },
+        )
 
     frontend = Path(os.getenv("DRASTHA_WEB") or os.getenv("AEGISFLOW_WEB", "web/dist"))
     if frontend.exists():

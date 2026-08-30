@@ -2,7 +2,7 @@
   "product": "Drastha",
   "sprint": "demo_ui",
   "production_build": true,
-  "automated_tests_passing": 73,
+  "automated_tests_passing": 74,
   "desktop_visual_review": true,
   "mobile_width_tested_px": 390,
   "mobile_visual_review": true,
@@ -24,6 +24,21 @@
     "data_quality": "healthy"
   },
   "plain_language_insight_view_verified": true,
+  "near_real_time_stream_verified": true,
+  "passive_return_path_required": false,
+  "stream_result": {
+    "records": 37,
+    "labelled_alerts": 4,
+    "incidents": 3,
+    "highest_risk_score": 100
+  },
+  "ml_inference_visible": "character_ngram_dga_classification",
+  "hybrid_methods_visible": [
+    "character_ngram_ml",
+    "dns_volume_entropy",
+    "statistical_timing",
+    "adaptive_baseline"
+  ],
   "severity_colors_preserved": ["critical_red", "high_amber"],
   "attack_chain_visible": [
     "periodic_callback",

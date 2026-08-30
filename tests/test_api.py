@@ -110,6 +110,36 @@ class AnalystAPITests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("beacon-1", response.text)
 
+    def test_simulated_stream_emits_near_real_time_labelled_intelligence(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        with patch.dict("os.environ", {"DRASTHA_ROOT": str(root)}):
+            response = self.client.get("/api/stream/simulated?interval=0")
+        self.assertEqual(response.status_code, 200)
+        messages = [
+            __import__("json").loads(line.removeprefix("data: "))
+            for line in response.text.splitlines()
+            if line.startswith("data: ")
+        ]
+        self.assertEqual(messages[0]["type"], "started")
+        self.assertFalse(messages[0]["return_path_required"])
+        traffic = [item for item in messages if item["type"] == "traffic"]
+        alerts = [item for item in messages if item["type"] == "alert"]
+        self.assertEqual(len(traffic), 37)
+        self.assertEqual({item["alert"]["threat_type"] for item in alerts}, {
+            "dns_threat", "command_and_control", "data_exfiltration",
+        })
+        ml_alerts = [item for item in alerts if item["alert"]["subtype"] == "dga_like_domain"]
+        self.assertTrue(ml_alerts)
+        self.assertEqual(ml_alerts[0]["detection_method"], "Character n-gram ML model")
+        for item in alerts:
+            self.assertIn("confidence", item["alert"])
+            self.assertTrue(item["alert"]["evidence"])
+            self.assertTrue(item["detection_method"])
+            self.assertIn("risk_score", item["incident"])
+        self.assertEqual(messages[-1]["type"], "complete")
+        self.assertTrue(messages[-1]["near_real_time"])
+        self.assertTrue(messages[-1]["passive"])
+
 
 if __name__ == "__main__":
     unittest.main()

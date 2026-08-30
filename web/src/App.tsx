@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity, ArrowRight, Check, ChevronRight, CircleAlert, Download, Eye,
-  FileJson, FileUp, Filter, Network, RefreshCw, Search, Shield, X,
+  FileJson, FileUp, Filter, Network, Radio, RefreshCw, Search, Shield, X,
 } from "lucide-react";
 
 type Evidence = { name: string; observed: number | string; comparison: string; explanation: string };
@@ -25,6 +25,16 @@ type UploadResult = {
   verdict: string; headline: string; summary: string; filename: string; file_size_bytes: number;
   analysis_ms: number; quality: { status: string; records_accepted: number; records_rejected: number; errors: string[] };
   alerts: Alert[]; incidents: Incident[]; top_incident_id?: string; stages: DemoStage[]; scope_note: string;
+};
+type StreamRecord = {
+  timestamp: number; flow_id: string; src_ip: string; dst_ip: string; protocol: string;
+  dst_port: number; outbound_bytes: number; inbound_bytes: number; record_kind?: string; query?: string;
+};
+type StreamFinding = { alert: Alert; detection_method: string; incident: Incident };
+type StreamState = {
+  status: "running" | "complete" | "error"; processed: number; total: number;
+  latest?: StreamRecord; findings: StreamFinding[]; topIncidentId?: string;
+  riskScore: number; elapsedMs?: number;
 };
 
 const API = "/api";
@@ -70,7 +80,9 @@ function App() {
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [stream, setStream] = useState<StreamState | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const eventSource = useRef<EventSource | null>(null);
 
   const refresh = async (keepSelection = true) => {
     setLoading(true);
@@ -82,7 +94,10 @@ function App() {
     } catch (error) { setMessage((error as Error).message); }
     finally { setLoading(false); }
   };
-  useEffect(() => { void refresh(false); }, []);
+  useEffect(() => {
+    void refresh(false);
+    return () => eventSource.current?.close();
+  }, []);
 
   const filtered = useMemo(() => incidents.filter((item) => {
     const text = `${item.src_ip} ${item.incident_id} ${item.threat_types.join(" ")}`.toLowerCase();
@@ -106,6 +121,46 @@ function App() {
       setMessage(`Replay complete. A critical incident was created in ${result.elapsed_ms ?? "—"} ms.`);
     } catch (error) { setMessage((error as Error).message); }
     finally { setRunning(false); }
+  };
+  const startLiveStream = () => {
+    eventSource.current?.close();
+    setUploadResult(null); setStream({ status: "running", processed: 0, total: 0, findings: [], riskScore: 0 });
+    setMessage("Listening to the simulated one-way IP stream…");
+    let finished = false;
+    const source = new EventSource(`${API}/stream/simulated`);
+    eventSource.current = source;
+    source.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === "started") {
+        setStream((current) => current ? { ...current, total: data.total_records } : current);
+      } else if (data.type === "traffic") {
+        setStream((current) => current ? { ...current, processed: data.processed, total: data.total_records, latest: data.record } : current);
+      } else if (data.type === "alert") {
+        setStream((current) => current ? {
+          ...current, processed: data.processed,
+          findings: [...current.findings, { alert: data.alert, detection_method: data.detection_method, incident: data.incident }],
+          topIncidentId: data.incident.incident_id,
+          riskScore: Math.max(current.riskScore, data.incident.risk_score),
+        } : current);
+      } else if (data.type === "complete") {
+        finished = true; source.close();
+        setStream((current) => current ? { ...current, status: "complete", processed: data.processed, total: data.total_records, topIncidentId: data.top_incident_id, riskScore: data.risk_score, elapsedMs: data.elapsed_ms } : current);
+        setDemoRun({ status: "completed", telemetry_status: "healthy", elapsed_ms: data.elapsed_ms, stages: [
+          { name: "Receive stream", status: "completed", detail: "Accepted passive IP records", records: data.processed },
+          { name: "Check data", status: "healthy", detail: "Validated incoming records", records: data.processed },
+          { name: "Detect and classify", status: data.alerts ? "detected" : "no_alert", detail: "Ran behavioural and ML-capable detection paths", alerts: data.alerts },
+          { name: "Score intelligence", status: data.risk_score >= 80 ? "critical" : "completed", detail: "Correlated evidence and calculated priority", incidents: data.incidents },
+          { name: "Update dashboard", status: "ready", detail: "Published labelled intelligence for review", incidents: data.incidents },
+        ] });
+        setVisibleStages(5);
+        void Promise.all([api<Incident[]>("/incidents"), api<Metrics>("/metrics")]).then(([queue, summary]) => { setIncidents(queue); setMetrics(summary); });
+        setMessage(`Live analysis complete: ${data.alerts} labelled findings, risk ${data.risk_score}/100.`);
+      }
+    };
+    source.onerror = () => {
+      source.close();
+      if (!finished) { setStream((current) => current ? { ...current, status: "error" } : current); setMessage("The live stream stopped before analysis completed."); }
+    };
   };
   const analyseFile = async (file?: File) => {
     if (!file) return;
@@ -148,7 +203,7 @@ function App() {
 
     <main id="top">
       <section className="workbench">
-        <div className="intro"><p className="eyebrow">Threat investigation</p><h1>Understand what happened on the network.</h1><p>Run our known scenario or upload a safe network replay. Drastha explains the behaviour it found and the evidence behind it.</p><button className="primary" disabled={running || uploading} onClick={runDemo}><Activity size={16} />{running ? "Analysing replay…" : "Run known attack replay"}</button></div>
+        <div className="intro"><p className="eyebrow">Passive near-real-time intelligence</p><h1>Watch threats emerge from a one-way IP stream.</h1><p>Drastha passively receives simulated network records, detects and classifies suspicious behaviour, scores the risk and publishes explainable alerts as the stream arrives.</p><div className="intro-actions"><button className="primary" disabled={stream?.status === "running" || running || uploading} onClick={startLiveStream}><Radio size={16} />{stream?.status === "running" ? "Stream running…" : "Start live IP simulation"}</button><button className="text-button" disabled={running || stream?.status === "running"} onClick={runDemo}><Activity size={14} />Run instant replay</button></div></div>
         <div className="upload-card">
           <div className="upload-title"><FileUp size={19} /><div><b>Analyse your own replay</b><span>Zeek connection records · JSONL or JSON · up to 5 MB</span></div></div>
           <button className={`dropzone ${dragging ? "dragging" : ""}`} disabled={uploading || running} onClick={() => fileInput.current?.click()} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); void analyseFile(event.dataTransfer.files[0]); }}>
@@ -158,6 +213,20 @@ function App() {
           <a className="sample-link" href="/api/replays/sample"><Download size={14} />Download a sample attack replay</a>
         </div>
       </section>
+
+      {stream && <section className={`live-panel live-${stream.status}`}>
+        <div className="live-head"><div><p className="eyebrow">One-way stream monitor</p><h2>{stream.status === "running" ? "Analysing traffic as it arrives" : stream.status === "complete" ? "Stream analysis complete" : "Stream interrupted"}</h2><p>No packets or commands are sent back to the simulated protected network.</p></div><span className="live-state"><i />{stream.status === "running" ? "Live" : stream.status}</span></div>
+        <div className="stream-progress"><div><span>Records analysed</span><b>{stream.processed} / {stream.total || "—"}</b></div><progress value={stream.processed} max={stream.total || 1} /></div>
+        <div className="stream-summary">
+          <div><span>Labelled alerts</span><b>{stream.findings.length}</b></div>
+          <div><span>Current risk</span><b>{stream.riskScore}/100</b></div>
+          <div><span>Collection mode</span><b>Passive only</b></div>
+          <div><span>Response path</span><b>None</b></div>
+        </div>
+        {stream.latest && <div className="latest-record"><span>Latest observation</span><b>{stream.latest.src_ip} <ArrowRight size={12} /> {stream.latest.dst_ip}:{stream.latest.dst_port}</b><small>{stream.latest.record_kind === "dns" ? `DNS query · ${stream.latest.query}` : `${stream.latest.protocol.toUpperCase()} · ${stream.latest.outbound_bytes.toLocaleString()} bytes out · flow ${stream.latest.flow_id}`}</small></div>}
+        {stream.findings.length > 0 ? <div className="live-findings">{stream.findings.map((item) => <article key={item.alert.alert_id}><div><span className={`severity severity-${item.alert.severity}`}>{item.alert.severity}</span><b>{label(item.alert.subtype)}</b></div><strong>{Math.round(item.alert.confidence * 100)}% confidence</strong><p>{item.detection_method}</p><small>{item.alert.evidence[0]?.explanation}</small></article>)}</div> : <div className="listening"><Radio size={15} /><span>{stream.status === "running" ? "Listening for behaviour that crosses a detection threshold…" : "No configured threat behaviour was found."}</span></div>}
+        {stream.topIncidentId && <button className="secondary live-review" onClick={() => void openIncident(stream.topIncidentId!)}><Eye size={15} />Open scored intelligence</button>}
+      </section>}
 
       {uploadResult && <section className={`result-panel ${uploadResult.verdict === "threat_detected" ? "result-danger" : "result-clear"}`}>
         <div className="result-heading"><div className="verdict-icon">{uploadResult.verdict === "threat_detected" ? <CircleAlert size={22} /> : <Check size={22} />}</div><div><p className="eyebrow">Uploaded replay result</p><h2>{uploadResult.headline}</h2><p>{uploadResult.summary}</p></div>{uploadResult.top_incident_id && <button className="secondary" onClick={() => void openIncident(uploadResult.top_incident_id!)}><Eye size={15} />Review full evidence</button>}</div>

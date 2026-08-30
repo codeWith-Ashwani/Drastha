@@ -5,6 +5,7 @@ import json
 import platform
 import shutil
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -113,7 +114,8 @@ def prepare_demo(
 
 def run_attack_story(root: str | Path, repository: Any) -> dict[str, Any]:
     project_root = Path(root).resolve()
-    started = __import__("time").perf_counter()
+    started = time.perf_counter()
+    stage_started = time.perf_counter()
     c2_events, c2_quality = load_jsonl_resilient(
         project_root / "examples/zeek_conn_beacon.jsonl",
         normalize_conn_record,
@@ -129,6 +131,7 @@ def run_attack_story(root: str | Path, repository: Any) -> dict[str, Any]:
         normalize_conn_record,
         stream="zeek:conn:exfiltration",
     )
+    ingestion_ms = round((time.perf_counter() - stage_started) * 1000, 3)
     quality_reports = [c2_quality, encrypted_quality, exfil_quality]
     blocking = [item for item in quality_reports if item.status in {"unavailable", "unusable"}]
     if blocking:
@@ -139,20 +142,28 @@ def run_attack_story(root: str | Path, repository: Any) -> dict[str, Any]:
             "stages": [],
         }
 
+    stage_started = time.perf_counter()
     c2_alerts = list(run_pipeline(c2_events, [C2BeaconDetector(
         encrypted_metadata=build_encrypted_metadata_index(encrypted_events)
     )]))
+    c2_ms = round((time.perf_counter() - stage_started) * 1000, 3)
+    stage_started = time.perf_counter()
     exfil_alerts = list(run_pipeline(exfil_events, [ExfiltrationDetector()]))
+    exfil_ms = round((time.perf_counter() - stage_started) * 1000, 3)
     alerts = c2_alerts + exfil_alerts
+    stage_started = time.perf_counter()
     correlator = IncidentStore()
     for alert in alerts:
         correlator.process(alert)
     incidents = list(correlator.all())
+    correlation_ms = round((time.perf_counter() - stage_started) * 1000, 3)
+    stage_started = time.perf_counter()
     loaded = repository.import_records(
         [incident.to_dict() for incident in incidents],
         [alert.to_dict() for alert in alerts],
     )
-    elapsed_ms = round((__import__("time").perf_counter() - started) * 1000, 3)
+    persistence_ms = round((time.perf_counter() - stage_started) * 1000, 3)
+    elapsed_ms = round((time.perf_counter() - started) * 1000, 3)
     overall_quality = "degraded" if any(
         item.status == "degraded" for item in quality_reports
     ) else "healthy"
@@ -161,15 +172,31 @@ def run_attack_story(root: str | Path, repository: Any) -> dict[str, Any]:
         "telemetry_status": overall_quality,
         "elapsed_ms": elapsed_ms,
         "stages": [
-            {"name": "Passive telemetry", "status": overall_quality,
-             "records": sum(item.records_accepted for item in quality_reports)},
-            {"name": "C2 detection", "status": "detected" if c2_alerts else "no_alert",
-             "alerts": len(c2_alerts)},
-            {"name": "Exfiltration detection", "status": "detected" if exfil_alerts else "no_alert",
-             "alerts": len(exfil_alerts)},
+            {"name": "Passive ingestion", "status": "completed",
+             "detail": "Read one-way connection and TLS metadata",
+             "records": sum(item.records_seen for item in quality_reports),
+             "duration_ms": ingestion_ms},
+            {"name": "Quality validation", "status": overall_quality,
+             "detail": "Validated schema, rejected records and timestamp order",
+             "records": sum(item.records_accepted for item in quality_reports),
+             "rejected": sum(item.records_rejected for item in quality_reports),
+             "duration_ms": 0.0},
+            {"name": "C2 timing analysis", "status": "detected" if c2_alerts else "no_alert",
+             "detail": "Measured callback interval and transfer-size consistency",
+             "alerts": len(c2_alerts), "duration_ms": c2_ms},
+            {"name": "Exfiltration analysis", "status": "detected" if exfil_alerts else "no_alert",
+             "detail": "Compared outbound direction and volume with source baseline",
+             "alerts": len(exfil_alerts), "duration_ms": exfil_ms},
             {"name": "Incident correlation", "status": "critical" if any(
                 item.severity == "critical" for item in incidents
-            ) else "completed", "incidents": len(incidents)},
+            ) else "completed", "detail": "Joined alerts by source and observation window",
+             "incidents": len(incidents), "duration_ms": correlation_ms},
+            {"name": "Evidence persistence", "status": "completed",
+             "detail": "Stored incident, contributing alerts and explainable evidence",
+             "incidents": len(incidents), "duration_ms": persistence_ms},
+            {"name": "Dashboard delivery", "status": "ready",
+             "detail": "Published prioritized incident through the analyst API",
+             "incidents": len(incidents), "duration_ms": 0.0},
         ],
         "loaded": loaded,
         "metrics": repository.metrics(),

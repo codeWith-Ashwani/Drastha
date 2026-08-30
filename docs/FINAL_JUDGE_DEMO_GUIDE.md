@@ -144,7 +144,22 @@ While it runs, say:
 > reparses the telemetry, runs the C2 and exfiltration detectors, correlates the
 > alerts and persists the resulting incident.”
 
-After completion, point to:
+Keep the **Attack-to-dashboard pipeline** in view while its seven stages appear
+sequentially. Point to each top-level stage:
+
+1. Passive ingestion — accepted one-way connection and TLS records.
+2. Quality validation — accepted/rejected counts and telemetry health.
+3. C2 timing analysis — alert count and measured stage time.
+4. Exfiltration analysis — alert count and measured stage time.
+5. Incident correlation — critical incident created from both alerts.
+6. Evidence persistence — incident and contributing evidence stored.
+7. Dashboard delivery — incident published through the analyst API.
+
+Explain that judges are seeing the real execution result, counts and measured
+timings. Detector implementation and sensitive operational details remain
+abstracted behind this top-level view.
+
+After completion, also point to:
 
 - `healthy` telemetry;
 - **Detected from repeated timing**;

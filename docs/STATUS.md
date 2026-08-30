@@ -16,6 +16,8 @@ Last updated: 30 August 2026
 - Sprint 7 demo package: walkthrough and recovery guide complete; submission media remains later work
 - Judge-day audit: fresh `.venv` setup, dependency install, frontend build,
   two-pass rehearsal and exact PowerShell launcher verified end to end
+- Judge-visible pipeline: seven measured top-level stages reveal sequentially;
+  detector internals remain abstracted while counts, status and timing stay visible
 
 ## Limitation burn-down
 

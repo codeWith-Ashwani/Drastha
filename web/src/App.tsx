@@ -29,8 +29,22 @@ type Health = {
   status: string; mode: string; storage: string; return_path_required: boolean;
   demo_run?: DemoRun | null;
 };
-type DemoStage = { name: string; status: string; records?: number; alerts?: number; incidents?: number };
+type DemoStage = {
+  name: string; status: string; detail: string; duration_ms?: number;
+  records?: number; rejected?: number; alerts?: number; incidents?: number;
+};
 type DemoRun = { status: string; telemetry_status: string; elapsed_ms?: number; stages: DemoStage[] };
+
+const PIPELINE_TEMPLATE: DemoStage[] = [
+  { name: "Passive ingestion", status: "ready", detail: "Read one-way connection and TLS metadata" },
+  { name: "Quality validation", status: "ready", detail: "Validate schema, rejected records and timestamp order" },
+  { name: "C2 timing analysis", status: "ready", detail: "Measure callback interval and size consistency" },
+  { name: "Exfiltration analysis", status: "ready", detail: "Compare outbound traffic with source baseline" },
+  { name: "Incident correlation", status: "ready", detail: "Join alerts by source and observation window" },
+  { name: "Evidence persistence", status: "ready", detail: "Store incident and explainable evidence" },
+  { name: "Dashboard delivery", status: "ready", detail: "Publish the prioritized incident to the analyst" },
+];
+const PIPELINE_ICONS = [Signal, ShieldCheck, Activity, Network, Workflow, Database, Gauge];
 
 const API = "/api";
 const pretty = (value: string) => value.replaceAll("_", " ");
@@ -95,6 +109,7 @@ function App() {
   const [notes, setNotes] = useState("");
   const [demoRun, setDemoRun] = useState<DemoRun | null>(null);
   const [demoRunning, setDemoRunning] = useState(false);
+  const [visibleStageCount, setVisibleStageCount] = useState(0);
 
   const refresh = async (keepSelection = true) => {
     setLoading(true);
@@ -103,7 +118,10 @@ function App() {
         api<Incident[]>("/incidents"), api<Metrics>("/metrics"), api<Health>("/health"),
       ]);
       setIncidents(queue); setMetrics(summary); setHealth(service);
-      if (service.demo_run) setDemoRun(service.demo_run);
+      if (service.demo_run) {
+        setDemoRun(service.demo_run);
+        setVisibleStageCount(service.demo_run.stages.length);
+      }
       if (keepSelection && selected) {
         setSelected(await api<Incident>(`/incidents/${selected.incident_id}`));
       }
@@ -124,10 +142,15 @@ function App() {
     catch (error) { setMessage((error as Error).message); }
   };
   const loadDemo = async () => {
-    setDemoRunning(true); setMessage("Replaying passive telemetry through Drastha…");
+    setDemoRunning(true); setVisibleStageCount(0);
+    setMessage("Replaying passive telemetry through Drastha…");
     try {
       const result = await api<DemoRun>("/demo/run", { method: "POST" });
       setDemoRun(result);
+      for (let index = 1; index <= result.stages.length; index += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 260));
+        setVisibleStageCount(index);
+      }
       setMessage(`Attack story completed in ${result.elapsed_ms ?? "—"} ms — critical incident ready.`);
       await refresh(false);
     } catch (error) { setMessage((error as Error).message); }
@@ -187,11 +210,11 @@ function App() {
         </div>
         <div className="story-card">
           <div className="story-head"><span>DEMO ATTACK CHAIN</span><div className={`run-state state-${demoRun?.telemetry_status ?? "ready"}`}>{demoRun ? `${demoRun.telemetry_status} · ${demoRun.elapsed_ms ?? "—"} ms` : "READY"}</div><Workflow size={17} /></div>
-          <div className="story-step"><b>01</b><div><strong>Periodic callback</strong><span>{demoRun?.stages[1]?.status === "detected" ? "Detected from repeated timing" : "C2-like beacon behaviour"}</span></div><Activity size={17} /></div>
+          <div className="story-step"><b>01</b><div><strong>Periodic callback</strong><span>{demoRun?.stages[2]?.status === "detected" ? "Detected from repeated timing" : "C2-like beacon behaviour"}</span></div><Activity size={17} /></div>
           <div className="story-connector" />
-          <div className="story-step"><b>02</b><div><strong>Outbound anomaly</strong><span>{demoRun?.stages[2]?.status === "detected" ? "Detected from directional volume" : "Unusual data transfer volume"}</span></div><Network size={17} /></div>
+          <div className="story-step"><b>02</b><div><strong>Outbound anomaly</strong><span>{demoRun?.stages[3]?.status === "detected" ? "Detected from directional volume" : "Unusual data transfer volume"}</span></div><Network size={17} /></div>
           <div className="story-connector" />
-          <div className="story-step critical-step"><b>03</b><div><strong>Critical incident</strong><span>{demoRun?.stages[3]?.status === "critical" ? "Correlation complete" : "Cross-detector correlation"}</span></div><ShieldAlert size={17} /></div>
+          <div className="story-step critical-step"><b>03</b><div><strong>Critical incident</strong><span>{demoRun?.stages[4]?.status === "critical" ? "Correlation complete" : "Cross-detector correlation"}</span></div><ShieldAlert size={17} /></div>
         </div>
       </section>
 
@@ -199,6 +222,21 @@ function App() {
         <span><Fingerprint size={15} /><b>Evidence first</b> every alert explains why</span>
         <span><LockKeyhole size={15} /><b>One-way safe</b> zero response traffic</span>
         <span><Gauge size={15} /><b>Transparent score</b> confidence stays separate</span>
+      </section>
+
+      <section className="pipeline-panel">
+        <div className="pipeline-head"><div><p className="eyebrow">Observable processing path</p><h2>Attack-to-dashboard pipeline</h2><span>Top-level execution is visible; implementation details remain securely abstracted.</span></div>
+          <div className={`pipeline-run ${demoRunning ? "is-running" : ""}`}><Activity size={15} />{demoRunning ? `Processing stage ${Math.min(visibleStageCount + 1, 7)} of 7` : demoRun ? `Last run ${demoRun.elapsed_ms ?? "—"} ms` : "Ready to replay"}</div></div>
+        <div className="pipeline-track">{(demoRun?.stages ?? PIPELINE_TEMPLATE).map((stage, index) => {
+          const Icon = PIPELINE_ICONS[index];
+          const visible = !demoRunning || index < visibleStageCount;
+          const count = stage.records !== undefined ? `${stage.records} records` : stage.alerts !== undefined ? `${stage.alerts} alert${stage.alerts === 1 ? "" : "s"}` : stage.incidents !== undefined ? `${stage.incidents} incident${stage.incidents === 1 ? "" : "s"}` : "awaiting run";
+          return <article className={`pipeline-stage ${visible ? `stage-${stage.status}` : "stage-pending"}`} key={stage.name}>
+            <div className="stage-index">{String(index + 1).padStart(2, "0")}</div><div className="stage-icon"><Icon size={17} /></div>
+            <div className="stage-copy"><strong>{stage.name}</strong><p>{stage.detail}</p><div><span>{visible ? pretty(stage.status) : "pending"}</span><b>{visible ? count : "waiting"}</b>{visible && stage.duration_ms !== undefined && <small>{stage.duration_ms} ms</small>}</div></div>
+            {index < PIPELINE_TEMPLATE.length - 1 && <ChevronRight className="stage-arrow" size={15} />}
+          </article>;
+        })}</div>
       </section>
 
       <section className="section-heading">

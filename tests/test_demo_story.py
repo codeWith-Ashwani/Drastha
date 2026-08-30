@@ -20,10 +20,21 @@ class DemoAttackStoryTests(unittest.TestCase):
         self.assertEqual(report["telemetry_status"], "healthy")
         self.assertEqual(report["loaded"]["alerts"], 2)
         self.assertEqual(report["metrics"]["critical_incidents"], 1)
+        self.assertEqual(len(report["stages"]), 7)
         self.assertEqual(
-            [stage["status"] for stage in report["stages"]],
-            ["healthy", "detected", "detected", "critical"],
+            [stage["name"] for stage in report["stages"]],
+            [
+                "Passive ingestion", "Quality validation", "C2 timing analysis",
+                "Exfiltration analysis", "Incident correlation",
+                "Evidence persistence", "Dashboard delivery",
+            ],
         )
+        self.assertEqual(report["stages"][2]["status"], "detected")
+        self.assertEqual(report["stages"][3]["status"], "detected")
+        self.assertEqual(report["stages"][4]["status"], "critical")
+        for stage in report["stages"]:
+            self.assertIn("detail", stage)
+            self.assertIn("duration_ms", stage)
 
 
 if __name__ == "__main__":

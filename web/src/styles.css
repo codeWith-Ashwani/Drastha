@@ -138,6 +138,33 @@ main { width: min(1360px, calc(100% - 56px)); margin: 0 auto; padding: 36px 0 80
 .trust-strip svg { color: var(--mint); }
 .trust-strip b { color: #d7e5e0; }
 
+.pipeline-panel { margin-bottom: 38px; padding: 20px; border: 1px solid var(--line); border-radius: 16px; background: linear-gradient(145deg, rgba(13, 29, 25, .94), rgba(7, 16, 14, .96)); box-shadow: 0 18px 45px rgba(0, 0, 0, .18); }
+.pipeline-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 17px; }
+.pipeline-head h2 { margin: 0 0 5px; font-size: 22px; letter-spacing: -.035em; }
+.pipeline-head > div > span { color: var(--muted); font-size: 10px; }
+.pipeline-run { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 8px 10px; border: 1px solid #31564c; border-radius: 999px; color: #a9beb7; background: #0d1d19; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }
+.pipeline-run svg { color: var(--mint); }
+.pipeline-run.is-running { color: var(--mint); box-shadow: 0 0 0 4px rgba(84, 232, 187, .05); }
+.pipeline-track { display: grid; grid-template-columns: repeat(7, minmax(132px, 1fr)); gap: 9px; overflow-x: auto; padding: 2px 1px 7px; scrollbar-width: thin; scrollbar-color: #355d52 #091511; }
+.pipeline-track::-webkit-scrollbar { height: 6px; }
+.pipeline-track::-webkit-scrollbar-track { background: #091511; border-radius: 999px; }
+.pipeline-track::-webkit-scrollbar-thumb { background: #355d52; border-radius: 999px; }
+.pipeline-stage { min-width: 132px; min-height: 174px; padding: 13px 12px 11px; border: 1px solid #234039; border-radius: 11px; background: #0b1916; position: relative; transition: border-color .22s ease, background .22s ease, opacity .22s ease, transform .22s ease; }
+.pipeline-stage.stage-pending { opacity: .42; border-style: dashed; }
+.pipeline-stage.stage-detected, .pipeline-stage.stage-critical, .pipeline-stage.stage-completed, .pipeline-stage.stage-healthy, .pipeline-stage.stage-ready { border-color: #34705e; background: linear-gradient(150deg, #10231e, #0a1714); }
+.pipeline-stage.stage-critical { border-color: #78433e; background: linear-gradient(150deg, #281714, #0c1714); }
+.stage-index { color: #617a72; font-size: 8px; font-weight: 900; letter-spacing: .12em; }
+.stage-icon { width: 32px; height: 32px; display: grid; place-items: center; margin: 11px 0 10px; border-radius: 8px; background: #153129; color: var(--mint); }
+.stage-critical .stage-icon { background: #351b19; color: var(--coral); }
+.stage-copy strong { display: block; min-height: 29px; font-size: 10px; line-height: 1.35; }
+.stage-copy p { min-height: 43px; margin: 5px 0 10px; color: var(--muted); font-size: 8px; line-height: 1.45; }
+.stage-copy > div { display: flex; flex-wrap: wrap; gap: 4px 7px; align-items: center; }
+.stage-copy span { color: var(--mint); font-size: 7px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+.stage-critical .stage-copy span { color: var(--coral); }
+.stage-copy b, .stage-copy small { color: #a4b9b2; font-size: 7px; font-weight: 650; }
+.stage-copy small { color: #617b73; }
+.stage-arrow { position: absolute; z-index: 2; right: -13px; top: 79px; color: #4b6f64; }
+
 .eyebrow { color: var(--mint) !important; text-transform: uppercase; letter-spacing: .14em; font-size: 9px !important; font-weight: 800; margin: 0 0 7px !important; }
 .section-heading { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 17px; }
 .section-heading h2 { font-size: 24px; letter-spacing: -.035em; margin: 0; }
@@ -290,6 +317,9 @@ tbody tr:hover, tbody tr:focus { background: #11231e; cursor: pointer; }
   .trust-strip { margin: 0 12px 32px; grid-template-columns: 1fr; }
   .trust-strip span { border-right: 0; border-bottom: 1px solid var(--line); }
   .trust-strip span:last-child { border-bottom: 0; }
+  .pipeline-panel { padding: 16px; }
+  .pipeline-head { align-items: flex-start; flex-direction: column; }
+  .pipeline-track { grid-template-columns: repeat(7, 150px); }
   .panel-head { align-items: flex-start; gap: 14px; flex-direction: column; }
   .filters { width: 100%; }
   .search { flex: 1; }

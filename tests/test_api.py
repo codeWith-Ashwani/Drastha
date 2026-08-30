@@ -59,6 +59,8 @@ class AnalystAPITests(unittest.TestCase):
         report = response.json()
         self.assertEqual(report["telemetry_status"], "healthy")
         self.assertEqual(report["metrics"]["critical_incidents"], 1)
+        self.assertEqual(len(report["stages"]), 7)
+        self.assertEqual(report["stages"][-1]["status"], "ready")
         health = self.client.get("/api/health").json()
         self.assertEqual(health["demo_run"]["status"], "completed")
 

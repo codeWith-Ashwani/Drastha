@@ -26,6 +26,7 @@ from aegisflow.detectors.base import Detector
 from aegisflow.demo import demo_preflight, prepare_demo
 from aegisflow.dns_model import DNSNgramModel
 from aegisflow.dns_training import train_and_evaluate
+from aegisflow.evaluation import evaluate_demo
 from aegisflow.health import ReplayHealth
 from aegisflow.incidents import FeedbackStore, IncidentStore, alert_from_dict
 from aegisflow.ingestion.zeek_dns import read_dns_jsonl
@@ -98,6 +99,15 @@ def _parser() -> argparse.ArgumentParser:
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8000)
     serve.add_argument("--skip-prepare", action="store_true")
+
+    evaluation = subparsers.add_parser(
+        "evaluate-demo", help="run per-threat fixture validation and detector benchmarks"
+    )
+    evaluation.add_argument("--root", type=Path, default=Path.cwd())
+    evaluation.add_argument("--iterations", type=int, default=100)
+    evaluation.add_argument(
+        "--report-output", type=Path, default=Path("output/drastha_evaluation_report.json")
+    )
 
     dns = subparsers.add_parser("dns-replay", help="replay a Zeek dns.log JSONL file")
     dns.add_argument("--input", required=True, type=Path)
@@ -515,6 +525,13 @@ def _run_demo_serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_demo_evaluation(args: argparse.Namespace) -> int:
+    report = evaluate_demo(args.root, iterations=args.iterations)
+    _write_report(report, args.report_output)
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 0 if report["all_scenarios_passed"] else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
@@ -524,6 +541,8 @@ def main(argv: list[str] | None = None) -> int:
             return _run_demo_prepare(args)
         if args.command == "demo-serve":
             return _run_demo_serve(args)
+        if args.command == "evaluate-demo":
+            return _run_demo_evaluation(args)
         if args.command == "check-zeek":
             resolved = _build_zeek_runner(args).check_available()
             print(f"Zeek available: {resolved}")

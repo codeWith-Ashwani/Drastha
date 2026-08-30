@@ -1,0 +1,97 @@
+{
+  "all_scenarios_passed": true,
+  "benchmark_note": "Single-process in-memory detector timing on this machine; excludes packet capture, Zeek conversion, network transport, database writes, and UI rendering.",
+  "environment": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.12.13"
+  },
+  "evaluation_scope": "synthetic_scenario_validation",
+  "product": "Drastha",
+  "quality_claim": "Each threat family is reported separately. These fixture checks prove repeatable pipeline behaviour; they are not production accuracy, recall, or false-positive claims.",
+  "scenarios": [
+    {
+      "benchmark": {
+        "iterations": 250,
+        "median_events_per_second": 214285.64,
+        "median_processing_ms": 0.028
+      },
+      "expected_alerts": {
+        "vertical_port_scan": 1
+      },
+      "fixture_events": 6,
+      "observed_alerts": {
+        "vertical_port_scan": 1
+      },
+      "scenario_passed": true,
+      "threat_family": "reconnaissance"
+    },
+    {
+      "benchmark": {
+        "iterations": 250,
+        "median_events_per_second": 235690.29,
+        "median_processing_ms": 0.0297
+      },
+      "expected_alerts": {
+        "syn_flood": 1,
+        "udp_flood": 1
+      },
+      "fixture_events": 7,
+      "observed_alerts": {
+        "syn_flood": 1,
+        "udp_flood": 1
+      },
+      "scenario_passed": true,
+      "threat_family": "denial_of_service"
+    },
+    {
+      "benchmark": {
+        "iterations": 250,
+        "median_events_per_second": 20737.67,
+        "median_processing_ms": 1.0126
+      },
+      "expected_alerts": {
+        "dga_like_domain": 1,
+        "dns_tunnelling": 1
+      },
+      "fixture_events": 21,
+      "observed_alerts": {
+        "dga_like_domain": 1,
+        "dns_tunnelling": 1
+      },
+      "scenario_passed": true,
+      "threat_family": "dns_threats"
+    },
+    {
+      "benchmark": {
+        "iterations": 250,
+        "median_events_per_second": 183066.31,
+        "median_processing_ms": 0.0437
+      },
+      "expected_alerts": {
+        "periodic_beacon": 1
+      },
+      "fixture_events": 8,
+      "observed_alerts": {
+        "periodic_beacon": 1
+      },
+      "scenario_passed": true,
+      "threat_family": "command_and_control"
+    },
+    {
+      "benchmark": {
+        "iterations": 250,
+        "median_events_per_second": 340425.47,
+        "median_processing_ms": 0.0235
+      },
+      "expected_alerts": {
+        "outbound_volume_anomaly": 1
+      },
+      "fixture_events": 8,
+      "observed_alerts": {
+        "outbound_volume_anomaly": 1
+      },
+      "scenario_passed": true,
+      "threat_family": "data_exfiltration"
+    }
+  ]
+}

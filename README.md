@@ -69,6 +69,16 @@ To prepare the data without starting the server:
 drastha demo-prepare --fresh --report-output output/drastha_demo_prepare_report.json
 ```
 
+Generate evidence for the judges with the same versioned fixtures:
+
+```powershell
+drastha evaluate-demo --iterations 250 --report-output output/drastha_evaluation_report.json
+```
+
+The report keeps reconnaissance, DDoS, DNS, C2, and exfiltration results
+separate and records detector-only timing. It deliberately labels these as
+synthetic scenario checks—not production accuracy or false-positive rates.
+
 To save alerts:
 
 ```powershell
@@ -171,6 +181,8 @@ Docker Desktop or Docker Engine installed.
 - Confidence is a transparent heuristic pending calibration on labelled data.
 - Severity is policy-based and does not claim operational impact knowledge.
 - The sample thresholds and seven-event throughput figure are smoke-test values, not production benchmarks.
+- The repeatable evaluation report measures small in-memory synthetic fixtures;
+  packet capture, Zeek conversion, database, API, and UI latency are excluded.
 - Docker Compose is verified on Windows with Docker Desktop 4.88.1, Docker Engine
   29.7.2, Compose 5.4.0, and the PostgreSQL 16 Alpine image.
 - Automatic correlation-to-database persistence is verified against the PostgreSQL

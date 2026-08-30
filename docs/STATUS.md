@@ -12,7 +12,8 @@ Last updated: 30 August 2026
 - Sprint 5: complete; SQLite and PostgreSQL/Docker deployment paths verified
 - Demo UI sprint: complete; judge-facing attack story and responsive investigation view verified
 - Demo reliability sprint: complete; preflight, safe reset and one-command SQLite fallback verified
-- Sprints 6-7: planned
+- Sprint 6 evaluation evidence: per-threat synthetic validation and detector timing complete
+- Remaining Sprint 6 hardening and Sprint 7: planned
 
 ## Limitation burn-down
 
@@ -168,5 +169,18 @@ drastha replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-t
 
 ## Next sprint
 
-Sprint 6 will add reproducible per-threat evaluation, latency and throughput
-benchmarks, malformed/loss/skew tests, restart recovery, and a formal threat model.
+## Sprint 6 acceptance checklist
+
+- [x] One-command reproducible evaluation report
+- [x] Reconnaissance, DDoS, DNS, C2 and exfiltration reported separately
+- [x] Expected and observed alert subtypes recorded per threat family
+- [x] Detector-only median latency and throughput measured over 250 iterations
+- [x] Scope explicitly excludes production accuracy and end-to-end performance claims
+- [x] Sixty-two total automated tests passing
+- [ ] Packet-loss and timestamp-skew degradation tests
+- [ ] Malformed-input suite across all telemetry adapters
+- [ ] End-to-end latency and resource benchmark with Zeek and persistence
+- [ ] Formal threat model and security hardening checklist
+
+The next required demo-hardening slice will add safe-degradation tests for
+missing, malformed, delayed and out-of-order telemetry.

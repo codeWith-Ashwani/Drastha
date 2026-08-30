@@ -13,6 +13,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from aegisflow.api_store import IncidentRepository, read_jsonl, repository_from_url
+from aegisflow.demo import run_attack_story
 
 
 class StatusUpdate(BaseModel):
@@ -48,6 +49,7 @@ def create_app(repository: IncidentRepository | None = None) -> FastAPI:
         description="Offline-first incident review API for passive network monitoring.",
     )
     app.state.repository = store
+    app.state.demo_run = None
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -63,6 +65,7 @@ def create_app(repository: IncidentRepository | None = None) -> FastAPI:
             "return_path_required": False,
             "storage": "postgresql" if hasattr(store, "database_url") else "sqlite",
             "timestamp": time.time(),
+            "demo_run": app.state.demo_run,
         }
 
     @app.get("/api/metrics")
@@ -131,6 +134,20 @@ def create_app(repository: IncidentRepository | None = None) -> FastAPI:
         except OSError as exc:
             raise HTTPException(status_code=500, detail=f"demo files unavailable: {exc}") from exc
         return {"loaded": loaded, "metrics": store.metrics()}
+
+    @app.post("/api/demo/run")
+    def run_demo() -> dict[str, Any]:
+        root = Path(os.getenv("DRASTHA_ROOT") or os.getenv("AEGISFLOW_ROOT", Path.cwd()))
+        report = run_attack_story(root, store)
+        app.state.demo_run = {
+            "status": report["status"],
+            "telemetry_status": report.get("telemetry_status", "unavailable"),
+            "elapsed_ms": report.get("elapsed_ms"),
+            "stages": report.get("stages", []),
+        }
+        if report["status"] != "completed":
+            raise HTTPException(status_code=503, detail=report["reason"])
+        return report
 
     frontend = Path(os.getenv("DRASTHA_WEB") or os.getenv("AEGISFLOW_WEB", "web/dist"))
     if frontend.exists():

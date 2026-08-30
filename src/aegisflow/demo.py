@@ -9,6 +9,15 @@ from pathlib import Path
 from typing import Any
 
 from aegisflow.api_store import IncidentRepository, read_jsonl
+from aegisflow.detectors import C2BeaconDetector, ExfiltrationDetector
+from aegisflow.incidents import IncidentStore
+from aegisflow.ingestion.zeek_encrypted import (
+    build_encrypted_metadata_index,
+    normalize_encrypted_record,
+)
+from aegisflow.ingestion.zeek_jsonl import normalize_conn_record
+from aegisflow.pipeline import run_pipeline
+from aegisflow.telemetry_quality import load_jsonl_resilient
 
 
 DEMO_FILES = (
@@ -99,4 +108,118 @@ def prepare_demo(
         "loaded": loaded,
         "metrics": repository.metrics(),
         "dashboard": "http://127.0.0.1:8000",
+    }
+
+
+def run_attack_story(root: str | Path, repository: Any) -> dict[str, Any]:
+    project_root = Path(root).resolve()
+    started = __import__("time").perf_counter()
+    c2_events, c2_quality = load_jsonl_resilient(
+        project_root / "examples/zeek_conn_beacon.jsonl",
+        normalize_conn_record,
+        stream="zeek:conn:c2",
+    )
+    encrypted_events, encrypted_quality = load_jsonl_resilient(
+        project_root / "examples/zeek_ssl_beacon.jsonl",
+        lambda record, line: normalize_encrypted_record(record, line, "tls"),
+        stream="zeek:tls",
+    )
+    exfil_events, exfil_quality = load_jsonl_resilient(
+        project_root / "examples/zeek_conn_exfil.jsonl",
+        normalize_conn_record,
+        stream="zeek:conn:exfiltration",
+    )
+    quality_reports = [c2_quality, encrypted_quality, exfil_quality]
+    blocking = [item for item in quality_reports if item.status in {"unavailable", "unusable"}]
+    if blocking:
+        return {
+            "status": "blocked",
+            "reason": "required demo telemetry is unavailable or unusable",
+            "telemetry": [item.to_dict() for item in quality_reports],
+            "stages": [],
+        }
+
+    c2_alerts = list(run_pipeline(c2_events, [C2BeaconDetector(
+        encrypted_metadata=build_encrypted_metadata_index(encrypted_events)
+    )]))
+    exfil_alerts = list(run_pipeline(exfil_events, [ExfiltrationDetector()]))
+    alerts = c2_alerts + exfil_alerts
+    correlator = IncidentStore()
+    for alert in alerts:
+        correlator.process(alert)
+    incidents = list(correlator.all())
+    loaded = repository.import_records(
+        [incident.to_dict() for incident in incidents],
+        [alert.to_dict() for alert in alerts],
+    )
+    elapsed_ms = round((__import__("time").perf_counter() - started) * 1000, 3)
+    overall_quality = "degraded" if any(
+        item.status == "degraded" for item in quality_reports
+    ) else "healthy"
+    return {
+        "status": "completed",
+        "telemetry_status": overall_quality,
+        "elapsed_ms": elapsed_ms,
+        "stages": [
+            {"name": "Passive telemetry", "status": overall_quality,
+             "records": sum(item.records_accepted for item in quality_reports)},
+            {"name": "C2 detection", "status": "detected" if c2_alerts else "no_alert",
+             "alerts": len(c2_alerts)},
+            {"name": "Exfiltration detection", "status": "detected" if exfil_alerts else "no_alert",
+             "alerts": len(exfil_alerts)},
+            {"name": "Incident correlation", "status": "critical" if any(
+                item.severity == "critical" for item in incidents
+            ) else "completed", "incidents": len(incidents)},
+        ],
+        "loaded": loaded,
+        "metrics": repository.metrics(),
+        "telemetry": [item.to_dict() for item in quality_reports],
+    }
+
+
+def rehearse_demo(
+    root: str | Path,
+    database: str | Path = "output/drastha-rehearsal.db",
+    *,
+    evaluation_iterations: int = 25,
+) -> dict[str, Any]:
+    from aegisflow.evaluation import evaluate_demo
+
+    project_root = Path(root).resolve()
+    preflight = demo_preflight(project_root)
+    if not preflight["ready"]:
+        return {"product": "Drastha", "ready": False, "preflight": preflight}
+
+    prepared = prepare_demo(project_root, database, fresh=True)
+    database_path = Path(database)
+    if not database_path.is_absolute():
+        database_path = project_root / database_path
+    repository = IncidentRepository(database_path)
+    first_run = run_attack_story(project_root, repository)
+    first_counts = {
+        "incidents": len(repository.list_incidents()),
+        "alerts": len(repository.list_alerts()),
+    }
+    second_run = run_attack_story(project_root, repository)
+    second_counts = {
+        "incidents": len(repository.list_incidents()),
+        "alerts": len(repository.list_alerts()),
+    }
+    evaluation = evaluate_demo(project_root, iterations=evaluation_iterations)
+    checks = {
+        "preflight_ready": preflight["ready"],
+        "attack_story_completed": first_run["status"] == "completed",
+        "critical_incident_created": repository.metrics()["critical_incidents"] == 1,
+        "replay_is_idempotent": first_counts == second_counts == {"incidents": 1, "alerts": 2},
+        "evaluation_passed": evaluation["all_scenarios_passed"],
+    }
+    return {
+        "product": "Drastha",
+        "ready": all(checks.values()),
+        "checks": checks,
+        "prepared": prepared,
+        "first_run": first_run,
+        "second_run": second_run,
+        "evaluation": evaluation,
+        "recovery_mode": "SQLite offline; Docker and live Zeek are optional for the SIH demo",
     }

@@ -23,7 +23,7 @@ from aegisflow.detectors import (
     ReconDetector,
 )
 from aegisflow.detectors.base import Detector
-from aegisflow.demo import demo_preflight, prepare_demo
+from aegisflow.demo import demo_preflight, prepare_demo, rehearse_demo
 from aegisflow.dns_model import DNSNgramModel
 from aegisflow.dns_training import train_and_evaluate
 from aegisflow.evaluation import evaluate_demo
@@ -107,6 +107,18 @@ def _parser() -> argparse.ArgumentParser:
     evaluation.add_argument("--iterations", type=int, default=100)
     evaluation.add_argument(
         "--report-output", type=Path, default=Path("output/drastha_evaluation_report.json")
+    )
+
+    rehearsal = subparsers.add_parser(
+        "demo-rehearse", help="verify the complete SIH demo twice from a clean local state"
+    )
+    rehearsal.add_argument("--root", type=Path, default=Path.cwd())
+    rehearsal.add_argument(
+        "--database", type=Path, default=Path("output/drastha-rehearsal.db")
+    )
+    rehearsal.add_argument("--evaluation-iterations", type=int, default=25)
+    rehearsal.add_argument(
+        "--report-output", type=Path, default=Path("output/drastha_demo_rehearsal.json")
     )
 
     dns = subparsers.add_parser("dns-replay", help="replay a Zeek dns.log JSONL file")
@@ -532,6 +544,15 @@ def _run_demo_evaluation(args: argparse.Namespace) -> int:
     return 0 if report["all_scenarios_passed"] else 1
 
 
+def _run_demo_rehearsal(args: argparse.Namespace) -> int:
+    report = rehearse_demo(
+        args.root, args.database, evaluation_iterations=args.evaluation_iterations
+    )
+    _write_report(report, args.report_output)
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 0 if report["ready"] else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
@@ -543,6 +564,8 @@ def main(argv: list[str] | None = None) -> int:
             return _run_demo_serve(args)
         if args.command == "evaluate-demo":
             return _run_demo_evaluation(args)
+        if args.command == "demo-rehearse":
+            return _run_demo_rehearsal(args)
         if args.command == "check-zeek":
             resolved = _build_zeek_runner(args).check_available()
             print(f"Zeek available: {resolved}")

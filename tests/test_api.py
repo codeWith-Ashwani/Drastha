@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -49,6 +50,17 @@ class AnalystAPITests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 422)
         self.assertEqual(self.client.get("/api/incidents/missing").status_code, 404)
+
+    def test_demo_endpoint_runs_real_detectors_and_exposes_health_state(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        with patch.dict("os.environ", {"DRASTHA_ROOT": str(root)}):
+            response = self.client.post("/api/demo/run")
+        self.assertEqual(response.status_code, 200)
+        report = response.json()
+        self.assertEqual(report["telemetry_status"], "healthy")
+        self.assertEqual(report["metrics"]["critical_incidents"], 1)
+        health = self.client.get("/api/health").json()
+        self.assertEqual(health["demo_run"]["status"], "completed")
 
 
 if __name__ == "__main__":

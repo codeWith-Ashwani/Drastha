@@ -27,7 +27,10 @@ type Metrics = {
 };
 type Health = {
   status: string; mode: string; storage: string; return_path_required: boolean;
+  demo_run?: DemoRun | null;
 };
+type DemoStage = { name: string; status: string; records?: number; alerts?: number; incidents?: number };
+type DemoRun = { status: string; telemetry_status: string; elapsed_ms?: number; stages: DemoStage[] };
 
 const API = "/api";
 const pretty = (value: string) => value.replaceAll("_", " ");
@@ -90,6 +93,8 @@ function App() {
   const [message, setMessage] = useState("");
   const [analyst, setAnalyst] = useState("demo-analyst");
   const [notes, setNotes] = useState("");
+  const [demoRun, setDemoRun] = useState<DemoRun | null>(null);
+  const [demoRunning, setDemoRunning] = useState(false);
 
   const refresh = async (keepSelection = true) => {
     setLoading(true);
@@ -98,6 +103,7 @@ function App() {
         api<Incident[]>("/incidents"), api<Metrics>("/metrics"), api<Health>("/health"),
       ]);
       setIncidents(queue); setMetrics(summary); setHealth(service);
+      if (service.demo_run) setDemoRun(service.demo_run);
       if (keepSelection && selected) {
         setSelected(await api<Incident>(`/incidents/${selected.incident_id}`));
       }
@@ -118,12 +124,14 @@ function App() {
     catch (error) { setMessage((error as Error).message); }
   };
   const loadDemo = async () => {
-    setMessage("Preparing the offline threat scenario…");
+    setDemoRunning(true); setMessage("Replaying passive telemetry through Drastha…");
     try {
-      await api("/demo/load", { method: "POST" });
-      setMessage("Demo scenario ready — open the critical incident.");
+      const result = await api<DemoRun>("/demo/run", { method: "POST" });
+      setDemoRun(result);
+      setMessage(`Attack story completed in ${result.elapsed_ms ?? "—"} ms — critical incident ready.`);
       await refresh(false);
     } catch (error) { setMessage((error as Error).message); }
+    finally { setDemoRunning(false); }
   };
   const setStatus = async (status: string) => {
     if (!selected) return;
@@ -172,17 +180,18 @@ function App() {
           <div className="hero-actions">
             {highestPriority
               ? <button className="primary" onClick={() => void openIncident(highestPriority.incident_id)}><Eye size={16} /> Investigate top incident</button>
-              : <button className="primary" onClick={loadDemo}><Sparkles size={16} /> Run demo scenario</button>}
+              : <button className="primary" disabled={demoRunning} onClick={loadDemo}><Sparkles size={16} /> {demoRunning ? "Running detectors…" : "Run demo scenario"}</button>}
+            {highestPriority && <button className="secondary" disabled={demoRunning} onClick={loadDemo}><RefreshCw className={demoRunning ? "spin" : ""} size={15} /> {demoRunning ? "Replaying…" : "Replay attack"}</button>}
             <span><Server size={14} /> Offline-ready deployment</span>
           </div>
         </div>
         <div className="story-card">
-          <div className="story-head"><span>DEMO ATTACK CHAIN</span><Workflow size={17} /></div>
-          <div className="story-step"><b>01</b><div><strong>Periodic callback</strong><span>C2-like beacon behaviour</span></div><Activity size={17} /></div>
+          <div className="story-head"><span>DEMO ATTACK CHAIN</span><div className={`run-state state-${demoRun?.telemetry_status ?? "ready"}`}>{demoRun ? `${demoRun.telemetry_status} · ${demoRun.elapsed_ms ?? "—"} ms` : "READY"}</div><Workflow size={17} /></div>
+          <div className="story-step"><b>01</b><div><strong>Periodic callback</strong><span>{demoRun?.stages[1]?.status === "detected" ? "Detected from repeated timing" : "C2-like beacon behaviour"}</span></div><Activity size={17} /></div>
           <div className="story-connector" />
-          <div className="story-step"><b>02</b><div><strong>Outbound anomaly</strong><span>Unusual data transfer volume</span></div><Network size={17} /></div>
+          <div className="story-step"><b>02</b><div><strong>Outbound anomaly</strong><span>{demoRun?.stages[2]?.status === "detected" ? "Detected from directional volume" : "Unusual data transfer volume"}</span></div><Network size={17} /></div>
           <div className="story-connector" />
-          <div className="story-step critical-step"><b>03</b><div><strong>Critical incident</strong><span>Cross-detector correlation</span></div><ShieldAlert size={17} /></div>
+          <div className="story-step critical-step"><b>03</b><div><strong>Critical incident</strong><span>{demoRun?.stages[3]?.status === "critical" ? "Correlation complete" : "Cross-detector correlation"}</span></div><ShieldAlert size={17} /></div>
         </div>
       </section>
 

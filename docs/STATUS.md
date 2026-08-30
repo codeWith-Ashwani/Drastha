@@ -12,8 +12,8 @@ Last updated: 30 August 2026
 - Sprint 5: complete; SQLite and PostgreSQL/Docker deployment paths verified
 - Demo UI sprint: complete; judge-facing attack story and responsive investigation view verified
 - Demo reliability sprint: complete; preflight, safe reset and one-command SQLite fallback verified
-- Sprint 6 evaluation evidence: per-threat synthetic validation and detector timing complete
-- Remaining Sprint 6 hardening and Sprint 7: planned
+- Sprint 6 demo hardening: safe telemetry degradation and full rehearsal complete
+- Sprint 7 demo package: walkthrough and recovery guide complete; submission media remains later work
 
 ## Limitation burn-down
 
@@ -177,10 +177,16 @@ drastha replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-t
 - [x] Detector-only median latency and throughput measured over 250 iterations
 - [x] Scope explicitly excludes production accuracy and end-to-end performance claims
 - [x] Sixty-two total automated tests passing
-- [ ] Packet-loss and timestamp-skew degradation tests
-- [ ] Malformed-input suite across all telemetry adapters
+- [x] Missing, corrupt and excessive-error telemetry states are visible
+- [x] Out-of-order records and maximum backward timestamp skew are measured
+- [x] One bad record can be quarantined while valid telemetry continues safely
+- [x] Excessive corruption blocks the scenario instead of producing misleading output
+- [x] UI Replay Attack control runs parsing, C2 detection, exfiltration detection,
+  incident correlation and persistence—not a saved-result-only animation
+- [x] Clean rehearsal runs the attack twice and verifies idempotent 1-incident/2-alert state
+- [x] Sixty-nine total automated tests passing
 - [ ] End-to-end latency and resource benchmark with Zeek and persistence
 - [ ] Formal threat model and security hardening checklist
 
-The next required demo-hardening slice will add safe-degradation tests for
-missing, malformed, delayed and out-of-order telemetry.
+The required SIH demonstration path is complete. Remaining items are production
+hardening or final submission assets rather than blockers for the offline demo.

@@ -63,6 +63,10 @@ failures from optional capabilities such as Docker and Zeek. If Docker is not
 running, the same evidence, incident queue, and analyst workflow remain
 available through the SQLite offline fallback.
 
+For the simplest Windows start, right-click `scripts/start-demo.ps1` and choose
+**Run with PowerShell**. It performs the preflight, opens the browser, and keeps
+the demo server running in the PowerShell window.
+
 To prepare the data without starting the server:
 
 ```powershell
@@ -78,6 +82,15 @@ drastha evaluate-demo --iterations 250 --report-output output/drastha_evaluation
 The report keeps reconnaissance, DDoS, DNS, C2, and exfiltration results
 separate and records detector-only timing. It deliberately labels these as
 synthetic scenario checks—not production accuracy or false-positive rates.
+
+Before presenting, verify the complete path twice from a clean rehearsal database:
+
+```powershell
+drastha demo-rehearse --evaluation-iterations 50
+```
+
+See `docs/DEMO_WALKTHROUGH.md` for the two-minute and five-minute presentation
+scripts, recovery steps, and judge-facing explanation of what is live versus simulated.
 
 To save alerts:
 

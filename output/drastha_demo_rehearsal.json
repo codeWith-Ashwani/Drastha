@@ -20,8 +20,8 @@
       {
         "benchmark": {
           "iterations": 50,
-          "median_events_per_second": 229007.67,
-          "median_processing_ms": 0.0262
+          "median_events_per_second": 240963.99,
+          "median_processing_ms": 0.0249
         },
         "expected_alerts": {
           "vertical_port_scan": 1
@@ -36,8 +36,8 @@
       {
         "benchmark": {
           "iterations": 50,
-          "median_events_per_second": 280561.11,
-          "median_processing_ms": 0.025
+          "median_events_per_second": 146290.49,
+          "median_processing_ms": 0.0479
         },
         "expected_alerts": {
           "syn_flood": 1,
@@ -54,8 +54,8 @@
       {
         "benchmark": {
           "iterations": 50,
-          "median_events_per_second": 18327.81,
-          "median_processing_ms": 1.1458
+          "median_events_per_second": 16964.9,
+          "median_processing_ms": 1.2378
         },
         "expected_alerts": {
           "dga_like_domain": 1,
@@ -72,8 +72,8 @@
       {
         "benchmark": {
           "iterations": 50,
-          "median_events_per_second": 152963.7,
-          "median_processing_ms": 0.0523
+          "median_events_per_second": 143112.73,
+          "median_processing_ms": 0.0559
         },
         "expected_alerts": {
           "periodic_beacon": 1
@@ -88,8 +88,8 @@
       {
         "benchmark": {
           "iterations": 50,
-          "median_events_per_second": 261865.8,
-          "median_processing_ms": 0.0305
+          "median_events_per_second": 264026.42,
+          "median_processing_ms": 0.0303
         },
         "expected_alerts": {
           "outbound_volume_anomaly": 1
@@ -104,7 +104,7 @@
     ]
   },
   "first_run": {
-    "elapsed_ms": 5.797,
+    "elapsed_ms": 5.28,
     "loaded": {
       "alerts": 2,
       "feedback": 0,
@@ -202,7 +202,7 @@
   "ready": true,
   "recovery_mode": "SQLite offline; Docker and live Zeek are optional for the SIH demo",
   "second_run": {
-    "elapsed_ms": 5.931,
+    "elapsed_ms": 4.894,
     "loaded": {
       "alerts": 2,
       "feedback": 0,

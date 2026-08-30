@@ -10,7 +10,7 @@ if (-not $PythonCandidates) {
     throw "Python 3.11+ was not found. Create .venv or install Python, then run this script again."
 }
 
-$PythonExecutable = $PythonCandidates[0]
+$PythonExecutable = @($PythonCandidates)[0]
 $env:PYTHONPATH = Join-Path $ProjectRoot "src"
 Set-Location $ProjectRoot
 

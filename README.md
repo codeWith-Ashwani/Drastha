@@ -52,6 +52,14 @@ Drastha's presentation path does not require Docker. It checks every required
 asset, resets a safe local SQLite demo database, loads the known attack story,
 and starts the API plus built dashboard with one command:
 
+On a fresh clone, run the one-time setup while internet is available:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/setup-demo.ps1
+```
+
+On presentation day, no internet is required:
+
 ```powershell
 $env:PYTHONPATH = "src"
 drastha demo-preflight --report-output output/drastha_demo_preflight.json

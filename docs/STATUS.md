@@ -14,6 +14,8 @@ Last updated: 30 August 2026
 - Demo reliability sprint: complete; preflight, safe reset and one-command SQLite fallback verified
 - Sprint 6 demo hardening: safe telemetry degradation and full rehearsal complete
 - Sprint 7 demo package: walkthrough and recovery guide complete; submission media remains later work
+- Judge-day audit: fresh `.venv` setup, dependency install, frontend build,
+  two-pass rehearsal and exact PowerShell launcher verified end to end
 
 ## Limitation burn-down
 
@@ -190,3 +192,5 @@ drastha replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-t
 
 The required SIH demonstration path is complete. Remaining items are production
 hardening or final submission assets rather than blockers for the offline demo.
+
+The final operator script and narration are in `docs/FINAL_JUDGE_DEMO_GUIDE.md`.

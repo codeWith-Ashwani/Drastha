@@ -71,6 +71,14 @@ failures from optional capabilities such as Docker and Zeek. If Docker is not
 running, the same evidence, incident queue, and analyst workflow remain
 available through the SQLite offline fallback.
 
+The dashboard also includes **Analyse your own replay**. Judges can upload a
+Zeek connection replay as `.jsonl`, `.ndjson`, or a JSON array up to 5 MB. The
+local API validates the records, runs reconnaissance, flooding, C2-beacon and
+outbound-transfer checks, correlates findings, stores any incidents, and returns
+a plain-language evidence view. Use **Download a sample attack replay** in the
+dashboard for a known-good upload. Uploaded file contents are processed locally
+and are not retained as files.
+
 For the simplest Windows start, right-click `scripts/start-demo.ps1` and choose
 **Run with PowerShell**. It performs the preflight, opens the browser, and keeps
 the demo server running in the PowerShell window.

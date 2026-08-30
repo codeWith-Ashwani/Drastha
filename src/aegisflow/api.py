@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from aegisflow.api_store import IncidentRepository, read_jsonl, repository_from_url
 from aegisflow.demo import run_attack_story
+from aegisflow.upload_analysis import analyse_uploaded_replay
 
 
 class StatusUpdate(BaseModel):
@@ -24,6 +25,11 @@ class FeedbackRequest(BaseModel):
     disposition: str
     analyst: str = Field(min_length=1, max_length=80)
     notes: str = Field(default="", max_length=1000)
+
+
+class ReplayUploadRequest(BaseModel):
+    filename: str = Field(min_length=1, max_length=120)
+    content: str = Field(min_length=1, max_length=5_000_000)
 
 
 def _repository() -> IncidentRepository:
@@ -148,6 +154,28 @@ def create_app(repository: IncidentRepository | None = None) -> FastAPI:
         if report["status"] != "completed":
             raise HTTPException(status_code=503, detail=report["reason"])
         return report
+
+    @app.post("/api/replays/analyse")
+    def analyse_replay(request: ReplayUploadRequest) -> dict[str, Any]:
+        try:
+            report = analyse_uploaded_replay(request.filename, request.content, store)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        app.state.demo_run = {
+            "status": report["status"],
+            "telemetry_status": report["quality"]["status"],
+            "elapsed_ms": report["analysis_ms"],
+            "stages": report["stages"],
+        }
+        return report
+
+    @app.get("/api/replays/sample", response_class=FileResponse)
+    def sample_replay() -> FileResponse:
+        root = Path(os.getenv("DRASTHA_ROOT") or os.getenv("AEGISFLOW_ROOT", Path.cwd()))
+        sample = root / "examples" / "judge_attack_replay.jsonl"
+        if not sample.is_file():
+            raise HTTPException(status_code=404, detail="sample replay unavailable")
+        return FileResponse(sample, filename="drastha-judge-attack-replay.jsonl")
 
     frontend = Path(os.getenv("DRASTHA_WEB") or os.getenv("AEGISFLOW_WEB", "web/dist"))
     if frontend.exists():

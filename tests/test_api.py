@@ -64,6 +64,52 @@ class AnalystAPITests(unittest.TestCase):
         health = self.client.get("/api/health").json()
         self.assertEqual(health["demo_run"]["status"], "completed")
 
+    def test_judge_can_upload_and_analyse_a_replay(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        content = (root / "examples" / "judge_attack_replay.jsonl").read_text(encoding="utf-8")
+        response = self.client.post(
+            "/api/replays/analyse",
+            json={"filename": "judge-attack.jsonl", "content": content},
+        )
+        self.assertEqual(response.status_code, 200)
+        report = response.json()
+        self.assertEqual(report["verdict"], "threat_detected")
+        self.assertEqual(report["quality"]["status"], "healthy")
+        self.assertEqual({item["threat_type"] for item in report["alerts"]}, {
+            "command_and_control", "data_exfiltration",
+        })
+        self.assertIsNotNone(report["top_incident_id"])
+
+    def test_upload_rejects_unusable_or_unsupported_files(self) -> None:
+        unsupported = self.client.post(
+            "/api/replays/analyse", json={"filename": "capture.txt", "content": "data"}
+        )
+        self.assertEqual(unsupported.status_code, 422)
+        malformed = self.client.post(
+            "/api/replays/analyse", json={"filename": "capture.jsonl", "content": "not-json"}
+        )
+        self.assertEqual(malformed.status_code, 422)
+
+    def test_judge_upload_can_return_a_clear_result(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        benign_lines = (root / "examples" / "zeek_conn_exfil.jsonl").read_text(
+            encoding="utf-8"
+        ).splitlines()[:5]
+        response = self.client.post(
+            "/api/replays/analyse",
+            json={"filename": "ordinary-traffic.jsonl", "content": "\n".join(benign_lines)},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["verdict"], "no_threat_detected")
+        self.assertEqual(response.json()["alerts"], [])
+
+    def test_sample_replay_is_downloadable(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        with patch.dict("os.environ", {"DRASTHA_ROOT": str(root)}):
+            response = self.client.get("/api/replays/sample")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("beacon-1", response.text)
+
 
 if __name__ == "__main__":
     unittest.main()

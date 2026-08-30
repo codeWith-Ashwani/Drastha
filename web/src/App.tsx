@@ -1,99 +1,56 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Activity, CheckCircle2, ChevronRight, CircleDot, Clock3, Database, Eye,
-  FileDown, Filter, Fingerprint, Gauge, LockKeyhole, Network, Radar,
-  RefreshCw, Search, Server, ShieldAlert, ShieldCheck, Signal, Sparkles,
-  TriangleAlert, UserRoundCheck, Workflow, X,
+  Activity, ArrowRight, Check, ChevronRight, CircleAlert, Download, Eye,
+  FileJson, FileUp, Filter, Network, RefreshCw, Search, Shield, X,
 } from "lucide-react";
 
 type Evidence = { name: string; observed: number | string; comparison: string; explanation: string };
 type Alert = {
   alert_id: string; detector_id: string; threat_type: string; subtype: string;
   severity: string; confidence: number; window_start: number; window_end: number;
-  dst_ip?: string; evidence: Evidence[]; limitations: string[];
+  src_ip: string; dst_ip?: string; evidence: Evidence[]; limitations: string[];
 };
-type Feedback = {
-  feedback_id: string; disposition: string; analyst: string; timestamp: number; notes: string;
-};
+type Feedback = { feedback_id: string; disposition: string; analyst: string; timestamp: number; notes: string };
 type Incident = {
   incident_id: string; src_ip: string; first_seen: number; last_seen: number;
   alert_ids: string[]; detector_ids: string[]; threat_types: string[];
   confidence: number; risk_score: number; severity: string; status: string;
   scoring_factors: Evidence[]; alerts?: Alert[]; feedback?: Feedback[];
 };
-type Metrics = {
-  total_incidents: number; active_incidents: number; critical_incidents: number;
-  feedback_records: number; average_risk_score: number;
-};
-type Health = {
-  status: string; mode: string; storage: string; return_path_required: boolean;
-  demo_run?: DemoRun | null;
-};
-type DemoStage = {
-  name: string; status: string; detail: string; duration_ms?: number;
-  records?: number; rejected?: number; alerts?: number; incidents?: number;
-};
+type Metrics = { total_incidents: number; active_incidents: number; critical_incidents: number; feedback_records: number; average_risk_score: number };
+type DemoStage = { name: string; status: string; detail: string; duration_ms?: number; records?: number; rejected?: number; alerts?: number; incidents?: number };
 type DemoRun = { status: string; telemetry_status: string; elapsed_ms?: number; stages: DemoStage[] };
-
-const PIPELINE_TEMPLATE: DemoStage[] = [
-  { name: "Passive ingestion", status: "ready", detail: "Read one-way connection and TLS metadata" },
-  { name: "Quality validation", status: "ready", detail: "Validate schema, rejected records and timestamp order" },
-  { name: "C2 timing analysis", status: "ready", detail: "Measure callback interval and size consistency" },
-  { name: "Exfiltration analysis", status: "ready", detail: "Compare outbound traffic with source baseline" },
-  { name: "Incident correlation", status: "ready", detail: "Join alerts by source and observation window" },
-  { name: "Evidence persistence", status: "ready", detail: "Store incident and explainable evidence" },
-  { name: "Dashboard delivery", status: "ready", detail: "Publish the prioritized incident to the analyst" },
-];
-const PIPELINE_ICONS = [Signal, ShieldCheck, Activity, Network, Workflow, Database, Gauge];
+type Health = { status: string; mode: string; storage: string; return_path_required: boolean; demo_run?: DemoRun | null };
+type UploadResult = {
+  verdict: string; headline: string; summary: string; filename: string; file_size_bytes: number;
+  analysis_ms: number; quality: { status: string; records_accepted: number; records_rejected: number; errors: string[] };
+  alerts: Alert[]; incidents: Incident[]; top_incident_id?: string; stages: DemoStage[]; scope_note: string;
+};
 
 const API = "/api";
-const pretty = (value: string) => value.replaceAll("_", " ");
-const durationLabel = (seconds: number) => {
-  const safe = Math.max(0, Math.round(seconds));
-  const minutes = Math.floor(safe / 60);
-  const remainder = safe % 60;
-  return minutes ? `${minutes}m ${remainder.toString().padStart(2, "0")}s` : `${remainder}s`;
+const PIPELINE_TEMPLATE: DemoStage[] = [
+  { name: "Read traffic", status: "ready", detail: "Accept one-way network records" },
+  { name: "Check data", status: "ready", detail: "Reject incomplete or damaged records" },
+  { name: "Find behaviour", status: "ready", detail: "Look for suspicious network patterns" },
+  { name: "Connect findings", status: "ready", detail: "Join related activity into one story" },
+  { name: "Show result", status: "ready", detail: "Store evidence for analyst review" },
+];
+const LABELS: Record<string, string> = {
+  command_and_control: "Command-and-control behaviour", data_exfiltration: "Possible data exfiltration",
+  reconnaissance: "Network reconnaissance", denial_of_service: "Traffic flooding",
+  periodic_beacon: "Repeated callback pattern", outbound_volume_anomaly: "Unusual outbound data transfer",
+  vertical_port_scan: "Many ports checked on one device", horizontal_host_scan: "One service checked across many devices",
+  syn_flood: "Many incomplete connection attempts", udp_flood: "Unusually high UDP traffic",
 };
-const timeLabel = (value: number, origin?: number) => {
-  if (value < 946684800) {
-    return origin === undefined
-      ? `Capture T+${durationLabel(value)}`
-      : `+${durationLabel(value - origin)}`;
-  }
-  return new Date(value * 1000).toLocaleString([], {
-    day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit",
-  });
-};
+const label = (value: string) => LABELS[value] || value.replaceAll("_", " ");
+const timeLabel = (value: number, origin?: number) => value < 946684800
+  ? origin === undefined ? `Capture +${Math.round(value)}s` : `+${Math.max(0, Math.round(value - origin))}s`
+  : new Date(value * 1000).toLocaleString([], { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API}${path}`, {
-    headers: { "Content-Type": "application/json", ...options?.headers }, ...options,
-  });
+  const response = await fetch(`${API}${path}`, { headers: { "Content-Type": "application/json", ...options?.headers }, ...options });
   if (!response.ok) throw new Error((await response.json()).detail || "Request failed");
   return response.json();
-}
-
-function MetricCard({ label, value, note, icon: Icon, tone = "mint" }: {
-  label: string; value: string | number; note: string; icon: typeof Activity; tone?: string;
-}) {
-  return <article className={`metric ${tone}`}>
-    <div className="metric-top"><span>{label}</span><Icon size={18} /></div>
-    <strong>{value}</strong><small>{note}</small><div className="metric-line" />
-  </article>;
-}
-
-function SeverityPill({ value }: { value: string }) {
-  return <span className={`pill severity-${value}`}>{value}<CircleDot size={11} /></span>;
-}
-
-function EmptyState({ onLoad }: { onLoad: () => void }) {
-  return <div className="empty-state">
-    <div className="empty-icon"><Radar size={32} /></div>
-    <p className="eyebrow">Demo workspace ready</p>
-    <h2>Run the multi-stage threat scenario</h2>
-    <p>Load a safe offline fixture to demonstrate detection, correlation and analyst review.</p>
-    <button className="primary" onClick={onLoad}><Sparkles size={16} /> Run demo scenario</button>
-  </div>;
 }
 
 function App() {
@@ -108,200 +65,120 @@ function App() {
   const [analyst, setAnalyst] = useState("demo-analyst");
   const [notes, setNotes] = useState("");
   const [demoRun, setDemoRun] = useState<DemoRun | null>(null);
-  const [demoRunning, setDemoRunning] = useState(false);
-  const [visibleStageCount, setVisibleStageCount] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [visibleStages, setVisibleStages] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const refresh = async (keepSelection = true) => {
     setLoading(true);
     try {
-      const [queue, summary, service] = await Promise.all([
-        api<Incident[]>("/incidents"), api<Metrics>("/metrics"), api<Health>("/health"),
-      ]);
+      const [queue, summary, service] = await Promise.all([api<Incident[]>("/incidents"), api<Metrics>("/metrics"), api<Health>("/health")]);
       setIncidents(queue); setMetrics(summary); setHealth(service);
-      if (service.demo_run) {
-        setDemoRun(service.demo_run);
-        setVisibleStageCount(service.demo_run.stages.length);
-      }
-      if (keepSelection && selected) {
-        setSelected(await api<Incident>(`/incidents/${selected.incident_id}`));
-      }
+      if (service.demo_run) { setDemoRun(service.demo_run); setVisibleStages(service.demo_run.stages.length); }
+      if (keepSelection && selected) setSelected(await api<Incident>(`/incidents/${selected.incident_id}`));
     } catch (error) { setMessage((error as Error).message); }
     finally { setLoading(false); }
   };
-
   useEffect(() => { void refresh(false); }, []);
-  const filtered = useMemo(() => incidents.filter((item) => {
-    const matchesText = `${item.src_ip} ${item.incident_id} ${item.threat_types.join(" ")}`
-      .toLowerCase().includes(query.toLowerCase());
-    return matchesText && (severity === "all" || item.severity === severity);
-  }), [incidents, query, severity]);
-  const highestPriority = incidents[0];
 
+  const filtered = useMemo(() => incidents.filter((item) => {
+    const text = `${item.src_ip} ${item.incident_id} ${item.threat_types.join(" ")}`.toLowerCase();
+    return text.includes(query.toLowerCase()) && (severity === "all" || item.severity === severity);
+  }), [incidents, query, severity]);
   const openIncident = async (id: string) => {
     try { setSelected(await api<Incident>(`/incidents/${id}`)); }
     catch (error) { setMessage((error as Error).message); }
   };
-  const loadDemo = async () => {
-    setDemoRunning(true); setVisibleStageCount(0);
-    setMessage("Replaying passive telemetry through Drastha…");
+  const revealStages = async (stages: DemoStage[]) => {
+    setVisibleStages(0);
+    for (let index = 1; index <= stages.length; index += 1) {
+      await new Promise((resolve) => window.setTimeout(resolve, 180)); setVisibleStages(index);
+    }
+  };
+  const runDemo = async () => {
+    setRunning(true); setUploadResult(null); setMessage("Running the known attack replay…");
     try {
       const result = await api<DemoRun>("/demo/run", { method: "POST" });
-      setDemoRun(result);
-      for (let index = 1; index <= result.stages.length; index += 1) {
-        await new Promise((resolve) => window.setTimeout(resolve, 260));
-        setVisibleStageCount(index);
-      }
-      setMessage(`Attack story completed in ${result.elapsed_ms ?? "—"} ms — critical incident ready.`);
-      await refresh(false);
+      setDemoRun(result); await revealStages(result.stages); await refresh(false);
+      setMessage(`Replay complete. A critical incident was created in ${result.elapsed_ms ?? "—"} ms.`);
     } catch (error) { setMessage((error as Error).message); }
-    finally { setDemoRunning(false); }
+    finally { setRunning(false); }
+  };
+  const analyseFile = async (file?: File) => {
+    if (!file) return;
+    if (file.size > 5_000_000) { setMessage("Choose a replay smaller than 5 MB."); return; }
+    setUploading(true); setUploadResult(null); setMessage(`Analysing ${file.name}…`);
+    try {
+      const content = await file.text();
+      const result = await api<UploadResult>("/replays/analyse", { method: "POST", body: JSON.stringify({ filename: file.name, content }) });
+      setUploadResult(result);
+      const run = { status: "completed", telemetry_status: result.quality.status, elapsed_ms: result.analysis_ms, stages: result.stages };
+      setDemoRun(run); await revealStages(result.stages); await refresh(false); setUploadResult(result); setMessage(result.headline);
+    } catch (error) { setMessage((error as Error).message); }
+    finally { setUploading(false); if (fileInput.current) fileInput.current.value = ""; }
   };
   const setStatus = async (status: string) => {
     if (!selected) return;
-    try {
-      await api(`/incidents/${selected.incident_id}/status`, {
-        method: "PATCH", body: JSON.stringify({ status }),
-      });
-      setMessage(`Incident marked ${pretty(status)}.`); await refresh();
-    } catch (error) { setMessage((error as Error).message); }
+    try { await api(`/incidents/${selected.incident_id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }); await openIncident(selected.incident_id); await refresh(false); }
+    catch (error) { setMessage((error as Error).message); }
   };
   const submitFeedback = async (disposition: string) => {
     if (!selected) return;
     try {
-      await api(`/incidents/${selected.incident_id}/feedback`, {
-        method: "POST", body: JSON.stringify({ disposition, analyst, notes }),
-      });
-      setNotes(""); setMessage("Analyst decision recorded."); await refresh();
+      await api(`/incidents/${selected.incident_id}/feedback`, { method: "POST", body: JSON.stringify({ disposition, analyst, notes }) });
+      setNotes(""); await openIncident(selected.incident_id); await refresh(false); setMessage("Analyst decision saved.");
     } catch (error) { setMessage((error as Error).message); }
   };
   const exportIncident = async () => {
     if (!selected) return;
     const data = await api(`/incidents/${selected.incident_id}/export`);
     const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
-    const link = document.createElement("a"); link.href = url; link.download = `${selected.incident_id}.json`; link.click();
-    URL.revokeObjectURL(url); setMessage("Incident export downloaded.");
+    const link = document.createElement("a"); link.href = url; link.download = `${selected.incident_id}.json`; link.click(); URL.revokeObjectURL(url);
   };
+  const stages = demoRun?.stages ?? PIPELINE_TEMPLATE;
 
-  return <div className="shell">
+  return <div className="app-shell">
     <header className="topbar">
-      <div className="brand"><div className="brandmark"><ShieldCheck size={22} /></div>
-        <div><b>Drastha</b><span>Passive Threat Intelligence</span></div></div>
-      <div className="header-status">
-        <span><Signal size={13} /> Sensor <b>{health?.status === "healthy" ? "ONLINE" : "CHECKING"}</b></span>
-        <span><Database size={13} /> {health?.storage ?? "storage"}</span>
-        <span><LockKeyhole size={13} /> No return path</span>
-      </div>
-      <button className="icon-button" onClick={() => void refresh()} aria-label="Refresh queue"><RefreshCw size={17} /></button>
+      <a className="brand" href="#top"><span><Shield size={18} /></span><div><b>Drastha</b><small>Passive threat review</small></div></a>
+      <div className="system-state"><span><i className={health?.status === "healthy" ? "online" : "offline"} />{health?.status === "healthy" ? "Sensor online" : "Checking sensor"}</span><span>{health?.storage || "local"} storage</span><span>One-way monitoring</span></div>
     </header>
 
-    <main>
-      <section className="hero">
-        <div className="hero-copy">
-          <div className="hero-kicker"><span>SIH Demo Console</span><span className="live-dot">Passive monitoring</span></div>
-          <h1>See the attack story.<br /><em>Not just another alert.</em></h1>
-          <p>Drastha converts one-way network telemetry into explainable, correlated incidents without decrypting payloads or contacting the protected network.</p>
-          <div className="hero-actions">
-            {highestPriority
-              ? <button className="primary" onClick={() => void openIncident(highestPriority.incident_id)}><Eye size={16} /> Investigate top incident</button>
-              : <button className="primary" disabled={demoRunning} onClick={loadDemo}><Sparkles size={16} /> {demoRunning ? "Running detectors…" : "Run demo scenario"}</button>}
-            {highestPriority && <button className="secondary" disabled={demoRunning} onClick={loadDemo}><RefreshCw className={demoRunning ? "spin" : ""} size={15} /> {demoRunning ? "Replaying…" : "Replay attack"}</button>}
-            <span><Server size={14} /> Offline-ready deployment</span>
-          </div>
-        </div>
-        <div className="story-card">
-          <div className="story-head"><span>DEMO ATTACK CHAIN</span><div className={`run-state state-${demoRun?.telemetry_status ?? "ready"}`}>{demoRun ? `${demoRun.telemetry_status} · ${demoRun.elapsed_ms ?? "—"} ms` : "READY"}</div><Workflow size={17} /></div>
-          <div className="story-step"><b>01</b><div><strong>Periodic callback</strong><span>{demoRun?.stages[2]?.status === "detected" ? "Detected from repeated timing" : "C2-like beacon behaviour"}</span></div><Activity size={17} /></div>
-          <div className="story-connector" />
-          <div className="story-step"><b>02</b><div><strong>Outbound anomaly</strong><span>{demoRun?.stages[3]?.status === "detected" ? "Detected from directional volume" : "Unusual data transfer volume"}</span></div><Network size={17} /></div>
-          <div className="story-connector" />
-          <div className="story-step critical-step"><b>03</b><div><strong>Critical incident</strong><span>{demoRun?.stages[4]?.status === "critical" ? "Correlation complete" : "Cross-detector correlation"}</span></div><ShieldAlert size={17} /></div>
+    <main id="top">
+      <section className="workbench">
+        <div className="intro"><p className="eyebrow">Threat investigation</p><h1>Understand what happened on the network.</h1><p>Run our known scenario or upload a safe network replay. Drastha explains the behaviour it found and the evidence behind it.</p><button className="primary" disabled={running || uploading} onClick={runDemo}><Activity size={16} />{running ? "Analysing replay…" : "Run known attack replay"}</button></div>
+        <div className="upload-card">
+          <div className="upload-title"><FileUp size={19} /><div><b>Analyse your own replay</b><span>Zeek connection records · JSONL or JSON · up to 5 MB</span></div></div>
+          <button className={`dropzone ${dragging ? "dragging" : ""}`} disabled={uploading || running} onClick={() => fileInput.current?.click()} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); void analyseFile(event.dataTransfer.files[0]); }}>
+            <FileJson size={23} /><b>{uploading ? "Checking the replay…" : "Choose or drop a replay file"}</b><span>The file stays on this computer and is used only for this analysis.</span>
+          </button>
+          <input ref={fileInput} hidden type="file" accept=".jsonl,.ndjson,.json,application/json" onChange={(event) => void analyseFile(event.target.files?.[0])} />
+          <a className="sample-link" href="/api/replays/sample"><Download size={14} />Download a sample attack replay</a>
         </div>
       </section>
 
-      <section className="trust-strip">
-        <span><Fingerprint size={15} /><b>Evidence first</b> every alert explains why</span>
-        <span><LockKeyhole size={15} /><b>One-way safe</b> zero response traffic</span>
-        <span><Gauge size={15} /><b>Transparent score</b> confidence stays separate</span>
-      </section>
+      {uploadResult && <section className={`result-panel ${uploadResult.verdict === "threat_detected" ? "result-danger" : "result-clear"}`}>
+        <div className="result-heading"><div className="verdict-icon">{uploadResult.verdict === "threat_detected" ? <CircleAlert size={22} /> : <Check size={22} />}</div><div><p className="eyebrow">Uploaded replay result</p><h2>{uploadResult.headline}</h2><p>{uploadResult.summary}</p></div>{uploadResult.top_incident_id && <button className="secondary" onClick={() => void openIncident(uploadResult.top_incident_id!)}><Eye size={15} />Review full evidence</button>}</div>
+        <div className="result-facts"><span><b>{uploadResult.quality.records_accepted}</b> valid records</span><span><b>{uploadResult.alerts.length}</b> findings</span><span><b>{uploadResult.incidents.length}</b> incidents</span><span><b>{uploadResult.analysis_ms} ms</b> analysis time</span><span><b>{uploadResult.quality.status}</b> data quality</span></div>
+        {uploadResult.alerts.length > 0 && <div className="finding-list">{uploadResult.alerts.map((alert) => <article className="finding" key={alert.alert_id}><div className="finding-top"><div><span className={`severity severity-${alert.severity}`}>{alert.severity}</span><h3>{label(alert.subtype)}</h3></div><b>{Math.round(alert.confidence * 100)}% confidence</b></div><p className="route">{alert.src_ip} <ArrowRight size={13} /> {alert.dst_ip || "multiple destinations"}</p><p className="finding-meaning">{label(alert.threat_type)}</p><div className="evidence-list">{alert.evidence.slice(0, 4).map((item) => <div key={item.name}><span>{label(item.name)}</span><b>{item.observed}</b><small>{item.explanation}</small></div>)}</div><p className="caveat"><b>Keep in mind:</b> {alert.limitations[0]}</p></article>)}</div>}
+        <p className="scope-note">{uploadResult.scope_note}</p>
+      </section>}
 
-      <section className="pipeline-panel">
-        <div className="pipeline-head"><div><p className="eyebrow">Observable processing path</p><h2>Attack-to-dashboard pipeline</h2><span>Top-level execution is visible; implementation details remain securely abstracted.</span></div>
-          <div className={`pipeline-run ${demoRunning ? "is-running" : ""}`}><Activity size={15} />{demoRunning ? `Processing stage ${Math.min(visibleStageCount + 1, 7)} of 7` : demoRun ? `Last run ${demoRun.elapsed_ms ?? "—"} ms` : "Ready to replay"}</div></div>
-        <div className="pipeline-track">{(demoRun?.stages ?? PIPELINE_TEMPLATE).map((stage, index) => {
-          const Icon = PIPELINE_ICONS[index];
-          const visible = !demoRunning || index < visibleStageCount;
-          const count = stage.records !== undefined ? `${stage.records} records` : stage.alerts !== undefined ? `${stage.alerts} alert${stage.alerts === 1 ? "" : "s"}` : stage.incidents !== undefined ? `${stage.incidents} incident${stage.incidents === 1 ? "" : "s"}` : "awaiting run";
-          return <article className={`pipeline-stage ${visible ? `stage-${stage.status}` : "stage-pending"}`} key={stage.name}>
-            <div className="stage-index">{String(index + 1).padStart(2, "0")}</div><div className="stage-icon"><Icon size={17} /></div>
-            <div className="stage-copy"><strong>{stage.name}</strong><p>{stage.detail}</p><div><span>{visible ? pretty(stage.status) : "pending"}</span><b>{visible ? count : "waiting"}</b>{visible && stage.duration_ms !== undefined && <small>{stage.duration_ms} ms</small>}</div></div>
-            {index < PIPELINE_TEMPLATE.length - 1 && <ChevronRight className="stage-arrow" size={15} />}
-          </article>;
-        })}</div>
-      </section>
+      <section className="pipeline-section"><div className="section-head"><div><p className="eyebrow">How the result was produced</p><h2>Replay to insight</h2></div><span>{demoRun ? `${demoRun.telemetry_status} data · ${demoRun.elapsed_ms ?? "—"} ms` : "Ready"}</span></div><ol className="pipeline">{stages.map((stage, index) => { const visible = !running && !uploading || index < visibleStages; const count = stage.alerts !== undefined ? `${stage.alerts} findings` : stage.incidents !== undefined ? `${stage.incidents} incidents` : stage.records !== undefined ? `${stage.records} records` : ""; return <li className={visible ? `step step-${stage.status}` : "step pending"} key={`${stage.name}-${index}`}><span>{visible ? <Check size={13} /> : index + 1}</span><div><b>{stage.name}</b><p>{stage.detail}</p><small>{visible ? count : "Waiting"}{visible && stage.duration_ms !== undefined ? ` · ${stage.duration_ms} ms` : ""}</small></div></li>; })}</ol></section>
 
-      <section className="section-heading">
-        <div><p className="eyebrow">Live operational snapshot</p><h2>Threat operations overview</h2></div>
-        <div className="freshness"><Clock3 size={15} /><span>Updated</span><b>just now</b></div>
-      </section>
-
-      <section className="metrics-grid">
-        <MetricCard label="Active incidents" value={metrics?.active_incidents ?? "—"} note="Requires analyst attention" icon={ShieldAlert} tone="coral" />
-        <MetricCard label="Critical" value={metrics?.critical_incidents ?? "—"} note="Highest-priority cases" icon={Activity} tone="amber" />
-        <MetricCard label="Average risk" value={metrics ? `${metrics.average_risk_score}/100` : "—"} note="Policy score, not confidence" icon={Radar} />
-        <MetricCard label="Reviewed" value={metrics?.feedback_records ?? "—"} note="Analyst decisions retained" icon={UserRoundCheck} tone="blue" />
-      </section>
-
-      <section className="workspace">
-        <div className="queue-panel">
-          <div className="panel-head"><div><p className="eyebrow">Prioritized investigation queue</p><h2>Incidents</h2><span>{filtered.length} result{filtered.length === 1 ? "" : "s"} ordered by risk</span></div>
-            <div className="filters"><label className="search"><Search size={15} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search IP, ID or threat" /></label>
-              <label className="select"><Filter size={14} /><select value={severity} onChange={(e) => setSeverity(e.target.value)}><option value="all">All severity</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label></div></div>
-
-          {loading ? <div className="loading"><RefreshCw className="spin" /> Synchronizing incident queue…</div> :
-            incidents.length === 0 ? <EmptyState onLoad={loadDemo} /> : filtered.length === 0 ?
-              <div className="no-results"><Search size={24} /><b>No matching incidents</b><span>Change the search text or severity filter.</span></div> :
-            <div className="table-wrap"><table><thead><tr><th>Risk</th><th>Source</th><th>Threat story</th><th>Severity</th><th>Status</th><th>Last seen</th><th></th></tr></thead>
-              <tbody>{filtered.map((item) => <tr key={item.incident_id} tabIndex={0} onClick={() => void openIncident(item.incident_id)} onKeyDown={(event) => { if (event.key === "Enter") void openIncident(item.incident_id); }}>
-                <td><div className={`risk risk-${item.severity}`}>{item.risk_score}</div></td>
-                <td><b className="mono">{item.src_ip}</b><small className="mono">#{item.incident_id.slice(0, 8)}</small></td>
-                <td><div className="threat-list">{item.threat_types.map((threat) => <span key={threat}>{pretty(threat)}</span>)}</div><small>{item.detector_ids.length} contributing detector{item.detector_ids.length === 1 ? "" : "s"}</small></td>
-                <td><SeverityPill value={item.severity} /></td><td><span className={`status status-${item.status}`}>{pretty(item.status)}</span></td>
-                <td className="time">{timeLabel(item.last_seen)}</td><td><ChevronRight size={17} /></td>
-              </tr>)}</tbody></table></div>}
-        </div>
+      <section className="overview"><div className="section-head"><div><p className="eyebrow">What needs attention</p><h2>Investigation queue</h2></div><div className="plain-metrics"><span><b>{metrics?.active_incidents ?? "—"}</b> active</span><span><b>{metrics?.critical_incidents ?? "—"}</b> critical</span><span><b>{metrics?.feedback_records ?? "—"}</b> reviewed</span></div></div><div className="queue-tools"><label><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search device, incident or behaviour" /></label><label><Filter size={14} /><select value={severity} onChange={(event) => setSeverity(event.target.value)}><option value="all">All priorities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label></div>
+        {loading ? <div className="empty"><RefreshCw className="spin" />Loading incidents…</div> : filtered.length === 0 ? <div className="empty"><Network size={22} /><b>No matching incidents</b><span>Run or upload a replay to analyse network behaviour.</span></div> : <div className="incident-list">{filtered.map((item) => <button key={item.incident_id} onClick={() => void openIncident(item.incident_id)}><div className={`risk risk-${item.severity}`}><b>{item.risk_score}</b><span>risk</span></div><div className="incident-main"><b>{item.threat_types.map(label).join(" + ")}</b><span>{item.src_ip} · {item.detector_ids.length} independent checks</span></div><span className={`severity severity-${item.severity}`}>{item.severity}</span><span className="incident-status">{label(item.status)}</span><time>{timeLabel(item.last_seen)}</time><ChevronRight size={17} /></button>)}</div>}
       </section>
     </main>
 
-    {selected && <div className="drawer-backdrop" onMouseDown={(event) => { if (event.currentTarget === event.target) setSelected(null); }}>
-      <aside className="drawer" aria-label="Incident evidence drawer">
-        <div className="drawer-head"><div><p className="eyebrow">Incident investigation</p><h2>{selected.src_ip}</h2><span className="mono">#{selected.incident_id}</span></div><button className="icon-button" aria-label="Close incident" onClick={() => setSelected(null)}><X size={19} /></button></div>
-
-        <div className="story-verdict"><TriangleAlert size={19} /><div><b>Multi-stage suspicious behaviour detected</b><span>{selected.detector_ids.length} independent detectors contributed to this incident.</span></div></div>
-        <div className="incident-summary"><div className={`score score-${selected.severity}`}><strong>{selected.risk_score}</strong><span>risk score</span></div>
-          <div className="summary-copy"><SeverityPill value={selected.severity} /><p><b>{Math.round(selected.confidence * 100)}%</b> detector confidence</p><small>Risk is a transparent policy priority. Confidence represents detector certainty.</small></div></div>
-        <div className="action-row"><label><span>Workflow status</span><select aria-label="Workflow status" value={selected.status} onChange={(e) => void setStatus(e.target.value)}><option value="open">Open</option><option value="investigating">Investigating</option><option value="resolved">Resolved</option><option value="false_positive">False positive</option></select></label><button onClick={() => void exportIncident()}><FileDown size={15} /> Export evidence</button></div>
-
-        <section className="drawer-section"><div className="section-title"><Activity size={16} /><div><h3>Attack timeline</h3><span>How separate signals became one incident</span></div></div>
-          <div className="timeline">{selected.alerts?.map((alert, index) => <article key={alert.alert_id}>
-            <div className="timeline-dot">{index + 1}</div><time>{timeLabel(alert.window_start, selected.first_seen)}</time><h4>{pretty(alert.subtype)}</h4>
-            <p>{pretty(alert.threat_type)} · {alert.detector_id}</p>
-            {alert.dst_ip && <span className="route mono">{selected.src_ip} <ChevronRight size={10} /> {alert.dst_ip}</span>}
-          </article>)}</div></section>
-
-        <section className="drawer-section"><div className="section-title"><Database size={16} /><div><h3>Evidence by detector</h3><span>Observed value, threshold and plain-language reason</span></div></div>
-          {selected.alerts?.map((alert) => <div className="evidence-group" key={alert.alert_id}>
-            <div className="evidence-group-head"><div><b>{pretty(alert.subtype)}</b><span>{alert.detector_id}</span></div><span>{Math.round(alert.confidence * 100)}% confidence</span></div>
-            <div className="evidence-grid">{alert.evidence.map((item) => <article className="evidence" key={`${alert.alert_id}-${item.name}`}><div><span>{pretty(item.name)}</span><strong>{item.observed}</strong></div><p>{item.explanation}</p><small>{item.comparison}</small></article>)}</div>
-          </div>)}
-          <div className="score-breakdown"><p className="eyebrow">Risk score breakdown</p><div className="factor-grid">{selected.scoring_factors.map((item) => <div key={item.name}><span>{pretty(item.name)}</span><b>+{item.observed}</b></div>)}</div></div>
-        </section>
-
-        <section className="drawer-section"><div className="section-title"><UserRoundCheck size={16} /><div><h3>Analyst decision</h3><span>Record a human-reviewed disposition</span></div></div>
-          <div className="review-form"><input aria-label="Analyst name" value={analyst} onChange={(e) => setAnalyst(e.target.value)} placeholder="Analyst name" /><textarea aria-label="Investigation notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Investigation notes and evidence context" rows={3} /><div className="decision-row"><button className="danger-action" onClick={() => void submitFeedback("confirmed_malicious")}><ShieldAlert size={14} /> Malicious</button><button onClick={() => void submitFeedback("needs_review")}><Clock3 size={14} /> Needs review</button><button className="safe-action" onClick={() => void submitFeedback("benign")}><CheckCircle2 size={14} /> Benign</button></div></div>
-          {!!selected.feedback?.length && <div className="feedback-log">{selected.feedback.map((item) => <article key={item.feedback_id}><b>{pretty(item.disposition)}</b><span>{item.analyst} · {timeLabel(item.timestamp, selected.first_seen)}</span><p>{item.notes || "No notes added."}</p></article>)}</div>}
-        </section>
-      </aside>
-    </div>}
+    {selected && <div className="drawer-backdrop" onMouseDown={(event) => { if (event.currentTarget === event.target) setSelected(null); }}><aside className="drawer" aria-label="Incident details"><div className="drawer-head"><div><p className="eyebrow">Incident review</p><h2>{selected.threat_types.map(label).join(" + ")}</h2><span>{selected.src_ip} · #{selected.incident_id}</span></div><button aria-label="Close" onClick={() => setSelected(null)}><X size={19} /></button></div><div className="incident-verdict"><div className={`risk risk-${selected.severity}`}><b>{selected.risk_score}</b><span>risk</span></div><div><b>{selected.severity} priority</b><span>{Math.round(selected.confidence * 100)}% detector confidence</span><small>Risk is investigation priority, not certainty.</small></div></div><div className="drawer-actions"><label><span>Status</span><select value={selected.status} onChange={(event) => void setStatus(event.target.value)}><option value="open">Open</option><option value="investigating">Investigating</option><option value="resolved">Resolved</option><option value="false_positive">False positive</option></select></label><button onClick={() => void exportIncident()}><Download size={14} />Export evidence</button></div>
+        <section className="detail-section"><h3>What happened</h3><div className="timeline">{selected.alerts?.map((alert, index) => <article key={alert.alert_id}><span>{index + 1}</span><div><time>{timeLabel(alert.window_start, selected.first_seen)}</time><b>{label(alert.subtype)}</b><p>{alert.src_ip} → {alert.dst_ip || "multiple destinations"}</p></div></article>)}</div></section>
+        <section className="detail-section"><h3>Why Drastha flagged it</h3>{selected.alerts?.map((alert) => <div className="detail-finding" key={alert.alert_id}><div><b>{label(alert.subtype)}</b><span>{Math.round(alert.confidence * 100)}% confidence</span></div><div className="evidence-list">{alert.evidence.map((item) => <div key={item.name}><span>{label(item.name)}</span><b>{item.observed}</b><small>{item.explanation}</small><em>{item.comparison}</em></div>)}</div><p className="caveat"><b>Possible alternative:</b> {alert.limitations[0]}</p></div>)}</section>
+        <section className="detail-section"><h3>Why it is prioritized</h3><div className="score-list">{selected.scoring_factors.map((item) => <div key={item.name}><span>{label(item.name)}</span><b>+{item.observed}</b><small>{item.explanation}</small></div>)}</div></section>
+        <section className="detail-section"><h3>Record the decision</h3><div className="review-form"><input value={analyst} onChange={(event) => setAnalyst(event.target.value)} placeholder="Analyst name" /><textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="What did you verify?" rows={3} /><div><button className="danger" onClick={() => void submitFeedback("confirmed_malicious")}>Malicious</button><button onClick={() => void submitFeedback("needs_review")}>Needs review</button><button onClick={() => void submitFeedback("benign")}>Benign</button></div></div>{!!selected.feedback?.length && <div className="feedback-list">{selected.feedback.map((item) => <article key={item.feedback_id}><b>{label(item.disposition)}</b><span>{item.analyst}</span><p>{item.notes || "No notes added."}</p></article>)}</div>}</section>
+      </aside></div>}
     {message && <button className="toast" onClick={() => setMessage("")}>{message}<X size={14} /></button>}
   </div>;
 }

@@ -208,6 +208,20 @@ Say:
 > decision. Status, notes, disposition and evidence remain available after a
 > restart.”
 
+### Optional judge-controlled replay
+
+If a judge wants to operate the system, use **Download a sample attack replay**
+and then upload that file through **Analyse your own replay**. The result should
+show 16 valid records, two suspicious behaviours and one correlated incident.
+Point out the plain-language result, data quality, affected device, supporting
+values, alternative explanations and measured analysis time. The upload is
+processed locally and the original file is not retained.
+
+The upload accepts Zeek connection JSONL, NDJSON or a JSON array up to 5 MB. It
+does not accept raw PCAP directly in the browser; PCAP first passes through the
+existing Zeek adapter. Demonstration thresholds are deliberately labelled and
+must be calibrated for a production network.
+
 ### 4:00–4:35 — show broader coverage
 
 Explain:

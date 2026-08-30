@@ -23,6 +23,7 @@ from aegisflow.detectors import (
     ReconDetector,
 )
 from aegisflow.detectors.base import Detector
+from aegisflow.demo import demo_preflight, prepare_demo
 from aegisflow.dns_model import DNSNgramModel
 from aegisflow.dns_training import train_and_evaluate
 from aegisflow.health import ReplayHealth
@@ -73,6 +74,30 @@ def _parser() -> argparse.ArgumentParser:
     readiness.add_argument("--zeek-mode", choices=("auto", "native", "wsl"), default="auto")
     readiness.add_argument("--zeek-binary")
     readiness.add_argument("--wsl-distro")
+
+    preflight = subparsers.add_parser(
+        "demo-preflight", help="verify required files and dependencies before an SIH demo"
+    )
+    preflight.add_argument("--root", type=Path, default=Path.cwd())
+    preflight.add_argument("--report-output", type=Path)
+
+    prepare = subparsers.add_parser(
+        "demo-prepare", help="prepare the offline SQLite demonstration database"
+    )
+    prepare.add_argument("--root", type=Path, default=Path.cwd())
+    prepare.add_argument("--database", type=Path, default=Path("output/drastha-demo.db"))
+    prepare.add_argument("--fresh", action="store_true")
+    prepare.add_argument("--report-output", type=Path)
+
+    serve = subparsers.add_parser(
+        "demo-serve", help="prepare and serve the complete offline demonstration"
+    )
+    serve.add_argument("--root", type=Path, default=Path.cwd())
+    serve.add_argument("--database", type=Path, default=Path("output/drastha-demo.db"))
+    serve.add_argument("--fresh", action="store_true")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8000)
+    serve.add_argument("--skip-prepare", action="store_true")
 
     dns = subparsers.add_parser("dns-replay", help="replay a Zeek dns.log JSONL file")
     dns.add_argument("--input", required=True, type=Path)
@@ -450,9 +475,55 @@ def _record_feedback(args: argparse.Namespace) -> int:
     return 0
 
 
+def _write_report(report: dict, path: Path | None) -> None:
+    if path is not None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _run_demo_preflight(args: argparse.Namespace) -> int:
+    report = demo_preflight(args.root)
+    _write_report(report, args.report_output)
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 0 if report["ready"] else 2
+
+
+def _run_demo_prepare(args: argparse.Namespace) -> int:
+    preflight = demo_preflight(args.root)
+    if not preflight["ready"]:
+        raise RuntimeError("demo preflight failed; run demo-preflight for details")
+    report = prepare_demo(args.root, args.database, fresh=args.fresh)
+    _write_report(report, args.report_output)
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 0
+
+
+def _run_demo_serve(args: argparse.Namespace) -> int:
+    preflight = demo_preflight(args.root)
+    if not preflight["ready"]:
+        raise RuntimeError("demo preflight failed; run demo-preflight for details")
+    project_root = args.root.resolve()
+    database = args.database if args.database.is_absolute() else project_root / args.database
+    if not args.skip_prepare:
+        prepare_demo(project_root, database, fresh=args.fresh)
+    os.environ["DRASTHA_DB"] = str(database.resolve())
+    os.environ["DRASTHA_ROOT"] = str(project_root)
+    os.environ["DRASTHA_WEB"] = str((project_root / "web" / "dist").resolve())
+    import uvicorn
+    print(f"Drastha demo ready: http://{args.host}:{args.port}", file=sys.stderr)
+    uvicorn.run("aegisflow.api:app", host=args.host, port=args.port)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
+        if args.command == "demo-preflight":
+            return _run_demo_preflight(args)
+        if args.command == "demo-prepare":
+            return _run_demo_prepare(args)
+        if args.command == "demo-serve":
+            return _run_demo_serve(args)
         if args.command == "check-zeek":
             resolved = _build_zeek_runner(args).check_available()
             print(f"Zeek available: {resolved}")

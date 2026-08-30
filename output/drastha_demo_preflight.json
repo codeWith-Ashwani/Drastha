@@ -1,0 +1,70 @@
+{
+  "checks": [
+    {
+      "detail": "3.12.13",
+      "name": "python",
+      "passed": true,
+      "required": true
+    },
+    {
+      "detail": "output/sprint4_incidents.jsonl",
+      "name": "output/sprint4_incidents.jsonl",
+      "passed": true,
+      "required": true
+    },
+    {
+      "detail": "output/sprint3_c2_alerts.jsonl",
+      "name": "output/sprint3_c2_alerts.jsonl",
+      "passed": true,
+      "required": true
+    },
+    {
+      "detail": "output/sprint4_exfil_alerts.jsonl",
+      "name": "output/sprint4_exfil_alerts.jsonl",
+      "passed": true,
+      "required": true
+    },
+    {
+      "detail": "output/sprint4_feedback.json",
+      "name": "output/sprint4_feedback.json",
+      "passed": true,
+      "required": true
+    },
+    {
+      "detail": "web/dist/index.html",
+      "name": "production_frontend",
+      "passed": true,
+      "required": true
+    },
+    {
+      "detail": "available",
+      "name": "python_dependency:fastapi",
+      "passed": true,
+      "required": true
+    },
+    {
+      "detail": "available",
+      "name": "python_dependency:uvicorn",
+      "passed": true,
+      "required": true
+    },
+    {
+      "detail": "not on PATH; use SQLite fallback",
+      "name": "docker_cli",
+      "passed": false,
+      "required": false
+    },
+    {
+      "detail": "C:\\WINDOWS\\system32\\wsl.EXE",
+      "name": "zeek_or_wsl",
+      "passed": true,
+      "required": false
+    }
+  ],
+  "fallback_mode": "sqlite_offline",
+  "product": "Drastha",
+  "ready": true,
+  "required_passed": 8,
+  "required_total": 8,
+  "root": "."
+}

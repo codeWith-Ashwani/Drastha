@@ -1,0 +1,18 @@
+{
+  "dashboard": "http://127.0.0.1:8000",
+  "database": "output/drastha-demo.db",
+  "fresh": true,
+  "loaded": {
+    "alerts": 2,
+    "feedback": 1,
+    "incidents": 1
+  },
+  "metrics": {
+    "active_incidents": 1,
+    "average_risk_score": 100.0,
+    "critical_incidents": 1,
+    "feedback_records": 1,
+    "total_incidents": 1
+  },
+  "product": "Drastha"
+}

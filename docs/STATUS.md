@@ -11,6 +11,7 @@ Last updated: 30 August 2026
 - Sprint 4: demonstrable prototype complete; persistent storage and calibration remain future work
 - Sprint 5: complete; SQLite and PostgreSQL/Docker deployment paths verified
 - Demo UI sprint: complete; judge-facing attack story and responsive investigation view verified
+- Demo reliability sprint: complete; preflight, safe reset and one-command SQLite fallback verified
 - Sprints 6-7: planned
 
 ## Limitation burn-down
@@ -53,7 +54,7 @@ drastha replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-t
 - Reconnaissance, SYN-flood and UDP-flood behaviour are implemented. UDP reflection/amplification attribution still needs service-aware directional features.
 - Thresholds are configuration values, not yet learned from a benign baseline.
 - Confidence is transparent but not calibrated on labelled datasets yet.
-- There is no API, database or dashboard yet.
+- Multi-user authentication and production traffic capture remain outside the demo scope.
 
 ## Sprint 1 acceptance checklist
 
@@ -158,6 +159,11 @@ drastha replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-t
 - [x] Capture-relative timestamps replace misleading 1970 dates in synthetic demos
 - [x] Evidence grouped by contributing detector with visible threshold context
 - [x] Desktop and 390px mobile layouts visually verified
+- [x] Required-versus-optional demo preflight with machine-readable report
+- [x] Safe, repeatable reset restricted to SQLite databases inside `output/`
+- [x] One-command API and dashboard start with a Docker-independent fallback
+- [x] Fresh demo preparation loads 1 critical incident, 2 alerts and 1 feedback record
+- [x] Fifty-nine total automated tests passing
 - [ ] Authentication and role-based access control before multi-user deployment
 
 ## Next sprint

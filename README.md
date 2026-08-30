@@ -46,6 +46,29 @@ $env:PYTHONPATH = "src"
 drastha replay --input examples/zeek_conn_scan.jsonl --port-threshold 5 --host-threshold 5
 ```
 
+### Reliable SIH demo start
+
+Drastha's presentation path does not require Docker. It checks every required
+asset, resets a safe local SQLite demo database, loads the known attack story,
+and starts the API plus built dashboard with one command:
+
+```powershell
+$env:PYTHONPATH = "src"
+drastha demo-preflight --report-output output/drastha_demo_preflight.json
+drastha demo-serve --fresh
+```
+
+Open `http://127.0.0.1:8000`. The preflight report distinguishes required
+failures from optional capabilities such as Docker and Zeek. If Docker is not
+running, the same evidence, incident queue, and analyst workflow remain
+available through the SQLite offline fallback.
+
+To prepare the data without starting the server:
+
+```powershell
+drastha demo-prepare --fresh --report-output output/drastha_demo_prepare_report.json
+```
+
 To save alerts:
 
 ```powershell
@@ -121,7 +144,7 @@ drastha correlate-alerts --input output/sprint3_c2_alerts.jsonl --input output/s
 
 Replaying the same alerts is idempotent and does not reset an analyst's incident status.
 
-Run the Sprint 5 analyst console locally:
+For frontend development, run the Sprint 5 analyst console manually:
 
 ```powershell
 python -m pip install -e ".[api]"

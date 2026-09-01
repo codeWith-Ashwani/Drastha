@@ -124,21 +124,49 @@ class AnalystAPITests(unittest.TestCase):
         self.assertFalse(messages[0]["return_path_required"])
         traffic = [item for item in messages if item["type"] == "traffic"]
         alerts = [item for item in messages if item["type"] == "alert"]
-        self.assertEqual(len(traffic), 37)
+        self.assertEqual(len(traffic), 67)
         self.assertEqual({item["alert"]["threat_type"] for item in alerts}, {
             "dns_threat", "command_and_control", "data_exfiltration",
+            "denial_of_service", "reconnaissance", "encrypted_session_threat",
         })
         ml_alerts = [item for item in alerts if item["alert"]["subtype"] == "dga_like_domain"]
         self.assertTrue(ml_alerts)
         self.assertEqual(ml_alerts[0]["detection_method"], "Character n-gram ML model")
+        ddos_classes = {
+            item["alert"]["subtype"]: item["alert"]["threat_class"]
+            for item in alerts if item["alert"]["threat_type"] == "denial_of_service"
+        }
+        self.assertEqual(ddos_classes["syn_flood"], "Volumetric DDoS - SYN Flood")
+        self.assertEqual(
+            ddos_classes["udp_reflection_amplification"],
+            "Volumetric DDoS - UDP Reflection/Amplification",
+        )
+        self.assertEqual(
+            ddos_classes["suspected_spoofed_source_flood"],
+            "Volumetric DDoS - Spoofed-Source Flood",
+        )
+        encrypted_classes = {
+            item["alert"]["threat_class"] for item in alerts
+            if item["alert"]["threat_type"] == "encrypted_session_threat"
+        }
+        self.assertEqual(encrypted_classes, {"Encrypted-session metadata anomaly"})
         for item in alerts:
             self.assertIn("confidence", item["alert"])
             self.assertTrue(item["alert"]["evidence"])
+            self.assertEqual(item["alert"]["schema_version"], "drastha-alert-v1")
+            self.assertIn("timestamp", item["alert"])
+            self.assertIn("flow_identifier", item["alert"])
+            self.assertIn("threat_class", item["alert"])
+            self.assertTrue(item["alert"]["supporting_evidence"])
             self.assertTrue(item["detection_method"])
             self.assertIn("risk_score", item["incident"])
         self.assertEqual(messages[-1]["type"], "complete")
         self.assertTrue(messages[-1]["near_real_time"])
         self.assertTrue(messages[-1]["passive"])
+        self.assertTrue(messages[-1]["bounded_latency"])
+        self.assertFalse(messages[-1]["return_path_required"])
+        self.assertEqual(messages[-1]["telemetry"]["dns_records"], 21)
+        self.assertEqual(messages[-1]["telemetry"]["encrypted_session_records"], 8)
 
 
 if __name__ == "__main__":

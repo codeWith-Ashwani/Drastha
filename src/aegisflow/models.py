@@ -4,6 +4,15 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 
+THREAT_CLASS_BY_SUBTYPE = {
+    "syn_flood": "Volumetric DDoS - SYN Flood",
+    "udp_flood": "Volumetric DDoS - UDP Flood",
+    "udp_reflection_amplification": "Volumetric DDoS - UDP Reflection/Amplification",
+    "suspected_spoofed_source_flood": "Volumetric DDoS - Spoofed-Source Flood",
+    "encrypted_session_metadata_anomaly": "Encrypted-session metadata anomaly",
+}
+
+
 @dataclass(frozen=True, slots=True)
 class NetworkEvent:
     timestamp: float
@@ -83,7 +92,17 @@ class Alert:
     limitations: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        record = asdict(self)
+        # Stable interoperability aliases required by the public alert schema.
+        # Existing fields remain unchanged for backward compatibility.
+        record.update({
+            "schema_version": "drastha-alert-v1",
+            "timestamp": self.window_end,
+            "flow_identifier": self.flow_ids[0] if self.flow_ids else None,
+            "threat_class": THREAT_CLASS_BY_SUBTYPE.get(self.subtype, self.threat_type),
+            "supporting_evidence": record["evidence"],
+        })
+        return record
 
 
 @dataclass(frozen=True, slots=True)

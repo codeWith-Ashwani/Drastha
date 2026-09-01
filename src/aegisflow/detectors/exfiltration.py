@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass
 from hashlib import sha256
 from typing import Any
 
+from aegisflow.context_policy import EndpointRule
 from aegisflow.detectors.base import Detector
 from aegisflow.models import Alert, Evidence, NetworkEvent
 from aegisflow.windowing import KeyedSlidingWindow
@@ -19,6 +20,10 @@ class ExfiltrationConfig:
     minimum_outbound_ratio: float = 8.0
     baseline_multiplier: float = 4.0
     baseline_history_size: int = 50
+    single_flow_minimum_outbound_bytes: int = 10_000_000
+    single_flow_minimum_outbound_ratio: float = 20.0
+    baseline_free_minimum_outbound_bytes: int = 10_000_000
+    baseline_free_minimum_outbound_ratio: float = 20.0
     cooldown_seconds: float = 600.0
 
     def __post_init__(self) -> None:
@@ -38,9 +43,12 @@ class ExfiltrationDetector(Detector):
         self,
         config: ExfiltrationConfig | None = None,
         approved_backup_destinations: set[str] | None = None,
+        approved_bulk_transfer_endpoints: tuple[EndpointRule, ...] = (),
     ) -> None:
         self.config = config or ExfiltrationConfig()
         self.approved_backup_destinations = approved_backup_destinations or set()
+        self.approved_bulk_transfer_endpoints = approved_bulk_transfer_endpoints
+        self.context_suppressed_records = 0
         self._windows: KeyedSlidingWindow[tuple[str, str], NetworkEvent] = KeyedSlidingWindow(
             self.config.window_seconds
         )
@@ -97,17 +105,38 @@ class ExfiltrationDetector(Detector):
                 self._windows.add(key, event.timestamp, event)
 
     def process(self, event: NetworkEvent) -> list[Alert]:
-        if event.dst_ip in self.approved_backup_destinations:
+        if (
+            event.dst_ip in self.approved_backup_destinations
+            or any(rule.matches(event) for rule in self.approved_bulk_transfer_endpoints)
+        ):
+            self.context_suppressed_records += 1
             return []
 
         baseline_history = self._source_baselines[event.src_ip]
         baseline_median = statistics.median(baseline_history) if baseline_history else 0.0
-        baseline_history.append(event.outbound_bytes)
         key = (event.src_ip, event.dst_ip)
         self._destination_first_seen.setdefault(key, event.timestamp)
         window = self._windows.add(key, event.timestamp, event)
         events = [item.value for item in window]
-        if len(events) < self.config.minimum_flows or len(baseline_history) < self.config.minimum_flows:
+        single_ratio = event.outbound_bytes / max(event.inbound_bytes, 1)
+        if (
+            event.outbound_bytes >= self.config.single_flow_minimum_outbound_bytes
+            and single_ratio >= self.config.single_flow_minimum_outbound_ratio
+            and event.timestamp - self._last_alert.get(key, float("-inf")) >= self.config.cooldown_seconds
+        ):
+            baseline_history.append(event.outbound_bytes)
+            self._last_alert[key] = event.timestamp
+            return [self._build_alert(
+                event,
+                [event],
+                event.outbound_bytes,
+                event.inbound_bytes,
+                single_ratio,
+                float(event.outbound_bytes),
+                baseline_median,
+            )]
+        if len(events) < self.config.minimum_flows:
+            baseline_history.append(event.outbound_bytes)
             return []
 
         outbound = sum(item.outbound_bytes for item in events)
@@ -116,15 +145,23 @@ class ExfiltrationDetector(Detector):
         average_outbound = outbound / len(events)
         baseline_threshold = max(baseline_median * self.config.baseline_multiplier, 1.0)
         exceeds_baseline = baseline_median > 0 and average_outbound >= baseline_threshold
-        suspicious = (
+        baseline_anomaly = (
             outbound >= self.config.minimum_outbound_bytes
             and ratio >= self.config.minimum_outbound_ratio
             and exceeds_baseline
         )
+        baseline_free_extreme_asymmetry = (
+            outbound >= self.config.baseline_free_minimum_outbound_bytes
+            and ratio >= self.config.baseline_free_minimum_outbound_ratio
+        )
+        suspicious = baseline_anomaly or baseline_free_extreme_asymmetry
         if not suspicious:
+            baseline_history.append(event.outbound_bytes)
             return []
         if event.timestamp - self._last_alert.get(key, float("-inf")) < self.config.cooldown_seconds:
+            baseline_history.append(event.outbound_bytes)
             return []
+        baseline_history.append(event.outbound_bytes)
         self._last_alert[key] = event.timestamp
         return [
             self._build_alert(

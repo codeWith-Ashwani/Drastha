@@ -1,10 +1,12 @@
 import sys
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from aegisflow.detectors.c2 import C2BeaconDetector, C2Config
+from aegisflow.context_policy import EndpointRule
 from aegisflow.models import EncryptedSessionMetadata, NetworkEvent
 
 
@@ -46,6 +48,52 @@ class C2DetectorTests(unittest.TestCase):
         for index, size in enumerate((200, 2000, 300, 3500, 500, 5000)):
             alerts.extend(detector.process(connection(index, 1000 + index * 10, size)))
         self.assertEqual(alerts, [])
+
+    def test_repeated_normal_https_downloads_do_not_alert(self):
+        detector = C2BeaconDetector(C2Config(minimum_connections=6))
+        alerts = []
+        for index in range(6):
+            alerts.extend(detector.process(
+                connection(index, 1000 + index * 10, total_bytes=5000)
+            ))
+        self.assertEqual(alerts, [])
+
+    def test_periodic_dns_is_routed_away_from_c2(self):
+        detector = C2BeaconDetector(C2Config(minimum_connections=6))
+        alerts = []
+        for index in range(8):
+            item = replace(
+                connection(index, 1000 + index * 5),
+                dst_port=53,
+                protocol="udp",
+                raw={"service": "dns"},
+            )
+            alerts.extend(detector.process(item))
+        self.assertEqual(alerts, [])
+
+    def test_scheduled_health_check_is_a_negative_signal(self):
+        detector = C2BeaconDetector(
+            C2Config(minimum_connections=6),
+            trusted_periodic_endpoints=(EndpointRule(
+                src_ip="10.0.0.44", dst_ip="203.0.113.77", dst_port=443,
+                protocol="tcp", purpose="test health check",
+            ),),
+        )
+        alerts = []
+        for index in range(8):
+            alerts.extend(detector.process(connection(index, 1000 + index * 60)))
+        self.assertEqual(alerts, [])
+        self.assertEqual(detector.context_suppressed_records, 8)
+
+    def test_untrusted_schedule_claim_does_not_suppress_c2(self):
+        detector = C2BeaconDetector(C2Config(minimum_connections=6))
+        alerts = []
+        for index in range(6):
+            alerts.extend(detector.process(replace(
+                connection(index, 1000 + index * 10),
+                raw={"ml_evidence": {"scheduled_health_check": True}},
+            )))
+        self.assertEqual([item.subtype for item in alerts], ["periodic_beacon"])
 
     def test_allowlisted_periodic_service_is_suppressed(self):
         detector = C2BeaconDetector(

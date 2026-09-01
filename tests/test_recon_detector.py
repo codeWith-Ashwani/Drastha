@@ -43,6 +43,20 @@ class ReconDetectorTests(unittest.TestCase):
             alerts.extend(detector.process(event(index, f"H{index}", f"10.0.1.{index + 1}", 443)))
         self.assertEqual([alert.subtype for alert in alerts], ["horizontal_host_scan"])
 
+    def test_combined_host_and_port_fanout(self):
+        detector = ReconDetector(ReconConfig(
+            window_seconds=10, unique_port_threshold=5,
+            unique_host_threshold=5, cooldown_seconds=30,
+        ))
+        alerts = []
+        ports = (22, 23, 25, 53, 80, 110)
+        for index, port in enumerate(ports):
+            alerts.extend(detector.process(event(
+                index * 0.2, f"M{index}", f"10.0.2.{index % 4 + 1}", port
+            )))
+        self.assertEqual([alert.subtype for alert in alerts], ["multi_host_port_scan"])
+        self.assertIsNone(alerts[0].dst_ip)
+
     def test_benign_contacts_do_not_alert(self):
         detector = ReconDetector(ReconConfig(
             window_seconds=10, unique_port_threshold=4, unique_host_threshold=4,
@@ -65,4 +79,3 @@ class ReconDetectorTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

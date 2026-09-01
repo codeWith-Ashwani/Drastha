@@ -36,7 +36,34 @@ class ZeekIngestionTests(unittest.TestCase):
             with self.assertRaisesRegex(ZeekRecordError, "line 1"):
                 list(read_conn_jsonl(path))
 
+    def test_accepts_iso_timestamp_and_infers_connection_state_from_history(self):
+        event = normalize_conn_record({
+            "ts": "2026-09-01T16:58:30Z",
+            "uid": "C-ISO",
+            "id.orig_h": "198.51.100.10",
+            "id.orig_p": 40000,
+            "id.resp_h": "10.0.0.20",
+            "id.resp_p": 443,
+            "proto": "tcp",
+            "history": "S",
+            "resp_bytes": 0,
+        })
+        self.assertGreater(event.timestamp, 0)
+        self.assertEqual(event.connection_state, "S0")
+
+    def test_scan_history_is_not_misread_as_incomplete_tcp(self):
+        event = normalize_conn_record({
+            "ts": 100.0,
+            "uid": "C-SCAN",
+            "id.orig_h": "192.0.2.10",
+            "id.resp_h": "192.0.2.20",
+            "id.resp_p": 22,
+            "proto": "tcp",
+            "history": "D",
+            "resp_bytes": 0,
+        })
+        self.assertEqual(event.connection_state, "")
+
 
 if __name__ == "__main__":
     unittest.main()
-

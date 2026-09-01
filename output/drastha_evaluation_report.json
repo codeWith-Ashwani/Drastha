@@ -1,8 +1,19 @@
 {
   "all_scenarios_passed": true,
-  "benchmark_note": "Single-process in-memory detector timing on this machine; excludes packet capture, Zeek conversion, network transport, database writes, and UI rendering.",
+  "benchmark_note": "Per-detector timings are in-memory. The end-to-end benchmark includes fixture file reads, normalization, detection, correlation, SQLite upserts and SSE serialization; it excludes packet capture, Zeek conversion, HTTP transport and browser rendering.",
+  "end_to_end_benchmark": {
+    "iterations": 250,
+    "median_end_to_end_ms": 57.992,
+    "p95_end_to_end_ms": 67.9,
+    "records_per_iteration": 67,
+    "scope": "file_read_to_sqlite_and_sse_serialization",
+    "sustained_events_per_second": 1127.74,
+    "target_events_per_second": 1000,
+    "target_met": true,
+    "total_records_processed": 16750
+  },
   "environment": {
-    "platform": "Windows-11-10.0.26200-SP0",
+    "platform": "Windows-11-10.0.22631-SP0",
     "python": "3.12.13"
   },
   "evaluation_scope": "synthetic_scenario_validation",
@@ -12,8 +23,8 @@
     {
       "benchmark": {
         "iterations": 250,
-        "median_events_per_second": 214285.64,
-        "median_processing_ms": 0.028
+        "median_events_per_second": 186335.41,
+        "median_processing_ms": 0.0322
       },
       "expected_alerts": {
         "vertical_port_scan": 1
@@ -28,17 +39,21 @@
     {
       "benchmark": {
         "iterations": 250,
-        "median_events_per_second": 235690.29,
-        "median_processing_ms": 0.0297
+        "median_events_per_second": 166753.52,
+        "median_processing_ms": 0.0959
       },
       "expected_alerts": {
+        "suspected_spoofed_source_flood": 1,
         "syn_flood": 1,
-        "udp_flood": 1
+        "udp_flood": 1,
+        "udp_reflection_amplification": 1
       },
-      "fixture_events": 7,
+      "fixture_events": 16,
       "observed_alerts": {
+        "suspected_spoofed_source_flood": 1,
         "syn_flood": 1,
-        "udp_flood": 1
+        "udp_flood": 1,
+        "udp_reflection_amplification": 1
       },
       "scenario_passed": true,
       "threat_family": "denial_of_service"
@@ -46,8 +61,24 @@
     {
       "benchmark": {
         "iterations": 250,
-        "median_events_per_second": 20737.67,
-        "median_processing_ms": 1.0126
+        "median_events_per_second": 159045.73,
+        "median_processing_ms": 0.0503
+      },
+      "expected_alerts": {
+        "encrypted_session_metadata_anomaly": 1
+      },
+      "fixture_events": 8,
+      "observed_alerts": {
+        "encrypted_session_metadata_anomaly": 1
+      },
+      "scenario_passed": true,
+      "threat_family": "encrypted_session_threat"
+    },
+    {
+      "benchmark": {
+        "iterations": 250,
+        "median_events_per_second": 14044.47,
+        "median_processing_ms": 1.4953
       },
       "expected_alerts": {
         "dga_like_domain": 1,
@@ -64,8 +95,8 @@
     {
       "benchmark": {
         "iterations": 250,
-        "median_events_per_second": 183066.31,
-        "median_processing_ms": 0.0437
+        "median_events_per_second": 147874.31,
+        "median_processing_ms": 0.0541
       },
       "expected_alerts": {
         "periodic_beacon": 1
@@ -80,8 +111,8 @@
     {
       "benchmark": {
         "iterations": 250,
-        "median_events_per_second": 340425.47,
-        "median_processing_ms": 0.0235
+        "median_events_per_second": 265780.73,
+        "median_processing_ms": 0.0301
       },
       "expected_alerts": {
         "outbound_volume_anomaly": 1

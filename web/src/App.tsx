@@ -6,7 +6,7 @@ import {
 
 type Evidence = { name: string; observed: number | string; comparison: string; explanation: string };
 type Alert = {
-  alert_id: string; detector_id: string; threat_type: string; subtype: string;
+  alert_id: string; detector_id: string; threat_type: string; threat_class?: string; subtype: string;
   severity: string; confidence: number; window_start: number; window_end: number;
   src_ip: string; dst_ip?: string; evidence: Evidence[]; limitations: string[];
 };
@@ -25,6 +25,8 @@ type UploadResult = {
   verdict: string; headline: string; summary: string; filename: string; file_size_bytes: number;
   analysis_ms: number; quality: { status: string; records_accepted: number; records_rejected: number; errors: string[] };
   alerts: Alert[]; incidents: Incident[]; top_incident_id?: string; stages: DemoStage[]; scope_note: string;
+  telemetry?: { connection_records: number; dns_records: number; encrypted_session_records: number; supplied_labels_ignored: boolean };
+  context_policy?: { source: string; trusted_periodic_rules: number; approved_bulk_transfer_rules: number; suppressed_connection_evaluations: number };
 };
 type StreamRecord = {
   timestamp: number; flow_id: string; src_ip: string; dst_ip: string; protocol: string;
@@ -47,10 +49,21 @@ const PIPELINE_TEMPLATE: DemoStage[] = [
 ];
 const LABELS: Record<string, string> = {
   command_and_control: "Command-and-control behaviour", data_exfiltration: "Possible data exfiltration",
-  reconnaissance: "Network reconnaissance", denial_of_service: "Traffic flooding",
+  reconnaissance: "Network reconnaissance", denial_of_service: "Volumetric DDoS",
+  dns_threat: "Suspicious DNS behaviour", encrypted_session_threat: "Suspicious encrypted-session behaviour",
   periodic_beacon: "Repeated callback pattern", outbound_volume_anomaly: "Unusual outbound data transfer",
+  dga_like_domain: "Algorithmically generated domain pattern", dns_tunnelling: "Possible DNS tunnelling",
+  encrypted_session_metadata_anomaly: "Encrypted-session metadata anomaly",
   vertical_port_scan: "Many ports checked on one device", horizontal_host_scan: "One service checked across many devices",
-  syn_flood: "Many incomplete connection attempts", udp_flood: "Unusually high UDP traffic",
+  multi_host_port_scan: "Multi-host/port reconnaissance",
+  syn_flood: "Many incomplete connections to one service", udp_flood: "Unusually high UDP traffic",
+  suspected_spoofed_source_flood: "Suspected spoofed-source SYN flood",
+  udp_reflection_amplification: "UDP reflection or amplification pattern",
+  target_port_concentration: "Traffic focused on one service", distinct_suspicious_domains: "Generated-looking domains",
+  model_probability: "ML model score", queried_domain: "Domain checked by the model",
+  txt_query_ratio: "TXT-query share", fingerprint_prevalence: "Fingerprint prevalence",
+  packet_size_sequence_anomaly: "Packet-size anomaly", timing_sequence_anomaly: "Timing anomaly",
+  outbound_to_inbound_ratio: "Outbound-to-inbound ratio", related_findings_merged: "Repeated findings merged",
 };
 const label = (value: string) => LABELS[value] || value.replaceAll("_", " ");
 const timeLabel = (value: number, origin?: number) => value < 946684800
@@ -205,7 +218,7 @@ function App() {
       <section className="workbench">
         <div className="intro"><p className="eyebrow">Passive near-real-time intelligence</p><h1>Watch threats emerge from a one-way IP stream.</h1><p>Drastha passively receives simulated network records, detects and classifies suspicious behaviour, scores the risk and publishes explainable alerts as the stream arrives.</p><div className="intro-actions"><button className="primary" disabled={stream?.status === "running" || running || uploading} onClick={startLiveStream}><Radio size={16} />{stream?.status === "running" ? "Stream running…" : "Start live IP simulation"}</button><button className="text-button" disabled={running || stream?.status === "running"} onClick={runDemo}><Activity size={14} />Run instant replay</button></div></div>
         <div className="upload-card">
-          <div className="upload-title"><FileUp size={19} /><div><b>Analyse your own replay</b><span>Zeek connection records · JSONL or JSON · up to 5 MB</span></div></div>
+          <div className="upload-title"><FileUp size={19} /><div><b>Analyse your own replay</b><span>Zeek connection, DNS and TLS metadata · JSONL or JSON · up to 5 MB</span></div></div>
           <button className={`dropzone ${dragging ? "dragging" : ""}`} disabled={uploading || running} onClick={() => fileInput.current?.click()} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); void analyseFile(event.dataTransfer.files[0]); }}>
             <FileJson size={23} /><b>{uploading ? "Checking the replay…" : "Choose or drop a replay file"}</b><span>The file stays on this computer and is used only for this analysis.</span>
           </button>
@@ -224,14 +237,14 @@ function App() {
           <div><span>Response path</span><b>None</b></div>
         </div>
         {stream.latest && <div className="latest-record"><span>Latest observation</span><b>{stream.latest.src_ip} <ArrowRight size={12} /> {stream.latest.dst_ip}:{stream.latest.dst_port}</b><small>{stream.latest.record_kind === "dns" ? `DNS query · ${stream.latest.query}` : `${stream.latest.protocol.toUpperCase()} · ${stream.latest.outbound_bytes.toLocaleString()} bytes out · flow ${stream.latest.flow_id}`}</small></div>}
-        {stream.findings.length > 0 ? <div className="live-findings">{stream.findings.map((item) => <article key={item.alert.alert_id}><div><span className={`severity severity-${item.alert.severity}`}>{item.alert.severity}</span><b>{label(item.alert.subtype)}</b></div><strong>{Math.round(item.alert.confidence * 100)}% confidence</strong><p>{item.detection_method}</p><small>{item.alert.evidence[0]?.explanation}</small></article>)}</div> : <div className="listening"><Radio size={15} /><span>{stream.status === "running" ? "Listening for behaviour that crosses a detection threshold…" : "No configured threat behaviour was found."}</span></div>}
+        {stream.findings.length > 0 ? <div className="live-findings">{stream.findings.map((item) => <article key={item.alert.alert_id}><div><span className={`severity severity-${item.alert.severity}`}>{item.alert.severity}</span><b>{item.alert.threat_class || label(item.alert.subtype)}</b></div><strong>{Math.round(item.alert.confidence * 100)}% confidence</strong><p>{item.detection_method}</p><small>{item.alert.evidence[0]?.explanation}</small></article>)}</div> : <div className="listening"><Radio size={15} /><span>{stream.status === "running" ? "Listening for behaviour that crosses a detection threshold…" : "No configured threat behaviour was found."}</span></div>}
         {stream.topIncidentId && <button className="secondary live-review" onClick={() => void openIncident(stream.topIncidentId!)}><Eye size={15} />Open scored intelligence</button>}
       </section>}
 
       {uploadResult && <section className={`result-panel ${uploadResult.verdict === "threat_detected" ? "result-danger" : "result-clear"}`}>
         <div className="result-heading"><div className="verdict-icon">{uploadResult.verdict === "threat_detected" ? <CircleAlert size={22} /> : <Check size={22} />}</div><div><p className="eyebrow">Uploaded replay result</p><h2>{uploadResult.headline}</h2><p>{uploadResult.summary}</p></div>{uploadResult.top_incident_id && <button className="secondary" onClick={() => void openIncident(uploadResult.top_incident_id!)}><Eye size={15} />Review full evidence</button>}</div>
-        <div className="result-facts"><span><b>{uploadResult.quality.records_accepted}</b> valid records</span><span><b>{uploadResult.alerts.length}</b> findings</span><span><b>{uploadResult.incidents.length}</b> incidents</span><span><b>{uploadResult.analysis_ms} ms</b> analysis time</span><span><b>{uploadResult.quality.status}</b> data quality</span></div>
-        {uploadResult.alerts.length > 0 && <div className="finding-list">{uploadResult.alerts.map((alert) => <article className="finding" key={alert.alert_id}><div className="finding-top"><div><span className={`severity severity-${alert.severity}`}>{alert.severity}</span><h3>{label(alert.subtype)}</h3></div><b>{Math.round(alert.confidence * 100)}% confidence</b></div><p className="route">{alert.src_ip} <ArrowRight size={13} /> {alert.dst_ip || "multiple destinations"}</p><p className="finding-meaning">{label(alert.threat_type)}</p><div className="evidence-list">{alert.evidence.slice(0, 4).map((item) => <div key={item.name}><span>{label(item.name)}</span><b>{item.observed}</b><small>{item.explanation}</small></div>)}</div><p className="caveat"><b>Keep in mind:</b> {alert.limitations[0]}</p></article>)}</div>}
+        <div className="result-facts"><span><b>{uploadResult.quality.records_accepted}</b> valid records</span><span><b>{uploadResult.alerts.length}</b> findings</span><span><b>{uploadResult.incidents.length}</b> incidents</span><span><b>{uploadResult.analysis_ms} ms</b> analysis time</span><span><b>{uploadResult.quality.status}</b> data quality</span>{uploadResult.telemetry && <><span><b>{uploadResult.telemetry.dns_records}</b> DNS records</span><span><b>{uploadResult.telemetry.encrypted_session_records}</b> TLS records</span></>}{uploadResult.context_policy && <span><b>{uploadResult.context_policy.suppressed_connection_evaluations}</b> policy-approved records</span>}</div>
+        {uploadResult.alerts.length > 0 && <div className="finding-list">{uploadResult.alerts.map((alert) => <article className="finding" key={alert.alert_id}><div className="finding-top"><div><span className={`severity severity-${alert.severity}`}>{alert.severity}</span><h3>{alert.threat_class || label(alert.subtype)}</h3></div><b>{Math.round(alert.confidence * 100)}% confidence</b></div><p className="route">{alert.src_ip} <ArrowRight size={13} /> {alert.dst_ip || "multiple destinations"}</p><p className="finding-meaning">{label(alert.subtype)}</p><div className="evidence-list">{alert.evidence.slice(0, 4).map((item) => <div key={item.name}><span>{label(item.name)}</span><b>{item.observed}</b><small>{item.explanation}</small></div>)}</div><p className="caveat"><b>Keep in mind:</b> {alert.limitations[0]}</p></article>)}</div>}
         <p className="scope-note">{uploadResult.scope_note}</p>
       </section>}
 

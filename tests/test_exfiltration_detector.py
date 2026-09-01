@@ -1,10 +1,12 @@
 import sys
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from aegisflow.detectors.exfiltration import ExfiltrationConfig, ExfiltrationDetector
+from aegisflow.context_policy import EndpointRule
 from aegisflow.models import NetworkEvent
 
 
@@ -51,6 +53,25 @@ class ExfiltrationDetectorTests(unittest.TestCase):
         self.assertEqual(alerts[0].subtype, "outbound_volume_anomaly")
         self.assertTrue(any(item.name == "outbound_to_inbound_ratio" for item in alerts[0].evidence))
 
+    def test_extreme_single_flow_asymmetry_alerts_without_a_baseline(self):
+        detector = self.detector()
+        alerts = detector.process(flow(
+            99, 1200, "203.0.113.120", 18_500_000, 42_000
+        ))
+        self.assertEqual(len(alerts), 1)
+        self.assertEqual(alerts[0].subtype, "outbound_volume_anomaly")
+
+    def test_extreme_multiflow_asymmetry_alerts_without_a_baseline(self):
+        detector = self.detector()
+        alerts = []
+        for index in range(5):
+            alerts.extend(detector.process(flow(
+                index, 1200 + index * 8, "203.0.113.220",
+                3_200_000 + index * 120_000, 9_000 + index * 500,
+            )))
+        self.assertEqual(len(alerts), 1)
+        self.assertEqual(alerts[0].subtype, "outbound_volume_anomaly")
+
     def test_approved_backup_does_not_alert(self):
         detector = self.detector({"198.51.100.88"})
         self.seed_baseline(detector)
@@ -60,6 +81,31 @@ class ExfiltrationDetectorTests(unittest.TestCase):
                 flow(10 + index, 1100 + index * 10, "198.51.100.88", 2_000_000, 1_000)
             ))
         self.assertEqual(alerts, [])
+
+    def test_exact_approved_bulk_endpoint_is_suppressed(self):
+        detector = ExfiltrationDetector(
+            ExfiltrationConfig(),
+            approved_bulk_transfer_endpoints=(EndpointRule(
+                src_ip="10.0.0.44", dst_ip="198.51.100.88", dst_port=443,
+                protocol="tcp", purpose="approved backup",
+            ),),
+        )
+        alerts = detector.process(flow(
+            99, 1200, "198.51.100.88", 18_500_000, 42_000
+        ))
+        self.assertEqual(alerts, [])
+        self.assertEqual(detector.context_suppressed_records, 1)
+
+    def test_untrusted_backup_claim_does_not_suppress_exfiltration(self):
+        detector = self.detector()
+        item = replace(
+            flow(99, 1200, "203.0.113.120", 18_500_000, 42_000),
+            raw={"ml_evidence": {"approved_backup": True}},
+        )
+        self.assertEqual(
+            [alert.subtype for alert in detector.process(item)],
+            ["outbound_volume_anomaly"],
+        )
 
     def test_balanced_download_does_not_alert(self):
         detector = self.detector()

@@ -26,12 +26,42 @@ class DDoSDetectorTests(unittest.TestCase):
         alerts = []
         for index in range(5):
             alerts.extend(detector.process(event(
-                index * 0.2, f"S{index}", f"203.0.113.{index + 1}",
+                index * 0.2, f"S{index}", "203.0.113.10",
                 "10.0.0.8", "tcp",
             )))
         self.assertEqual([alert.subtype for alert in alerts], ["syn_flood"])
         self.assertEqual(alerts[0].severity, "high")
-        self.assertEqual(len(alerts[0].evidence), 3)
+        self.assertGreaterEqual(len(alerts[0].evidence), 3)
+        self.assertTrue(any(
+            item.name == "target_port_concentration" for item in alerts[0].evidence
+        ))
+
+    def test_high_source_entropy_is_labelled_as_suspected_spoofed_source_flood(self):
+        detector = DDoSDetector(DDoSConfig(
+            window_seconds=5, syn_attempt_threshold=5,
+            min_incomplete_ratio=0.8, udp_packet_threshold=500,
+        ))
+        alerts = []
+        for index in range(5):
+            alerts.extend(detector.process(event(
+                index * 0.2, f"E{index}", f"198.51.100.{index + 1}",
+                "10.0.0.8", "tcp",
+            )))
+        self.assertEqual(
+            [alert.subtype for alert in alerts], ["suspected_spoofed_source_flood"]
+        )
+
+    def test_port_fanout_is_not_misclassified_as_syn_flood(self):
+        detector = DDoSDetector(DDoSConfig(
+            window_seconds=5, syn_attempt_threshold=5,
+            min_incomplete_ratio=0.8, udp_packet_threshold=500,
+        ))
+        alerts = []
+        for index, port in enumerate((21, 22, 23, 25, 53)):
+            item = event(index * 0.2, f"P{index}", "203.0.113.10", "10.0.0.8", "tcp")
+            item = __import__("dataclasses").replace(item, dst_port=port)
+            alerts.extend(detector.process(item))
+        self.assertEqual(alerts, [])
 
     def test_completed_tcp_connections_do_not_trigger_syn_flood(self):
         detector = DDoSDetector(DDoSConfig(
@@ -58,4 +88,3 @@ class DDoSDetectorTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

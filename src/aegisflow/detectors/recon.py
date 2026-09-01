@@ -69,6 +69,15 @@ class ReconDetector(Detector):
                 "horizontal_host_scan", len(horizontal_hosts),
                 self.config.unique_host_threshold, None, horizontal_port,
             ))
+        if (
+            len(ports) >= self.config.unique_port_threshold
+            and len(hosts) >= 2
+            and len(vertical_ports) < self.config.unique_port_threshold
+        ):
+            candidates.append((
+                "multi_host_port_scan", len(ports),
+                self.config.unique_port_threshold, None, None,
+            ))
 
         alerts: list[Alert] = []
         for subtype, observed, threshold, target_host, target_port in candidates:
@@ -80,6 +89,64 @@ class ReconDetector(Detector):
                 event, contacts, ports, hosts, subtype, observed, threshold,
                 target_host, target_port,
             ))
+        return alerts
+
+    def final_alerts(self) -> list[Alert]:
+        """Return end-of-replay snapshots with the complete active fan-out window.
+
+        Streaming alerts still fire as soon as the threshold is crossed. A
+        completed replay can use this snapshot so the dashboard shows all ports
+        or hosts observed later in the same window instead of only the first
+        threshold-crossing evidence.
+        """
+        alerts: list[Alert] = []
+        for source, contacts in self._contacts.items():
+            if not contacts:
+                continue
+            ports = {item.dst_port for item in contacts}
+            hosts = {item.dst_ip for item in contacts}
+            ports_by_host: dict[str, set[int]] = defaultdict(set)
+            hosts_by_port: dict[int, set[str]] = defaultdict(set)
+            for item in contacts:
+                ports_by_host[item.dst_ip].add(item.dst_port)
+                hosts_by_port[item.dst_port].add(item.dst_ip)
+            vertical_host, vertical_ports = max(
+                ports_by_host.items(), key=lambda pair: len(pair[1])
+            )
+            horizontal_port, horizontal_hosts = max(
+                hosts_by_port.items(), key=lambda pair: len(pair[1])
+            )
+            last = contacts[-1]
+            event = NetworkEvent(
+                timestamp=last.timestamp,
+                flow_id=last.flow_id,
+                src_ip=source,
+                dst_ip=last.dst_ip,
+                src_port=0,
+                dst_port=last.dst_port,
+                protocol="tcp",
+            )
+            if len(vertical_ports) >= self.config.unique_port_threshold:
+                alerts.append(self._build_alert(
+                    event, contacts, ports, hosts, "vertical_port_scan",
+                    len(vertical_ports), self.config.unique_port_threshold,
+                    vertical_host, None,
+                ))
+            if len(horizontal_hosts) >= self.config.unique_host_threshold:
+                alerts.append(self._build_alert(
+                    event, contacts, ports, hosts, "horizontal_host_scan",
+                    len(horizontal_hosts), self.config.unique_host_threshold,
+                    None, horizontal_port,
+                ))
+            if (
+                len(ports) >= self.config.unique_port_threshold
+                and len(hosts) >= 2
+                and len(vertical_ports) < self.config.unique_port_threshold
+            ):
+                alerts.append(self._build_alert(
+                    event, contacts, ports, hosts, "multi_host_port_scan",
+                    len(ports), self.config.unique_port_threshold, None, None,
+                ))
         return alerts
 
     def _build_alert(
@@ -107,11 +174,18 @@ class ReconDetector(Detector):
             explanation = "One source contacted many destination ports inside the observation window."
             destination = target_host
             pattern_context = f"Target host {target_host} received probes on {observed} unique ports."
-        else:
+        elif subtype == "horizontal_host_scan":
             primary_name = "unique_destination_hosts"
             explanation = "One source contacted many destination hosts inside the observation window."
             destination = None
             pattern_context = f"Destination port {target_port} was probed across {observed} unique hosts."
+        else:
+            primary_name = "unique_destination_ports"
+            explanation = "One source contacted many ports distributed across multiple destination hosts."
+            destination = None
+            pattern_context = (
+                f"The source probed {observed} unique ports across {len(hosts)} hosts."
+            )
 
         return Alert(
             alert_id=alert_id,

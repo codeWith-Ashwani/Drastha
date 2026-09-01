@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import TextIO
 
 from aegisflow.api_store import repository_from_url
+from aegisflow.context_policy import load_context_policy
 from aegisflow.detectors import (
     C2BeaconDetector,
     C2Config,
@@ -328,6 +329,7 @@ def _run_c2(input_path: Path, args: argparse.Namespace) -> int:
         list(read_encrypted_jsonl(args.encrypted_input, args.encrypted_transport))
         if args.encrypted_input else []
     )
+    context_policy = load_context_policy()
     detector = C2BeaconDetector(
         C2Config(
             window_seconds=args.window,
@@ -340,6 +342,7 @@ def _run_c2(input_path: Path, args: argparse.Namespace) -> int:
         ),
         encrypted_metadata=build_encrypted_metadata_index(metadata_events),
         allowlisted_destinations=set(args.allow_destination),
+        trusted_periodic_endpoints=context_policy.trusted_periodic_endpoints,
     )
     events = alerts = 0
 
@@ -373,6 +376,7 @@ def _run_exfil(input_path: Path, args: argparse.Namespace) -> int:
         args.output.parent.mkdir(parents=True, exist_ok=True)
     if args.report_output:
         args.report_output.parent.mkdir(parents=True, exist_ok=True)
+    context_policy = load_context_policy()
     detector = ExfiltrationDetector(
         ExfiltrationConfig(
             window_seconds=args.window,
@@ -383,6 +387,7 @@ def _run_exfil(input_path: Path, args: argparse.Namespace) -> int:
             cooldown_seconds=args.cooldown,
         ),
         approved_backup_destinations=set(args.approved_backup_destination),
+        approved_bulk_transfer_endpoints=context_policy.approved_bulk_transfer_endpoints,
     )
     repository = repository_from_url(args.database) if args.database else None
     state_restored = False

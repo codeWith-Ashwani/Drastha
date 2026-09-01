@@ -17,10 +17,11 @@ Last updated: 30 August 2026
 - Judge-day audit: fresh `.venv` setup, dependency install, frontend build,
   two-pass rehearsal and exact PowerShell launcher verified end to end
 - Judge-visible pipeline: seven measured top-level stages reveal sequentially;
-- Near-real-time objective path: 37 simulated passive DNS/connection records are
-  streamed individually to the dashboard; four labelled findings appear during
-  processing, including real character n-gram ML inference, and persist as three
-  risk-scored incidents without any return path to the monitored network.
+- Near-real-time objective path: 67 simulated passive connection, DNS, and TLS
+  metadata records are streamed individually to the dashboard; ten labelled
+  findings spanning every required threat family appear during processing and
+  persist as eight risk-scored incidents without any return path to the monitored
+  network.
   detector internals remain abstracted while counts, status and timing stay visible
 
 ## Limitation burn-down

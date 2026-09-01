@@ -5,4 +5,12 @@
 {"ts":1787932000.8,"uid":"SYN05","id.orig_h":"203.0.113.5","id.orig_p":41005,"id.resp_h":"10.0.0.8","id.resp_p":443,"proto":"tcp","orig_pkts":1,"resp_pkts":0,"orig_bytes":0,"resp_bytes":0,"conn_state":"S0"}
 {"ts":1787932002.0,"uid":"UDP01","id.orig_h":"198.51.100.1","id.orig_p":53001,"id.resp_h":"10.0.0.9","id.resp_p":53,"proto":"udp","orig_pkts":300,"resp_pkts":0,"orig_bytes":24000,"resp_bytes":0,"conn_state":"S0"}
 {"ts":1787932002.2,"uid":"UDP02","id.orig_h":"198.51.100.2","id.orig_p":53002,"id.resp_h":"10.0.0.9","id.resp_p":53,"proto":"udp","orig_pkts":300,"resp_pkts":0,"orig_bytes":24000,"resp_bytes":0,"conn_state":"S0"}
-
+{"ts":1787932010.0,"uid":"SYN-SINGLE-01","id.orig_h":"203.0.113.200","id.orig_p":42001,"id.resp_h":"10.0.0.18","id.resp_p":443,"proto":"tcp","orig_pkts":1,"resp_pkts":0,"orig_bytes":60,"resp_bytes":0,"conn_state":"S0"}
+{"ts":1787932010.2,"uid":"SYN-SINGLE-02","id.orig_h":"203.0.113.200","id.orig_p":42002,"id.resp_h":"10.0.0.18","id.resp_p":443,"proto":"tcp","orig_pkts":1,"resp_pkts":0,"orig_bytes":60,"resp_bytes":0,"conn_state":"S0"}
+{"ts":1787932010.4,"uid":"SYN-SINGLE-03","id.orig_h":"203.0.113.200","id.orig_p":42003,"id.resp_h":"10.0.0.18","id.resp_p":443,"proto":"tcp","orig_pkts":1,"resp_pkts":0,"orig_bytes":60,"resp_bytes":0,"conn_state":"S0"}
+{"ts":1787932010.6,"uid":"SYN-SINGLE-04","id.orig_h":"203.0.113.200","id.orig_p":42004,"id.resp_h":"10.0.0.18","id.resp_p":443,"proto":"tcp","orig_pkts":1,"resp_pkts":0,"orig_bytes":60,"resp_bytes":0,"conn_state":"S0"}
+{"ts":1787932010.8,"uid":"SYN-SINGLE-05","id.orig_h":"203.0.113.200","id.orig_p":42005,"id.resp_h":"10.0.0.18","id.resp_p":443,"proto":"tcp","orig_pkts":1,"resp_pkts":0,"orig_bytes":60,"resp_bytes":0,"conn_state":"S0"}
+{"ts":1787932020.0,"uid":"REFLECT-01","id.orig_h":"198.51.100.50","id.orig_p":53000,"id.resp_h":"10.0.0.19","id.resp_p":123,"proto":"udp","orig_pkts":1,"resp_pkts":40,"orig_bytes":70,"resp_bytes":4200,"conn_state":"SF"}
+{"ts":1787932020.5,"uid":"REFLECT-02","id.orig_h":"198.51.100.51","id.orig_p":53001,"id.resp_h":"10.0.0.19","id.resp_p":123,"proto":"udp","orig_pkts":1,"resp_pkts":40,"orig_bytes":70,"resp_bytes":4200,"conn_state":"SF"}
+{"ts":1787932021.0,"uid":"REFLECT-03","id.orig_h":"198.51.100.52","id.orig_p":53002,"id.resp_h":"10.0.0.19","id.resp_p":123,"proto":"udp","orig_pkts":1,"resp_pkts":40,"orig_bytes":70,"resp_bytes":4200,"conn_state":"SF"}
+{"ts":1787932021.5,"uid":"REFLECT-04","id.orig_h":"198.51.100.53","id.orig_p":53003,"id.resp_h":"10.0.0.19","id.resp_p":123,"proto":"udp","orig_pkts":1,"resp_pkts":40,"orig_bytes":70,"resp_bytes":4200,"conn_state":"SF"}

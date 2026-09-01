@@ -13,7 +13,7 @@ class DemoEvaluationTests(unittest.TestCase):
     def test_every_threat_family_is_reported_separately(self) -> None:
         report = evaluate_demo(ROOT, iterations=1)
         self.assertTrue(report["all_scenarios_passed"])
-        self.assertEqual(len(report["scenarios"]), 5)
+        self.assertEqual(len(report["scenarios"]), 6)
         self.assertEqual(
             {item["threat_family"] for item in report["scenarios"]},
             {
@@ -22,6 +22,7 @@ class DemoEvaluationTests(unittest.TestCase):
                 "dns_threats",
                 "command_and_control",
                 "data_exfiltration",
+                "encrypted_session_threat",
             },
         )
 
@@ -31,6 +32,9 @@ class DemoEvaluationTests(unittest.TestCase):
         self.assertIn("not production accuracy", report["quality_claim"])
         for scenario in report["scenarios"]:
             self.assertGreater(scenario["benchmark"]["median_events_per_second"], 0)
+        benchmark = report["end_to_end_benchmark"]
+        self.assertGreater(benchmark["sustained_events_per_second"], 0)
+        self.assertEqual(benchmark["target_events_per_second"], 1000)
 
     def test_iterations_must_be_positive(self) -> None:
         with self.assertRaises(ValueError):

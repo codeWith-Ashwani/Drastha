@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
-from aegisflow.ingestion.zeek_jsonl import ZeekRecordError, _required
+from aegisflow.ingestion.zeek_jsonl import ZeekRecordError, _required, _timestamp
 from aegisflow.models import DNSEvent
 
 
@@ -17,7 +17,7 @@ def normalize_dns_record(record: dict[str, Any], line_number: int = 1) -> DNSEve
         if not isinstance(answers, (list, tuple)):
             raise ValueError("answers must be a list")
         return DNSEvent(
-            timestamp=float(_required(record, "ts", line_number)),
+            timestamp=_timestamp(record, "ts", line_number),
             flow_id=str(_required(record, "uid", line_number)),
             src_ip=str(_required(record, "id.orig_h", line_number)),
             dst_ip=str(_required(record, "id.resp_h", line_number)),

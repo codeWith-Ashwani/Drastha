@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
-from aegisflow.ingestion.zeek_jsonl import ZeekRecordError, _required
+from aegisflow.ingestion.zeek_jsonl import ZeekRecordError, _required, _timestamp
 from aegisflow.models import EncryptedSessionMetadata
 
 
@@ -14,19 +14,32 @@ def normalize_encrypted_record(
     record: dict[str, Any], line_number: int = 1, transport: str = "tls"
 ) -> EncryptedSessionMetadata:
     try:
+        features = record.get(
+            "features", record.get("ml_evidence", record.get("evidence", {}))
+        )
+        if not isinstance(features, dict):
+            features = {}
+        fingerprint = (
+            record.get("ja4")
+            or record.get("ja3")
+            or record.get("client_fingerprint")
+            or features.get("ja4")
+            or features.get("ja3")
+            or ""
+        )
         return EncryptedSessionMetadata(
-            timestamp=float(_required(record, "ts", line_number)),
+            timestamp=_timestamp(record, "ts", line_number),
             flow_id=str(_required(record, "uid", line_number)),
             src_ip=str(_required(record, "id.orig_h", line_number)),
             dst_ip=str(_required(record, "id.resp_h", line_number)),
             transport=transport.lower(),
-            server_name=str(record.get("server_name", "") or "").lower(),
-            version=str(record.get("version", "") or ""),
-            cipher=str(record.get("cipher", "") or ""),
+            server_name=str(record.get("server_name", features.get("server_name", "")) or "").lower(),
+            version=str(record.get("version", features.get("tls_version", "")) or ""),
+            cipher=str(record.get("cipher", features.get("cipher", "")) or ""),
             application_protocol=str(
                 record.get("next_protocol", record.get("alpn", record.get("service", ""))) or ""
             ),
-            client_fingerprint=str(record.get("ja3", record.get("client_fingerprint", "")) or ""),
+            client_fingerprint=str(fingerprint),
             server_fingerprint=str(record.get("ja3s", record.get("server_fingerprint", "")) or ""),
             established=bool(record.get("established", False)),
             resumed=bool(record.get("resumed", False)),

@@ -1,0 +1,38 @@
+{
+  "trusted_periodic_endpoints": [
+    {
+      "src_ip": "192.168.20.100",
+      "dst_ip": "192.168.20.200",
+      "dst_port": 443,
+      "protocol": "tcp",
+      "service": "https",
+      "purpose": "approved internal monitoring health check"
+    },
+    {
+      "src_ip": "192.168.20.100",
+      "dst_ip": "10.0.20.5",
+      "dst_port": 443,
+      "protocol": "tcp",
+      "service": "ssl",
+      "purpose": "approved simulated monitoring health check"
+    }
+  ],
+  "approved_bulk_transfer_endpoints": [
+    {
+      "src_ip": "192.168.20.150",
+      "dst_ip": "198.51.100.50",
+      "dst_port": 443,
+      "protocol": "tcp",
+      "service": "https",
+      "purpose": "approved backup and update destination"
+    },
+    {
+      "src_ip": "192.168.20.101",
+      "dst_ip": "198.51.100.50",
+      "dst_port": 443,
+      "protocol": "tcp",
+      "service": "ssl",
+      "purpose": "approved simulated backup destination"
+    }
+  ]
+}

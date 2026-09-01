@@ -3,8 +3,10 @@ from __future__ import annotations
 import platform
 import statistics
 import time
+import json
 from collections import Counter
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any, Callable
 
 from aegisflow.detectors import (
@@ -12,6 +14,7 @@ from aegisflow.detectors import (
     DDoSConfig,
     DDoSDetector,
     DNSDetector,
+    EncryptedSessionAnomalyDetector,
     ExfiltrationDetector,
     ReconConfig,
     ReconDetector,
@@ -24,9 +27,12 @@ from aegisflow.ingestion.zeek_encrypted import (
 )
 from aegisflow.ingestion.zeek_jsonl import read_conn_jsonl
 from aegisflow.pipeline import run_dns_pipeline, run_pipeline
+from aegisflow.api_store import IncidentRepository
+from aegisflow.streaming_demo import stream_simulated_ip_traffic
 
 
 Runner = Callable[[], list]
+THROUGHPUT_TARGET_EVENTS_PER_SECOND = 1_000
 
 
 def _measure(runner: Runner, iterations: int, event_count: int) -> tuple[list, dict[str, Any]]:
@@ -71,10 +77,26 @@ def evaluate_demo(root: str | Path, *, iterations: int = 100) -> dict[str, Any]:
         (
             "denial_of_service",
             ddos_events,
-            Counter({"syn_flood": 1, "udp_flood": 1}),
+            Counter({
+                "suspected_spoofed_source_flood": 1,
+                "syn_flood": 1,
+                "udp_flood": 1,
+                "udp_reflection_amplification": 1,
+            }),
             lambda: list(run_pipeline(ddos_events, [DDoSDetector(DDoSConfig(
                 syn_attempt_threshold=5, udp_packet_threshold=500
             ))])),
+        ),
+        (
+            "encrypted_session_threat",
+            encrypted_events,
+            Counter({"encrypted_session_metadata_anomaly": 1}),
+            lambda: [
+                alert
+                for detector in [EncryptedSessionAnomalyDetector()]
+                for event in encrypted_events
+                for alert in detector.process(event)
+            ],
         ),
         (
             "dns_threats",
@@ -111,6 +133,35 @@ def evaluate_demo(root: str | Path, *, iterations: int = 100) -> dict[str, Any]:
             "benchmark": benchmark,
         })
 
+    with TemporaryDirectory() as directory:
+        repository = IncidentRepository(Path(directory) / "benchmark.db")
+        durations: list[float] = []
+        records_per_iteration = 0
+        for _ in range(iterations):
+            started = time.perf_counter()
+            messages = list(stream_simulated_ip_traffic(
+                project_root, repository, interval_seconds=0.0
+            ))
+            durations.append(time.perf_counter() - started)
+            complete = json.loads(messages[-1].removeprefix("data: ").strip())
+            records_per_iteration = int(complete["processed"])
+        total_seconds = sum(durations)
+        total_records = records_per_iteration * iterations
+        sorted_durations = sorted(durations)
+        p95_index = max(0, min(len(sorted_durations) - 1, round(0.95 * len(sorted_durations)) - 1))
+        sustained_rate = total_records / max(total_seconds, 1e-9)
+        end_to_end_benchmark = {
+            "scope": "file_read_to_sqlite_and_sse_serialization",
+            "iterations": iterations,
+            "records_per_iteration": records_per_iteration,
+            "total_records_processed": total_records,
+            "median_end_to_end_ms": round(statistics.median(durations) * 1000, 3),
+            "p95_end_to_end_ms": round(sorted_durations[p95_index] * 1000, 3),
+            "sustained_events_per_second": round(sustained_rate, 2),
+            "target_events_per_second": THROUGHPUT_TARGET_EVENTS_PER_SECOND,
+            "target_met": sustained_rate >= THROUGHPUT_TARGET_EVENTS_PER_SECOND,
+        }
+
     return {
         "product": "Drastha",
         "evaluation_scope": "synthetic_scenario_validation",
@@ -119,8 +170,9 @@ def evaluate_demo(root: str | Path, *, iterations: int = 100) -> dict[str, Any]:
             "pipeline behaviour; they are not production accuracy, recall, or false-positive claims."
         ),
         "benchmark_note": (
-            "Single-process in-memory detector timing on this machine; excludes packet capture, "
-            "Zeek conversion, network transport, database writes, and UI rendering."
+            "Per-detector timings are in-memory. The end-to-end benchmark includes fixture file "
+            "reads, normalization, detection, correlation, SQLite upserts and SSE serialization; "
+            "it excludes packet capture, Zeek conversion, HTTP transport and browser rendering."
         ),
         "environment": {
             "python": platform.python_version(),
@@ -128,4 +180,5 @@ def evaluate_demo(root: str | Path, *, iterations: int = 100) -> dict[str, Any]:
         },
         "all_scenarios_passed": all(item["scenario_passed"] for item in results),
         "scenarios": results,
+        "end_to_end_benchmark": end_to_end_benchmark,
     }

@@ -97,8 +97,9 @@ Simulated stream, Zeek logs or PCAP
  SQLite/PostgreSQL -> API -> dashboard
 ```
 
-The live demonstration streams 37 simulated DNS and connection observations
-one at a time. It produces four labelled findings and three incidents. The
+The live demonstration streams 67 simulated connection, DNS, and encrypted-
+session metadata observations one at a time. It produces ten labelled findings
+and eight incidents spanning every required threat family. The
 highest-priority incident combines a repeated callback with abnormal outbound
 transfer and receives a risk score of 100.
 
@@ -252,17 +253,20 @@ before any shared deployment.
 5. Observe the alerts appear while the stream is still running.
 6. Confirm the final result:
 
-   - 37 records analysed;
-   - 4 labelled alerts;
-   - 3 incidents;
+   - 67 records analysed;
+   - 10 labelled alerts;
+   - 8 incidents;
    - highest risk score 100.
 
-The four findings demonstrate:
+The findings demonstrate:
 
 - real inference from the trained DGA ML model;
 - DNS tunnelling analysis;
 - repeated C2-style callback detection;
-- abnormal outbound-transfer detection.
+- abnormal outbound-transfer detection;
+- vertical port scanning without a duplicate DDoS classification;
+- SYN, suspected spoofed-source, UDP-flood, and reflection/amplification paths;
+- encrypted-session anomaly detection from TLS/JA4, size, and timing metadata.
 
 Click **Open scored intelligence** to see the attack timeline, confidence,
 observed values, comparisons, explanations, limitations and score calculation.
@@ -284,11 +288,19 @@ Open an incident to:
 
 ## Analyse your own replay
 
-The dashboard accepts a safe Zeek connection replay in one of these formats:
+The dashboard accepts safe Zeek connection records and can route embedded DNS
+and TLS/JA3/JA4 metadata to their threat-specific detectors. Supported JSON
+shapes are:
 
 - `.jsonl`;
 - `.ndjson`;
 - a `.json` array.
+- a `.json` object containing a `records` array.
+
+Both native Zeek Unix timestamps and ISO-8601 timestamps are accepted. Supplied
+ground-truth fields such as `label`, `threat_class`, `confidence`, and expected
+`evidence` are never trusted as predictions; Drastha calculates its own labels,
+confidence and evidence from the telemetry features.
 
 Maximum upload size: 5 MB.
 
@@ -395,7 +407,7 @@ source .venv/bin/activate
 python -m unittest discover -s tests -v
 ```
 
-The current repository contains 74 automated tests covering ingestion,
+The current repository contains 96 automated tests covering ingestion,
 detectors, ML training, correlation, persistence, API workflows, replay upload,
 near-real-time streaming, telemetry quality, PCAP integration and restart
 behaviour.
@@ -570,4 +582,6 @@ See [`docs/FINAL_JUDGE_DEMO_GUIDE.md`](docs/FINAL_JUDGE_DEMO_GUIDE.md).
 - [Sprint plan](docs/SPRINTS.md)
 - [Current status](docs/STATUS.md)
 - [Production limitations](docs/PRODUCTION_LIMITATIONS.md)
+- [Prototype requirements traceability](docs/PROTOTYPE_REQUIREMENTS.md)
+- [Models and engineered features](docs/MODELS_AND_FEATURES.md)
 - [Final SIH demonstration guide](docs/FINAL_JUDGE_DEMO_GUIDE.md)

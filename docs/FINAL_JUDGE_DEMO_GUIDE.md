@@ -140,9 +140,9 @@ Click **Start live IP simulation** for the strongest demonstration of the
 problem statement. Records arrive one at a time and labelled alerts appear as
 soon as evidence crosses a detector threshold. Point out the DGA alert's
 **Character n-gram ML model** method, then the statistical DNS-tunnel and C2
-findings and the adaptive-baseline outbound-transfer finding. The final view
-shows 37 records, four labelled alerts, three incidents and a highest correlated
-risk score of 100.
+findings, TLS-metadata anomaly, DDoS/recon separation, and the adaptive-baseline
+outbound-transfer finding. The final view shows 67 records, ten labelled alerts,
+eight incidents and a highest correlated risk score of 100.
 
 Use **Run instant replay** when presentation time is limited.
 

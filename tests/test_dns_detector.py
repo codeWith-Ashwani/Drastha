@@ -64,6 +64,25 @@ class DNSDetectorTests(unittest.TestCase):
         )
         self.assertEqual(detector.process(event(1, "tracking.example.com")), [])
 
+    def test_multiple_digit_heavy_random_domains_trigger_lexical_fallback(self):
+        detector = DNSDetector(DNSConfig(dga_probability_threshold=0.9))
+        alerts = []
+        for index, domain in enumerate((
+            "xqzv7m2k9p4r.example",
+            "n8v2kq7z1m5t.example",
+            "q9x4z7m2v8kp.example",
+        )):
+            alerts.extend(detector.process(event(index, domain)))
+        self.assertEqual([item.subtype for item in alerts], ["dga_like_domain"])
+
+    def test_repeated_long_high_entropy_txt_queries_trigger_strong_tunnel_path(self):
+        detector = DNSDetector(DNSConfig())
+        alerts = []
+        query = "a8f3c91d72e4b6f0" * 4 + ".tunnel.example"
+        for index in range(4):
+            alerts.extend(detector.process(event(index * 3, query)))
+        self.assertEqual([item.subtype for item in alerts], ["dns_tunnelling"])
+
 
 if __name__ == "__main__":
     unittest.main()

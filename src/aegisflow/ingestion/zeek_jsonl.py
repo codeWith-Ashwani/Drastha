@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -28,10 +29,47 @@ def _number(record: dict[str, Any], key: str, default: float = 0.0) -> float:
     return default if value in (None, "-") else float(value)
 
 
+def _timestamp(record: dict[str, Any], key: str = "ts", line_number: int = 1) -> float:
+    """Accept native Zeek epoch timestamps and ISO-8601 replay timestamps."""
+    value = _required(record, key, line_number)
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return float(value)
+    text = str(value).strip()
+    try:
+        return float(text)
+    except ValueError:
+        pass
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(f"{key} must be a Unix timestamp or ISO-8601 datetime") from exc
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.timestamp()
+
+
+def _connection_state(record: dict[str, Any]) -> str:
+    explicit = str(record.get("conn_state", "") or "").upper()
+    if explicit:
+        return explicit
+    history = str(record.get("history", "") or "").upper()
+    response_bytes = _integer(record, "resp_bytes")
+    # Zeek history "S" means an originator SYN with no observed response when
+    # the flow also has no responder bytes. Do not treat generic history values
+    # such as "D" as incomplete connections; doing so confuses scans with floods.
+    if history == "S" and response_bytes == 0:
+        return "S0"
+    if history.startswith("R") and response_bytes == 0:
+        return "REJ"
+    if response_bytes > 0:
+        return "SF"
+    return ""
+
+
 def normalize_conn_record(record: dict[str, Any], line_number: int = 1) -> NetworkEvent:
     try:
         return NetworkEvent(
-            timestamp=float(_required(record, "ts", line_number)),
+            timestamp=_timestamp(record, "ts", line_number),
             flow_id=str(_required(record, "uid", line_number)),
             src_ip=str(_required(record, "id.orig_h", line_number)),
             dst_ip=str(_required(record, "id.resp_h", line_number)),
@@ -43,7 +81,7 @@ def normalize_conn_record(record: dict[str, Any], line_number: int = 1) -> Netwo
             inbound_bytes=_integer(record, "resp_bytes"),
             outbound_packets=_integer(record, "orig_pkts"),
             inbound_packets=_integer(record, "resp_pkts"),
-            connection_state=str(record.get("conn_state", "")),
+            connection_state=_connection_state(record),
             source="zeek:conn",
             raw=record,
         )
@@ -68,4 +106,3 @@ def read_conn_jsonl(path: str | Path) -> Iterator[NetworkEvent]:
             if not isinstance(record, dict):
                 raise ZeekRecordError(f"line {line_number}: expected a JSON object")
             yield normalize_conn_record(record, line_number)
-

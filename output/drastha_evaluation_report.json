@@ -3,18 +3,18 @@
   "benchmark_note": "Per-detector timings are in-memory. The end-to-end benchmark includes fixture file reads, normalization, detection, correlation, SQLite upserts and SSE serialization; it excludes packet capture, Zeek conversion, HTTP transport and browser rendering.",
   "end_to_end_benchmark": {
     "iterations": 250,
-    "median_end_to_end_ms": 57.992,
-    "p95_end_to_end_ms": 67.9,
+    "median_end_to_end_ms": 47.564,
+    "p95_end_to_end_ms": 60.519,
     "records_per_iteration": 67,
     "scope": "file_read_to_sqlite_and_sse_serialization",
-    "sustained_events_per_second": 1127.74,
+    "sustained_events_per_second": 1340.82,
     "target_events_per_second": 1000,
     "target_met": true,
     "total_records_processed": 16750
   },
   "environment": {
     "platform": "Windows-11-10.0.22631-SP0",
-    "python": "3.12.13"
+    "python": "3.12.10"
   },
   "evaluation_scope": "synthetic_scenario_validation",
   "product": "Drastha",
@@ -23,8 +23,8 @@
     {
       "benchmark": {
         "iterations": 250,
-        "median_events_per_second": 186335.41,
-        "median_processing_ms": 0.0322
+        "median_events_per_second": 184615.38,
+        "median_processing_ms": 0.0325
       },
       "expected_alerts": {
         "vertical_port_scan": 1
@@ -39,8 +39,8 @@
     {
       "benchmark": {
         "iterations": 250,
-        "median_events_per_second": 166753.52,
-        "median_processing_ms": 0.0959
+        "median_events_per_second": 177481.97,
+        "median_processing_ms": 0.0901
       },
       "expected_alerts": {
         "suspected_spoofed_source_flood": 1,
@@ -61,8 +61,8 @@
     {
       "benchmark": {
         "iterations": 250,
-        "median_events_per_second": 159045.73,
-        "median_processing_ms": 0.0503
+        "median_events_per_second": 158415.84,
+        "median_processing_ms": 0.0505
       },
       "expected_alerts": {
         "encrypted_session_metadata_anomaly": 1
@@ -77,8 +77,8 @@
     {
       "benchmark": {
         "iterations": 250,
-        "median_events_per_second": 14044.47,
-        "median_processing_ms": 1.4953
+        "median_events_per_second": 14403.29,
+        "median_processing_ms": 1.458
       },
       "expected_alerts": {
         "dga_like_domain": 1,
@@ -95,8 +95,8 @@
     {
       "benchmark": {
         "iterations": 250,
-        "median_events_per_second": 147874.31,
-        "median_processing_ms": 0.0541
+        "median_events_per_second": 127490.04,
+        "median_processing_ms": 0.0628
       },
       "expected_alerts": {
         "periodic_beacon": 1
@@ -111,8 +111,8 @@
     {
       "benchmark": {
         "iterations": 250,
-        "median_events_per_second": 265780.73,
-        "median_processing_ms": 0.0301
+        "median_events_per_second": 240963.86,
+        "median_processing_ms": 0.0332
       },
       "expected_alerts": {
         "outbound_volume_anomaly": 1

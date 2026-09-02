@@ -23,7 +23,7 @@ dashboard; it is not a path to any address represented by the telemetry.
 | SYN flood | `detectors/ddos.py` | incomplete-flow ratio, attempt rate, target-port concentration |
 | UDP flood | `detectors/ddos.py` | packet and byte volume inside a target window |
 | UDP reflection/amplification | `detectors/ddos.py` | response/request byte ratio, flow count, target concentration |
-| Suspected spoofed-source flood | `detectors/ddos.py` | source diversity and normalized source-IP entropy |
+| Distributed-source SYN flood | `detectors/ddos.py` | source diversity and normalized source-IP entropy; no spoofing claim |
 | Botnet C2 beaconing | `detectors/c2.py` | inter-arrival mean/CV, observation span, size CV, completed-flow ratio |
 | DGA-like domains | `detectors/dns.py`, `dns_model.py` | character 3-grams plus guarded lexical campaign fallback |
 | DNS tunnelling | `detectors/dns.py` | query count, unique labels, label length, entropy, TXT-query ratio |
@@ -50,9 +50,14 @@ and an SSE alert is emitted immediately when its evidence crosses a threshold.
 The final message reports processed records, alerts, incidents, elapsed time,
 telemetry counts, `bounded_latency: true`, and the one-way safety properties.
 
-Replay uploads also use the same threat-specific normalizers and detectors. The
-completed replay replaces threshold-crossing reconnaissance evidence with a final
-active-window snapshot, so the analyst sees the full port/host fan-out.
+Replay uploads also use the same threat-specific normalizers and detectors.
+Threshold-crossing reconnaissance alerts are retained for the complete replay.
+A final active-window snapshot is added only when it can enrich a still-active scan;
+deduplication never deletes an earlier scan that has since expired from the window.
+
+When optional `evaluation_*` ground truth is present, a post-inference scorer reports
+TP, FP, FN, TN, precision, recall, F1, FPR, per-class coverage, and classification
+mismatches. These fields are isolated from feature extraction and detector inference.
 
 ## Standard alert schema
 

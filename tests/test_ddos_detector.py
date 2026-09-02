@@ -36,7 +36,7 @@ class DDoSDetectorTests(unittest.TestCase):
             item.name == "target_port_concentration" for item in alerts[0].evidence
         ))
 
-    def test_high_source_entropy_is_labelled_as_suspected_spoofed_source_flood(self):
+    def test_high_source_entropy_is_labelled_as_distributed_source_syn_flood(self):
         detector = DDoSDetector(DDoSConfig(
             window_seconds=5, syn_attempt_threshold=5,
             min_incomplete_ratio=0.8, udp_packet_threshold=500,
@@ -48,7 +48,7 @@ class DDoSDetectorTests(unittest.TestCase):
                 "10.0.0.8", "tcp",
             )))
         self.assertEqual(
-            [alert.subtype for alert in alerts], ["suspected_spoofed_source_flood"]
+            [alert.subtype for alert in alerts], ["distributed_source_syn_flood"]
         )
 
     def test_port_fanout_is_not_misclassified_as_syn_flood(self):

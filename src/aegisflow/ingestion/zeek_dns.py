@@ -5,12 +5,22 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
-from aegisflow.ingestion.zeek_jsonl import ZeekRecordError, _required, _timestamp
+from aegisflow.ingestion.zeek_jsonl import (
+    ZeekRecordError,
+    _ip,
+    _required,
+    _timestamp,
+    normalize_field_aliases,
+)
 from aegisflow.models import DNSEvent
 
 
 def normalize_dns_record(record: dict[str, Any], line_number: int = 1) -> DNSEvent:
     try:
+        record, _ = normalize_field_aliases(record, line_number)
+        if not record.get("query") and record.get("query_name"):
+            record = {**record, "query": record["query_name"]}
+        query = str(_required(record, "query", line_number)).strip().lower().rstrip(".")
         answers = record.get("answers") or ()
         if isinstance(answers, str):
             answers = (answers,)
@@ -19,9 +29,9 @@ def normalize_dns_record(record: dict[str, Any], line_number: int = 1) -> DNSEve
         return DNSEvent(
             timestamp=_timestamp(record, "ts", line_number),
             flow_id=str(_required(record, "uid", line_number)),
-            src_ip=str(_required(record, "id.orig_h", line_number)),
-            dst_ip=str(_required(record, "id.resp_h", line_number)),
-            query=str(_required(record, "query", line_number)).strip().lower().rstrip("."),
+            src_ip=_ip(record, "id.orig_h", line_number),
+            dst_ip=_ip(record, "id.resp_h", line_number),
+            query=query,
             query_type=str(record.get("qtype_name", record.get("qtype", "UNKNOWN"))),
             response_code=str(record.get("rcode_name", record.get("rcode", "UNKNOWN"))),
             answers=tuple(str(answer) for answer in answers),

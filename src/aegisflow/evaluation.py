@@ -78,7 +78,7 @@ def evaluate_demo(root: str | Path, *, iterations: int = 100) -> dict[str, Any]:
             "denial_of_service",
             ddos_events,
             Counter({
-                "suspected_spoofed_source_flood": 1,
+                "distributed_source_syn_flood": 1,
                 "syn_flood": 1,
                 "udp_flood": 1,
                 "udp_reflection_amplification": 1,

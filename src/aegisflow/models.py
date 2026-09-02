@@ -8,7 +8,7 @@ THREAT_CLASS_BY_SUBTYPE = {
     "syn_flood": "Volumetric DDoS - SYN Flood",
     "udp_flood": "Volumetric DDoS - UDP Flood",
     "udp_reflection_amplification": "Volumetric DDoS - UDP Reflection/Amplification",
-    "suspected_spoofed_source_flood": "Volumetric DDoS - Spoofed-Source Flood",
+    "distributed_source_syn_flood": "Volumetric DDoS - Distributed-Source SYN Flood",
     "encrypted_session_metadata_anomaly": "Encrypted-session metadata anomaly",
 }
 

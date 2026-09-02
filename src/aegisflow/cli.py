@@ -40,6 +40,7 @@ from aegisflow.ingestion.zeek_runner import (
     ZeekUnavailableError,
 )
 from aegisflow.pipeline import run_dns_pipeline, run_pipeline
+from aegisflow.validate_replay import validation_summary, validate_replay_file
 
 
 def _add_detection_arguments(parser: argparse.ArgumentParser) -> None:
@@ -63,6 +64,11 @@ def _parser() -> argparse.ArgumentParser:
     replay = subparsers.add_parser("replay", help="replay an existing Zeek conn.log JSONL file")
     replay.add_argument("--input", required=True, type=Path)
     _add_detection_arguments(replay)
+
+    validate = subparsers.add_parser(
+        "validate-replay", help="validate replay format, schema and telemetry quality"
+    )
+    validate.add_argument("--input", required=True, type=Path)
 
     pcap = subparsers.add_parser("pcap", help="convert a PCAP with Zeek and run detectors")
     pcap.add_argument("--input", required=True, type=Path)
@@ -577,6 +583,10 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "replay":
             return _run_jsonl(args.input, args)
+        if args.command == "validate-replay":
+            summary = validation_summary(validate_replay_file(args.input))
+            print(json.dumps(summary, indent=2, sort_keys=True))
+            return 0 if summary["quality"]["status"] == "healthy" else 1
         if args.command == "dns-replay":
             return _run_dns(args.input, args)
         if args.command == "c2-replay":

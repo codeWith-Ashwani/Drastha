@@ -72,6 +72,24 @@ class UploadAnalysisTests(unittest.TestCase):
         )
         self.assertEqual(ports_evidence["observed"], 7)
 
+    def test_recon_alert_survives_after_scan_expires_from_final_window(self):
+        records = [
+            record(
+                f"scan-{index}", index, "192.0.2.10", "192.0.2.20", port
+            )
+            for index, port in enumerate((21, 22, 23, 25, 53, 80))
+        ]
+        records.append(record(
+            "later-benign", 100, "192.0.2.10", "192.0.2.30", 443,
+            history="S", outbound=200, inbound=500,
+        ))
+        report = analyse_uploaded_replay(
+            "expired-scan.json", json.dumps(records), _Repository()
+        )
+        self.assertIn(
+            "vertical_port_scan", {item["subtype"] for item in report["alerts"]}
+        )
+
     def test_ml_evidence_routes_dns_and_tls_without_trusting_labels(self):
         records = []
         for index, domain in enumerate((

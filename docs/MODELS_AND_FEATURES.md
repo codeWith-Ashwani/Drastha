@@ -52,8 +52,8 @@ labels when repetition, TXT concentration, uniqueness, and entropy agree.
 The DDoS detector measures flow arrival rate, incomplete-flow ratio, target-port
 concentration, packet/byte volume, response/request amplification, source diversity,
 and normalized source-IP entropy. High port fan-out is suppressed as reconnaissance.
-High source entropy produces a *suspected* spoofed-source subtype because passive
-flow metadata cannot cryptographically prove address spoofing.
+High source entropy produces a distributed-source SYN subtype. Passive flow metadata
+cannot prove spoofing, so the classifier deliberately makes no spoofing claim.
 
 ## C2 beaconing
 
@@ -75,8 +75,8 @@ and high timing-sequence anomaly. Fingerprint rarity by itself cannot alert.
 
 Sliding windows count destination ports per target, destination hosts per service,
 and combined port diversity across multiple hosts. Streaming alerts fire at threshold
-crossing; completed replay results use a final window snapshot so evidence reports
-the full observed fan-out.
+crossing and are preserved throughout completed replay analysis. A final-window
+snapshot may enrich a still-active finding but cannot replace historical detections.
 
 ## Exfiltration
 

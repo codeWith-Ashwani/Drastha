@@ -6,7 +6,13 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
-from aegisflow.ingestion.zeek_jsonl import ZeekRecordError, _required, _timestamp
+from aegisflow.ingestion.zeek_jsonl import (
+    ZeekRecordError,
+    _ip,
+    _required,
+    _timestamp,
+    normalize_field_aliases,
+)
 from aegisflow.models import EncryptedSessionMetadata
 
 
@@ -14,6 +20,7 @@ def normalize_encrypted_record(
     record: dict[str, Any], line_number: int = 1, transport: str = "tls"
 ) -> EncryptedSessionMetadata:
     try:
+        record, _ = normalize_field_aliases(record, line_number)
         features = record.get(
             "features", record.get("ml_evidence", record.get("evidence", {}))
         )
@@ -23,6 +30,7 @@ def normalize_encrypted_record(
             record.get("ja4")
             or record.get("ja3")
             or record.get("client_fingerprint")
+            or record.get("client fingerprint")
             or features.get("ja4")
             or features.get("ja3")
             or ""
@@ -30,8 +38,8 @@ def normalize_encrypted_record(
         return EncryptedSessionMetadata(
             timestamp=_timestamp(record, "ts", line_number),
             flow_id=str(_required(record, "uid", line_number)),
-            src_ip=str(_required(record, "id.orig_h", line_number)),
-            dst_ip=str(_required(record, "id.resp_h", line_number)),
+            src_ip=_ip(record, "id.orig_h", line_number),
+            dst_ip=_ip(record, "id.resp_h", line_number),
             transport=transport.lower(),
             server_name=str(record.get("server_name", features.get("server_name", "")) or "").lower(),
             version=str(record.get("version", features.get("tls_version", "")) or ""),
@@ -40,7 +48,14 @@ def normalize_encrypted_record(
                 record.get("next_protocol", record.get("alpn", record.get("service", ""))) or ""
             ),
             client_fingerprint=str(fingerprint),
-            server_fingerprint=str(record.get("ja3s", record.get("server_fingerprint", "")) or ""),
+            server_fingerprint=str(
+                record.get("ja3s")
+                or record.get("server_fingerprint")
+                or record.get("server fingerprint")
+                or features.get("ja3s")
+                or features.get("server_fingerprint")
+                or ""
+            ),
             established=bool(record.get("established", False)),
             resumed=bool(record.get("resumed", False)),
             source=f"zeek:{transport.lower()}",

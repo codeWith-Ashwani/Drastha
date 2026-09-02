@@ -1,0 +1,11 @@
+{"ts":1700000000,"uid":"mixed-1","id.orig_h":"192.0.2.1","id.resp_h":"198.51.100.1","proto":"tcp"}
+{"ts":"not-a-time","uid":"mixed-2","id.orig_h":"192.0.2.2","id.resp_h":"198.51.100.2","proto":"tcp"}
+{"ts":1700000002,"uid":"mixed-3","id.orig_h":"192.0.2.3","id.resp_h":"198.51.100.3","proto":"udp"}
+{"ts":1700000003,"uid":"mixed-4","id.orig_h":"192.0.2.4","id.resp_h":"198.51.100.4","proto":"tcp"}
+{"ts":1700000004,"uid":"mixed-5","id.orig_h":"192.0.2.5","id.resp_h":"198.51.100.5","proto":"tcp"}
+{"ts":1700000005,"uid":"mixed-6","id.orig_h":"192.0.2.6","id.resp_h":"198.51.100.6","proto":"tcp"}
+{"ts":1700000006,"uid":"mixed-7","id.orig_h":"192.0.2.7","id.resp_h":"198.51.100.7","proto":"tcp"}
+{"ts":1700000007,"uid":"mixed-8","id.orig_h":"192.0.2.8","id.resp_h":"198.51.100.8","proto":"tcp"}
+{"ts":1700000008,"uid":"mixed-9","id.orig_h":"192.0.2.9","id.resp_h":"198.51.100.9","proto":"tcp"}
+{"ts":1700000009,"uid":"mixed-10","id.orig_h":"192.0.2.10","id.resp_h":"198.51.100.10","proto":"tcp"}
+{"ts":1700000010,"uid":"mixed-11","id.orig_h":"192.0.2.11","id.resp_h":"198.51.100.11","proto":"tcp"}

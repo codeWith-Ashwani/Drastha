@@ -142,8 +142,8 @@ class AnalystAPITests(unittest.TestCase):
             "Volumetric DDoS - UDP Reflection/Amplification",
         )
         self.assertEqual(
-            ddos_classes["suspected_spoofed_source_flood"],
-            "Volumetric DDoS - Spoofed-Source Flood",
+            ddos_classes["distributed_source_syn_flood"],
+            "Volumetric DDoS - Distributed-Source SYN Flood",
         )
         encrypted_classes = {
             item["alert"]["threat_class"] for item in alerts

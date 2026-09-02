@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import time
+from collections import Counter
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -20,10 +21,17 @@ from aegisflow.detectors import (
 )
 from aegisflow.incidents import IncidentStore
 from aegisflow.context_policy import load_context_policy
+from aegisflow.evaluation_scoring import score_ground_truth
 from aegisflow.dns_model import DNSNgramModel
 from aegisflow.ingestion.zeek_dns import normalize_dns_record
 from aegisflow.ingestion.zeek_encrypted import normalize_encrypted_record
 from aegisflow.ingestion.zeek_jsonl import ZeekRecordError, normalize_conn_record
+from aegisflow.ingestion.zeek_jsonl import normalize_field_aliases
+from aegisflow.ingestion.replay_input import (
+    parse_replay_content,
+    record_schema,
+    schema_summary,
+)
 from aegisflow.models import Alert, Evidence
 from aegisflow.pipeline import run_pipeline
 from aegisflow.telemetry_quality import TelemetryQuality
@@ -35,39 +43,7 @@ ALLOWED_SUFFIXES = {".jsonl", ".ndjson", ".json"}
 
 
 def _records_from_content(content: str) -> list[tuple[int, Any]]:
-    stripped = content.strip()
-    if not stripped:
-        return []
-    if stripped.startswith(("[", "{")):
-        try:
-            parsed = json.loads(stripped)
-        except json.JSONDecodeError as exc:
-            # A valid JSONL file also starts with "{" but contains several
-            # complete JSON documents. Fall through to the per-line parser for
-            # that specific "extra data" case.
-            if exc.msg != "Extra data":
-                raise ValueError(f"Invalid JSON at line {exc.lineno}: {exc.msg}") from exc
-        else:
-            if isinstance(parsed, dict) and isinstance(parsed.get("records"), list):
-                parsed = parsed["records"]
-            elif isinstance(parsed, dict):
-                parsed = [parsed]
-            if not isinstance(parsed, list):
-                raise ValueError(
-                    "A JSON upload must be an array, one record object, or an object containing a records array."
-                )
-            return list(enumerate(parsed, start=1))
-
-    records: list[tuple[int, Any]] = []
-    for line_number, line in enumerate(content.splitlines(), start=1):
-        value = line.strip()
-        if not value or value.startswith("#"):
-            continue
-        try:
-            records.append((line_number, json.loads(value)))
-        except json.JSONDecodeError as exc:
-            records.append((line_number, exc))
-    return records
+    return list(parse_replay_content(content).records)
 
 
 def _features(record: dict[str, Any]) -> dict[str, Any]:
@@ -79,7 +55,7 @@ def _features(record: dict[str, Any]) -> dict[str, Any]:
 
 def _dns_record(record: dict[str, Any]) -> dict[str, Any] | None:
     features = _features(record)
-    query = record.get("query") or features.get("query_name")
+    query = record.get("query") or record.get("query_name") or features.get("query_name")
     if not query:
         return None
     return {
@@ -105,7 +81,7 @@ def _deduplicate_and_resolve_conflicts(alerts: list[Alert]) -> list[Alert]:
     recon_alerts = [item for item in alerts if item.threat_type == "reconnaissance"]
     resolved: list[Alert] = []
     for alert in alerts:
-        if alert.subtype in {"syn_flood", "distributed_syn_flood"}:
+        if alert.subtype in {"syn_flood", "distributed_source_syn_flood"}:
             flows = set(alert.flow_ids)
             if any(
                 recon.src_ip == alert.src_ip and flows.intersection(recon.flow_ids)
@@ -163,7 +139,8 @@ def analyse_uploaded_replay(
     if upload_bytes > MAX_UPLOAD_BYTES:
         raise ValueError("Replay file is larger than the 5 MB demonstration limit.")
 
-    raw_records = _records_from_content(content)
+    parsed_replay = parse_replay_content(content, safe_name)
+    raw_records = list(parsed_replay.records)
     if len(raw_records) > MAX_UPLOAD_RECORDS:
         raise ValueError("Replay contains more than 20,000 records.")
 
@@ -171,61 +148,105 @@ def analyse_uploaded_replay(
     events = []
     dns_events = []
     encrypted_events = []
+    accepted_records: list[dict[str, Any]] = []
+    alias_usage: Counter[tuple[str, str]] = Counter()
+    schema_counts: Counter[str] = Counter()
+    seen_uids: dict[str, str] = {}
     latest_timestamp: float | None = None
     for line_number, raw in raw_records:
         quality.records_seen += 1
-        if isinstance(raw, json.JSONDecodeError):
-            error = ZeekRecordError(
-                f"line {line_number}: invalid JSON at column {raw.colno}: {raw.msg}"
-            )
+        if isinstance(raw, ZeekRecordError):
+            error = raw
             quality.records_rejected += 1
+            quality.records_quarantined += 1
             if len(quality.errors) < 5:
                 quality.errors.append(str(error))
+            quality.quarantined_records.append(error.to_dict())
             continue
         if not isinstance(raw, dict):
+            error = ZeekRecordError(
+                f"Line {line_number}: unsupported record; expected a JSON object.",
+                line_number=line_number,
+                category="unsupported_record",
+            )
             quality.records_rejected += 1
+            quality.records_quarantined += 1
+            quality.unsupported_record_count += 1
             if len(quality.errors) < 5:
-                quality.errors.append(f"line {line_number}: expected a JSON object")
+                quality.errors.append(str(error))
+            quality.quarantined_records.append(error.to_dict())
             continue
+
+        try:
+            canonical, aliases = normalize_field_aliases(raw, line_number)
+        except ZeekRecordError as exc:
+            quality.records_rejected += 1
+            quality.records_quarantined += 1
+            if len(quality.errors) < 5:
+                quality.errors.append(str(exc))
+            quality.quarantined_records.append(exc.to_dict())
+            continue
+        for target, source in aliases.items():
+            alias_usage[(target, source)] += 1
+        kind = record_schema(canonical)
+        schema_counts[kind] += 1
 
         record_timestamps: list[float] = []
-        connection_error: ZeekRecordError | None = None
+        record_events = []
+        record_dns_events = []
+        record_encrypted_events = []
+        record_error: ZeekRecordError | None = None
         try:
-            event = normalize_conn_record(raw, line_number)
-        except ZeekRecordError as exc:
-            connection_error = exc
-        else:
-            events.append(event)
-            record_timestamps.append(event.timestamp)
+            if kind != "dns":
+                event = normalize_conn_record(canonical, line_number)
+                record_events.append(event)
+                record_timestamps.append(event.timestamp)
 
-        dns_source = _dns_record(raw)
-        if dns_source is not None:
-            try:
+            dns_source = _dns_record(canonical)
+            if kind == "dns" and dns_source is not None:
                 dns_event = normalize_dns_record(dns_source, line_number)
-            except ZeekRecordError:
-                pass
-            else:
-                dns_events.append(dns_event)
+                record_dns_events.append(dns_event)
                 record_timestamps.append(dns_event.timestamp)
-        if _has_encrypted_features(raw):
-            try:
-                encrypted_event = normalize_encrypted_record(raw, line_number)
-            except ZeekRecordError:
-                pass
-            else:
-                encrypted_events.append(encrypted_event)
+
+            if kind in {"tls", "quic"}:
+                encrypted_event = normalize_encrypted_record(canonical, line_number, kind)
+                record_encrypted_events.append(encrypted_event)
                 record_timestamps.append(encrypted_event.timestamp)
+        except ZeekRecordError as exc:
+            record_error = exc
 
         if not record_timestamps:
+            error = record_error or ZeekRecordError(
+                f"Line {line_number}: unsupported passive telemetry record. Expected connection, DNS, or TLS/QUIC metadata.",
+                line_number=line_number,
+                category="unsupported_record",
+            )
             quality.records_rejected += 1
+            quality.records_quarantined += 1
+            if error.category == "invalid_timestamp":
+                quality.invalid_timestamp_count += 1
+            if error.category == "unsupported_record":
+                quality.unsupported_record_count += 1
             if len(quality.errors) < 5:
-                quality.errors.append(str(
-                    connection_error
-                    or ZeekRecordError(
-                        f"line {line_number}: no supported connection, DNS, or encrypted-session metadata"
-                    )
-                ))
+                quality.errors.append(str(error))
+            quality.quarantined_records.append(error.to_dict())
             continue
+
+        events.extend(record_events)
+        dns_events.extend(record_dns_events)
+        encrypted_events.extend(record_encrypted_events)
+        accepted_records.append(canonical)
+
+        uid = str(canonical.get("uid", ""))
+        signature = json.dumps(canonical, sort_keys=True, separators=(",", ":"), default=str)
+        if uid in seen_uids:
+            quality.duplicate_uid_count += 1
+            if seen_uids[uid] == signature:
+                quality.exact_duplicate_count += 1
+            else:
+                quality.conflicting_duplicate_uid_count += 1
+        else:
+            seen_uids[uid] = signature
 
         record_timestamp = min(record_timestamps)
         if latest_timestamp is not None and record_timestamp < latest_timestamp:
@@ -239,12 +260,22 @@ def analyse_uploaded_replay(
     rejection_ratio = quality.records_rejected / max(quality.records_seen, 1)
     if not (events or dns_events or encrypted_events) or rejection_ratio > 0.10:
         quality.status = "unusable"
-    elif quality.records_rejected or quality.out_of_order_records:
+    elif quality.records_rejected or quality.out_of_order_records or quality.duplicate_uid_count:
         quality.status = "degraded"
+    if quality.records_rejected:
+        quality.degraded_reasons.append(f"{quality.records_rejected} rejected record(s)")
+    if quality.out_of_order_records:
+        quality.degraded_reasons.append(
+            f"{quality.out_of_order_records} out-of-order timestamp record(s)"
+        )
+    if quality.duplicate_uid_count:
+        quality.degraded_reasons.append(
+            f"{quality.duplicate_uid_count} duplicate flow ID occurrence(s)"
+        )
     quality.maximum_backward_skew_seconds = round(quality.maximum_backward_skew_seconds, 6)
     if quality.status == "unusable":
         reason = quality.errors[0] if quality.errors else "No supported passive telemetry records were found."
-        raise ValueError(f"Replay could not be analysed: {reason}")
+        raise ValueError(f"Replay could not be analysed (data quality: unusable): {reason}")
 
     detection_started = time.perf_counter()
     root = Path(os.getenv("DRASTHA_ROOT") or Path(__file__).resolve().parents[2])
@@ -268,7 +299,9 @@ def analyse_uploaded_replay(
     dns_events.sort(key=lambda item: item.timestamp)
     encrypted_events.sort(key=lambda item: item.timestamp)
     alerts = list(run_pipeline(events, detectors))
-    alerts = [item for item in alerts if item.threat_type != "reconnaissance"]
+    # Preserve threshold-crossing reconnaissance findings from the whole replay.
+    # A final snapshot can enrich a still-active scan, but must never replace an
+    # earlier scan that has expired from the detector's active window.
     alerts.extend(recon_detector.final_alerts())
 
     model_path = root / "output" / "models" / "dns_dga_demo.json"
@@ -282,6 +315,9 @@ def analyse_uploaded_replay(
         alerts.extend(encrypted_detector.process(event))
 
     alerts = _deduplicate_and_resolve_conflicts(alerts)
+    evaluation = score_ground_truth(
+        accepted_records, alerts
+    )
     detection_ms = round((time.perf_counter() - detection_started) * 1000, 3)
 
     correlation_started = time.perf_counter()
@@ -328,6 +364,9 @@ def analyse_uploaded_replay(
         "file_size_bytes": upload_bytes,
         "analysis_ms": elapsed_ms,
         "quality": quality.to_dict(),
+        "input_schema": schema_summary(
+            parsed_replay.input_format, raw_records, alias_usage, schema_counts
+        ),
         "telemetry": {
             "connection_records": len(events),
             "dns_records": len(dns_events),
@@ -345,6 +384,7 @@ def analyse_uploaded_replay(
                 + exfiltration_detector.context_suppressed_records
             ),
         },
+        "evaluation": evaluation,
         "alerts": alert_records,
         "incidents": incident_records,
         "top_incident_id": top_incident["incident_id"] if top_incident else None,

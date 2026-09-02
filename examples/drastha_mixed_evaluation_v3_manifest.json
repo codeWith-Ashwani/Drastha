@@ -1,0 +1,32 @@
+{
+  "dataset": "drastha_mixed_evaluation_v3.jsonl",
+  "records": 452,
+  "attack_records": 91,
+  "benign_records": 361,
+  "attack_class_record_counts": {
+    "volumetric_ddos_syn_flood": 18,
+    "udp_reflection_amplification": 14,
+    "reconnaissance_port_scan": 24,
+    "botnet_c2_beaconing": 7,
+    "dga_domain": 7,
+    "dns_tunnelling": 9,
+    "encrypted_session_malware": 7,
+    "data_exfiltration": 5
+  },
+  "time_ranges_utc": {
+    "attack": [
+      "2026-09-02T08:01:40.150000Z",
+      "2026-09-02T08:09:17Z"
+    ],
+    "benign": [
+      "2026-09-02T08:00:00Z",
+      "2026-09-02T11:00:27Z"
+    ]
+  },
+  "ground_truth_fields": {
+    "evaluation_label": "attack|benign",
+    "evaluation_threat_class": "expected threat family/subtype or benign",
+    "evaluation_id": "scenario identifier"
+  },
+  "upload_note": "This manifest contains metadata only. Upload drastha_mixed_evaluation_v3.jsonl to Drastha."
+}

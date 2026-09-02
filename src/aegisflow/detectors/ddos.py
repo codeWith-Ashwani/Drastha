@@ -20,8 +20,8 @@ class DDoSConfig:
     udp_reflection_flow_threshold: int = 4
     udp_amplification_ratio_threshold: float = 10.0
     udp_reflection_bytes_threshold: int = 10_000
-    spoofed_source_entropy_threshold: float = 0.85
-    spoofed_source_minimum_sources: int = 3
+    distributed_source_entropy_threshold: float = 0.85
+    distributed_source_minimum_sources: int = 3
     cooldown_seconds: float = 30.0
 
     def __post_init__(self) -> None:
@@ -87,9 +87,9 @@ class DDoSDetector(Detector):
         sources = {item.src_ip for item in tcp}
         source_entropy = self._source_entropy(tcp)
         subtype = (
-            "suspected_spoofed_source_flood"
-            if len(sources) >= self.config.spoofed_source_minimum_sources
-            and source_entropy >= self.config.spoofed_source_entropy_threshold
+            "distributed_source_syn_flood"
+            if len(sources) >= self.config.distributed_source_minimum_sources
+            and source_entropy >= self.config.distributed_source_entropy_threshold
             else "syn_flood"
         )
         if self._cooling_down(event.dst_ip, subtype, event.timestamp):
@@ -121,11 +121,12 @@ class DDoSDetector(Detector):
                 Evidence("unique_source_ips", len(sources), "context", "Source diversity helps distinguish concentrated and distributed floods."),
                 Evidence("target_port_concentration", round(port_concentration, 3), f">= {self.config.minimum_target_port_concentration}", "Flood attempts remain concentrated on one service instead of fanning out like a port scan."),
                 Evidence("connection_attempt_rate_per_second", round(observed_rate, 3), "rate feature", "Flow arrival rate measures volumetric pressure inside the observation window."),
-                Evidence("normalized_source_ip_entropy", round(source_entropy, 3), f">= {self.config.spoofed_source_entropy_threshold} for spoofing suspicion", "High source diversity and entropy can indicate distributed or spoofed-source traffic."),
+                Evidence("normalized_source_ip_entropy", round(source_entropy, 3), f">= {self.config.distributed_source_entropy_threshold} for distributed-source classification", "High source diversity and entropy support a distributed-source classification; passive flows cannot establish whether addresses were spoofed."),
             ),
             limitations=(
                 "Zeek connection state is a flow-level proxy; packet-level SYN/ACK counts will be added with capture features.",
                 "A service outage or aggressive health check can also create incomplete connections.",
+                "Source diversity does not prove IP spoofing; this alert deliberately uses distributed-source wording.",
             ),
         )
 

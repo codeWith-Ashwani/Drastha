@@ -265,7 +265,7 @@ The findings demonstrate:
 - repeated C2-style callback detection;
 - abnormal outbound-transfer detection;
 - vertical port scanning without a duplicate DDoS classification;
-- SYN, suspected spoofed-source, UDP-flood, and reflection/amplification paths;
+- SYN, distributed-source SYN, UDP-flood, and reflection/amplification paths;
 - encrypted-session anomaly detection from TLS/JA4, size, and timing metadata.
 
 Click **Open scored intelligence** to see the attack timeline, confidence,
@@ -407,10 +407,21 @@ source .venv/bin/activate
 python -m unittest discover -s tests -v
 ```
 
-The current repository contains 96 automated tests covering ingestion,
+The current repository contains 115 automated tests covering ingestion,
 detectors, ML training, correlation, persistence, API workflows, replay upload,
 near-real-time streaming, telemetry quality, PCAP integration and restart
 behaviour.
+
+The canonical mixed evaluation replay is
+`examples/drastha_mixed_evaluation_v3.jsonl`. Its 452 labelled records are in
+strict timestamp order so the unchanged input-quality monitor reports healthy
+telemetry while the upload path detects all eight intended behaviours.
+
+Validate a replay without importing incidents:
+
+```powershell
+python -m aegisflow.validate_replay examples/drastha_mixed_evaluation_v3.jsonl
+```
 
 Build the dashboard separately with:
 

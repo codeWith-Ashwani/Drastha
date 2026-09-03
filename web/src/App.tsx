@@ -163,10 +163,10 @@ function App() {
         } : current);
       } else if (data.type === "complete") {
         finished = true; source.close();
-        setStream((current) => current ? { ...current, status: "complete", processed: data.processed, total: data.total_records, topIncidentId: data.top_incident_id, riskScore: data.risk_score, elapsedMs: data.elapsed_ms } : current);
-        setDemoRun({ status: "completed", telemetry_status: "healthy", elapsed_ms: data.elapsed_ms, stages: [
+        setStream((current) => current ? { ...current, status: "complete", findings: data.findings ?? current.findings, processed: data.processed, total: data.total_records, topIncidentId: data.top_incident_id, riskScore: data.risk_score, elapsedMs: data.elapsed_ms } : current);
+        setDemoRun({ status: "completed", telemetry_status: data.quality?.status ?? "unavailable", elapsed_ms: data.elapsed_ms, stages: [
           { name: "Receive stream", status: "completed", detail: "Accepted passive IP records", records: data.processed },
-          { name: "Check data", status: "healthy", detail: "Validated incoming records", records: data.processed },
+          { name: "Check data", status: data.quality?.status ?? "unavailable", detail: "Validated incoming records in source order", records: data.processed },
           { name: "Detect and classify", status: data.alerts ? "detected" : "no_alert", detail: "Ran behavioural and ML-capable detection paths", alerts: data.alerts },
           { name: "Score intelligence", status: data.risk_score >= 80 ? "critical" : "completed", detail: "Correlated evidence and calculated priority", incidents: data.incidents },
           { name: "Update dashboard", status: "ready", detail: "Published labelled intelligence for review", incidents: data.incidents },
@@ -244,7 +244,7 @@ function App() {
         </div>
         {stream.latest && <div className="latest-record"><span>Latest observation</span><b>{stream.latest.src_ip} <ArrowRight size={12} /> {stream.latest.dst_ip}:{stream.latest.dst_port}</b><small>{stream.latest.record_kind === "dns" ? `DNS query · ${stream.latest.query}` : `${stream.latest.protocol.toUpperCase()} · ${stream.latest.outbound_bytes.toLocaleString()} bytes out · flow ${stream.latest.flow_id}`}</small></div>}
         {stream.findings.length > 0 ? <div className="live-findings">{stream.findings.map((item) => <article key={item.alert.alert_id}><div><span className={`severity severity-${item.alert.severity}`}>{item.alert.severity}</span><b>{item.alert.threat_class || label(item.alert.subtype)}</b></div><strong>{Math.round(item.alert.confidence * 100)}% confidence</strong><p>{item.detection_method}</p><small>{item.alert.evidence[0]?.explanation}</small></article>)}</div> : <div className="listening"><Radio size={15} /><span>{stream.status === "running" ? "Listening for behaviour that crosses a detection threshold…" : "No configured threat behaviour was found."}</span></div>}
-        {stream.topIncidentId && <button className="secondary live-review" onClick={() => void openIncident(stream.topIncidentId!)}><Eye size={15} />Open scored intelligence</button>}
+        {stream.status === "complete" && stream.topIncidentId && <button className="secondary live-review" onClick={() => void openIncident(stream.topIncidentId!)}><Eye size={15} />Open scored intelligence</button>}
       </section>}
 
       {uploadResult && <section className={`result-panel ${uploadResult.verdict === "threat_detected" ? "result-danger" : "result-clear"}`}>

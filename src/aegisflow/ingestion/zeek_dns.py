@@ -15,11 +15,30 @@ from aegisflow.ingestion.zeek_jsonl import (
 from aegisflow.models import DNSEvent
 
 
+DNS_NORMALIZER_VERSION = "2.0"
+_QTYPES = {1: "A", 2: "NS", 5: "CNAME", 6: "SOA", 12: "PTR", 15: "MX",
+           16: "TXT", 28: "AAAA", 33: "SRV", 41: "OPT", 64: "SVCB", 65: "HTTPS", 255: "ANY"}
+_RCODES = {0: "NOERROR", 1: "FORMERR", 2: "SERVFAIL", 3: "NXDOMAIN",
+           4: "NOTIMP", 5: "REFUSED"}
+
+
+def _dns_code(value: Any, names: dict[int, str]) -> str:
+    if value is None or value == "":
+        return "UNKNOWN"
+    text = str(value).strip().upper()
+    # Unknown numeric values remain visible; do not silently invent a type.
+    return names.get(int(text), text) if text.isdecimal() else text
+
+
 def normalize_dns_record(record: dict[str, Any], line_number: int = 1) -> DNSEvent:
     try:
         record, _ = normalize_field_aliases(record, line_number)
-        if not record.get("query") and record.get("query_name"):
-            record = {**record, "query": record["query_name"]}
+        features = record.get("features", record.get("ml_evidence", record.get("evidence", {})))
+        features = features if isinstance(features, dict) else {}
+        if not record.get("query"):
+            query_value = record.get("query_name") or features.get("query_name")
+            if query_value:
+                record = {**record, "query": query_value}
         query = str(_required(record, "query", line_number)).strip().lower().rstrip(".")
         answers = record.get("answers") or ()
         if isinstance(answers, str):
@@ -32,8 +51,9 @@ def normalize_dns_record(record: dict[str, Any], line_number: int = 1) -> DNSEve
             src_ip=_ip(record, "id.orig_h", line_number),
             dst_ip=_ip(record, "id.resp_h", line_number),
             query=query,
-            query_type=str(record.get("qtype_name", record.get("qtype", "UNKNOWN"))),
-            response_code=str(record.get("rcode_name", record.get("rcode", "UNKNOWN"))),
+            query_type=_dns_code(record.get("qtype_name") or record.get("qtype")
+                                 or features.get("record_type"), _QTYPES),
+            response_code=_dns_code(record.get("rcode_name") or record.get("rcode"), _RCODES),
             answers=tuple(str(answer) for answer in answers),
             rejected=bool(record.get("rejected", False)),
             source="zeek:dns",

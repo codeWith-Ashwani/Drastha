@@ -30,6 +30,7 @@ def alert_from_dict(record: dict) -> Alert:
         flow_ids=tuple(record.get("flow_ids", ())),
         evidence=tuple(Evidence(**item) for item in record.get("evidence", ())),
         limitations=tuple(record.get("limitations", ())),
+        analysis_provenance=dict(record.get("analysis_provenance", {})),
     )
 
 

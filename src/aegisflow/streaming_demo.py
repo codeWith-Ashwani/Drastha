@@ -5,25 +5,10 @@ import time
 from pathlib import Path
 from typing import Any, Iterator
 
-from aegisflow.detectors import (
-    C2BeaconDetector,
-    DDoSConfig,
-    DDoSDetector,
-    DNSDetector,
-    EncryptedSessionAnomalyDetector,
-    ExfiltrationDetector,
-    ReconConfig,
-    ReconDetector,
-)
-from aegisflow.dns_model import DNSNgramModel
-from aegisflow.context_policy import load_context_policy
-from aegisflow.incidents import IncidentStore
-from aegisflow.ingestion.zeek_jsonl import read_conn_jsonl
-from aegisflow.ingestion.zeek_dns import read_dns_jsonl
-from aegisflow.ingestion.zeek_encrypted import (
-    build_encrypted_metadata_index,
-    read_encrypted_jsonl,
-)
+from aegisflow.analysis_session import AnalysisProfile, AnalysisSession, STREAM_DEMO
+from aegisflow.ingestion.passive_replay import prepare_replay, event_order
+from aegisflow.evaluation_scoring import score_ground_truth
+from uuid import uuid4
 from aegisflow.models import DNSEvent, EncryptedSessionMetadata
 
 
@@ -54,6 +39,7 @@ def stream_simulated_ip_traffic(
     repository: Any,
     *,
     interval_seconds: float = 0.10,
+    profile: AnalysisProfile = STREAM_DEMO,
 ) -> Iterator[str]:
     """Process an accelerated, one-way flow stream and emit dashboard intelligence.
 
@@ -62,63 +48,56 @@ def stream_simulated_ip_traffic(
     endpoint represented by the input records.
     """
     project_root = Path(root).resolve()
-    context_policy = load_context_policy(project_root)
     connection_paths = (
         "zeek_conn_scan.jsonl",
         "zeek_conn_ddos.jsonl",
         "zeek_conn_beacon.jsonl",
         "zeek_conn_exfil.jsonl",
     )
-    connection_events = [
-        event
-        for name in connection_paths
-        for event in read_conn_jsonl(project_root / "examples" / name)
-    ]
-    dns_events = list(read_dns_jsonl(project_root / "examples" / "zeek_dns_threats.jsonl"))
-    encrypted_events = list(read_encrypted_jsonl(
-        project_root / "examples" / "zeek_ssl_beacon.jsonl", "tls"
-    ))
-    events = sorted(
-        [*dns_events, *encrypted_events, *connection_events],
-        key=lambda item: item.timestamp,
-    )
-    connection_detectors = [
-        ReconDetector(ReconConfig(unique_port_threshold=6, unique_host_threshold=6)),
-        DDoSDetector(DDoSConfig(syn_attempt_threshold=5, udp_packet_threshold=500)),
-        C2BeaconDetector(
-            encrypted_metadata=build_encrypted_metadata_index(encrypted_events),
-            trusted_periodic_endpoints=context_policy.trusted_periodic_endpoints,
-        ),
-        ExfiltrationDetector(
-            approved_bulk_transfer_endpoints=context_policy.approved_bulk_transfer_endpoints
-        ),
-    ]
-    dns_detector = DNSDetector(
-        model=DNSNgramModel.load(project_root / "output" / "models" / "dns_dga_demo.json")
-    )
-    encrypted_detector = EncryptedSessionAnomalyDetector()
-    correlator = IncidentStore()
+    paths = [*(project_root / "examples" / name for name in connection_paths),
+             project_root / "examples/zeek_dns_threats.jsonl",
+             project_root / "examples/zeek_ssl_beacon.jsonl"]
+    prepared = [prepare_replay(path.read_text(encoding="utf-8"), path.name) for path in paths]
+    events = sorted([event for source in prepared for event in source.ordered_events()], key=event_order)
+    telemetry = {key: sum(source.telemetry()[key] for source in prepared) for key in
+                 ("connection_records", "dns_records", "encrypted_session_records")}
+    quality = {"status": "degraded" if any(source.quality.status != "healthy" for source in prepared) else "healthy",
+               "sources": [source.quality.to_dict() for source in prepared]}
+    yield from stream_events(project_root, repository, events, telemetry, quality,
+                             profile=profile, interval_seconds=interval_seconds)
+
+
+def stream_replay(root, repository, filename, content, *, profile=STREAM_DEMO, interval_seconds=0):
+    """Upload-compatible replay delivered incrementally over monitoring-side SSE."""
+    prepared = prepare_replay(content, filename)
+    yield from stream_events(root, repository, prepared.ordered_events(), prepared.telemetry(),
+                             prepared.quality.to_dict(), profile=profile, interval_seconds=interval_seconds,
+                             accepted_records=prepared.accepted_records)
+
+
+def stream_events(root, repository, events, telemetry, quality, *, profile=STREAM_DEMO,
+                  interval_seconds=0, accepted_records=()):
+    session = AnalysisSession.from_root(root, profile)
+    run_id = uuid4().hex
     alerts = []
     started = time.perf_counter()
 
     yield _sse({
         "type": "started",
         "total_records": len(events),
-        "source": "simulated one-way IP stream",
+        "source": "passive replay stream",
+        "run_id": run_id,
+        "quality": quality,
+        "analysis_provenance": session.provenance(),
         "passive": True,
         "return_path_required": False,
-        "telemetry": {
-            "connection_records": len(connection_events),
-            "dns_records": len(dns_events),
-            "encrypted_session_records": len(encrypted_events),
-        },
+        "telemetry": telemetry,
     })
 
     for index, event in enumerate(events, start=1):
         record_started = time.perf_counter()
-        new_alerts = []
+        new_alerts = session.process(event)
         if isinstance(event, DNSEvent):
-            new_alerts.extend(dns_detector.process(event))
             record = {
                 "record_kind": "dns",
                 "timestamp": event.timestamp,
@@ -132,7 +111,6 @@ def stream_simulated_ip_traffic(
                 "query": event.query,
             }
         elif isinstance(event, EncryptedSessionMetadata):
-            new_alerts.extend(encrypted_detector.process(event))
             record = {
                 "record_kind": "encrypted_session",
                 "timestamp": event.timestamp,
@@ -146,8 +124,6 @@ def stream_simulated_ip_traffic(
                 "fingerprint": event.client_fingerprint,
             }
         else:
-            for detector in connection_detectors:
-                new_alerts.extend(detector.process(event))
             record = {
                 "record_kind": "connection",
                 "timestamp": event.timestamp,
@@ -170,10 +146,21 @@ def stream_simulated_ip_traffic(
 
         for alert in new_alerts:
             alerts.append(alert)
-            incident = correlator.process(alert)
-            repository.import_records([incident.to_dict()], [alert.to_dict()])
+            # Provisional notifications are not inserted into the final incident
+            # tables: later evidence can merge or retract them.
+            current = session.incidents()
+            incident = next((item for item in current if alert.alert_id in item.alert_ids), None)
+            if incident is None:
+                continue
+            if hasattr(repository, "save_analysis_run"):
+                repository.save_analysis_run(run_id, {"status": "running", "quality": quality,
+                    "analysis_provenance": session.provenance(),
+                    "alerts": [item.to_dict() for item in session.findings()],
+                    "incidents": [item.to_dict() for item in current]})
             yield _sse({
                 "type": "alert",
+                "provisional": True,
+                "run_id": run_id,
                 "processed": index,
                 "alert": alert.to_dict(),
                 "detection_method": _detection_method(alert),
@@ -183,25 +170,38 @@ def stream_simulated_ip_traffic(
         if interval_seconds:
             time.sleep(interval_seconds)
 
-    incidents = [item.to_dict() for item in correlator.all()]
+    final_alerts = session.findings(complete=True)
+    incidents = [item.to_dict() for item in session.incidents()]
+    final_records = [item.to_dict() for item in final_alerts]
+    repository.import_records(incidents, final_records)
+    evaluation = score_ground_truth(list(accepted_records), final_alerts)
+    if hasattr(repository, "save_analysis_run"):
+        repository.save_analysis_run(run_id, {"status": "completed", "quality": quality,
+            "analysis_provenance": session.provenance(), "alerts": final_records,
+            "incidents": incidents, "evaluation": evaluation})
     top_incident = max(incidents, key=lambda item: item["risk_score"], default=None)
     elapsed_ms = round((time.perf_counter() - started) * 1000, 3)
     yield _sse({
         "type": "complete",
         "processed": len(events),
         "total_records": len(events),
-        "alerts": len(alerts),
+        "alerts": len(final_alerts),
+        "emitted_alerts": len(alerts),
+        "findings": [{"alert": item, "detection_method": _detection_method(alert),
+                      "incident": next(incident for incident in incidents if item["alert_id"] in incident["alert_ids"])}
+                     for item, alert in zip(final_records, final_alerts)],
+        "incident_records": incidents,
+        "evaluation": evaluation,
+        "quality": quality,
+        "run_id": run_id,
         "incidents": len(incidents),
         "top_incident_id": top_incident["incident_id"] if top_incident else None,
         "risk_score": top_incident["risk_score"] if top_incident else 0,
         "elapsed_ms": elapsed_ms,
+        "analysis_provenance": session.provenance(),
         "near_real_time": True,
         "passive": True,
         "return_path_required": False,
         "bounded_latency": True,
-        "telemetry": {
-            "connection_records": len(connection_events),
-            "dns_records": len(dns_events),
-            "encrypted_session_records": len(encrypted_events),
-        },
+        "telemetry": telemetry,
     })

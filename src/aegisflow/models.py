@@ -90,6 +90,7 @@ class Alert:
     flow_ids: tuple[str, ...]
     evidence: tuple[Evidence, ...]
     limitations: tuple[str, ...] = ()
+    analysis_provenance: dict[str, Any] = field(default_factory=dict, compare=False)
 
     def to_dict(self) -> dict[str, Any]:
         record = asdict(self)

@@ -1,7 +1,9 @@
 {
   "dataset_id": "CICDDoS2019",
   "status": "not_downloaded",
-  "source": "https://www.unb.ca/cic/datasets/",
+  "source": "https://www.unb.ca/cic/datasets/ddos-2019.html",
+  "license_review": "Publisher permits redistribution with dataset and paper citation; source reviewed 2026-09-04. Data has not been downloaded or evaluated.",
+  "citation": "Iman Sharafaldin, Arash Habibi Lashkari, Saqib Hakak, Ali A. Ghorbani. Developing Realistic Distributed Denial of Service (DDoS) Attack Dataset and Taxonomy. IEEE ICCST, 2019.",
   "purpose": [
     "SYN flood evaluation",
     "UDP flood evaluation",
@@ -28,4 +30,3 @@
     "processing throughput"
   ]
 }
-

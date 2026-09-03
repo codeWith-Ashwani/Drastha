@@ -2,6 +2,19 @@
 
 ## Delivery principle
 
+Production follow-on sequence (the original sprint plan below is historical):
+
+- Sprint 8: shared ingestion/inference/session path — complete.
+- Sprint 9: measured passive metadata features — complete.
+- Sprint 10: independent evaluation, provenance and split guards — complete;
+  external baseline findings and limitations are in `SPRINT_10.md`.
+- Sprint 11: feature-compatible labelled corpora, validation-only calibration and
+  an independently reserved final holdout; no tuning on the inspected CTU run.
+- Sprint 12: continuous ingestion, backpressure, checkpoints and recovery.
+- Sprint 13: authentication, retention and tamper-evident evidence.
+- Sprint 14: sustained end-to-end throughput and real-sensor/browser validation.
+- Sprint 15: operational deployment and runbooks.
+
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 
 ## Definition of done for every sprint

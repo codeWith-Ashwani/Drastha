@@ -68,6 +68,13 @@ def _parser() -> argparse.ArgumentParser:
     analyse.add_argument("--report-output", type=Path)
     analyse.add_argument("--packet-capture", type=Path, help="Optional matching classic Ethernet PCAP for measured packet sequences and JA3")
 
+    benchmark = subparsers.add_parser("evaluate-corpus", help="audit pinned capture splits and run isolated held-out evaluation")
+    benchmark.add_argument("--manifest", required=True, type=Path)
+    benchmark.add_argument("--data-root", required=True, type=Path)
+    benchmark.add_argument("--split", choices=("train", "validation", "test"), default="test")
+    benchmark.add_argument("--report-output", required=True, type=Path)
+    benchmark.add_argument("--database", help="Optional separate evaluation database, not the production analyst store")
+
     validate = subparsers.add_parser(
         "validate-replay", help="validate replay format, schema and telemetry quality"
     )
@@ -596,6 +603,15 @@ def _analyse_shared(path, args):
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
+        if args.command == "evaluate-corpus":
+            from aegisflow.benchmark import run_benchmark, protect_outputs
+            protect_outputs(args.manifest, args.data_root, (args.report_output, args.database))
+            repository = repository_from_url(args.database) if args.database else None
+            report = run_benchmark(args.manifest, data_root=args.data_root, split=args.split, repository=repository)
+            _write_report(report, args.report_output)
+            print(json.dumps({"corpus_id": report["corpus_id"], "runs": len(report["runs"]),
+                              "metrics": report["pooled_binary_alert_coverage"], "report": str(args.report_output)}))
+            return 0
         if args.command == "analyse":
             report = _analyse_shared(args.input, args)
             _write_report(report, args.report_output)

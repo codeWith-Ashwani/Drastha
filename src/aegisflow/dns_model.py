@@ -29,6 +29,8 @@ class DNSNgramModel:
 
     @classmethod
     def train(cls, rows: Iterable[DNSLabelledDomain], ngram_size: int = 3) -> "DNSNgramModel":
+        rows = list(rows)
+        validate_leakage_safe_split(rows)
         training = [row for row in rows if row.split == "train"]
         if not training or {row.label for row in training} != {0, 1}:
             raise ValueError("training split must contain both benign and malicious domains")
@@ -98,8 +100,8 @@ def read_dns_dataset(path: str | Path) -> list[DNSLabelledDomain]:
                 )
             except (KeyError, TypeError, ValueError) as exc:
                 raise ValueError(f"line {line_number}: invalid DNS dataset row: {exc}") from exc
-            if row.label not in (0, 1) or row.split not in ("train", "test"):
-                raise ValueError(f"line {line_number}: label must be 0/1 and split train/test")
+            if row.label not in (0, 1) or row.split not in ("train", "validation", "test"):
+                raise ValueError(f"line {line_number}: label must be 0/1 and split train/validation/test")
             rows.append(row)
     validate_leakage_safe_split(rows)
     return rows
@@ -108,16 +110,24 @@ def read_dns_dataset(path: str | Path) -> list[DNSLabelledDomain]:
 def validate_leakage_safe_split(rows: Iterable[DNSLabelledDomain]) -> None:
     rows = list(rows)
     splits_by_domain: dict[str, set[str]] = {}
+    seen = set()
     for row in rows:
-        splits_by_domain.setdefault(row.domain, set()).add(row.split)
+        domain = normalized_domain(row.domain)
+        if not domain or row.label not in (0, 1) or row.split not in {"train", "validation", "test"} or not row.family.strip():
+            raise ValueError("Invalid DNS label, family, split or empty domain")
+        if (domain, row.split) in seen:
+            raise ValueError("duplicate domain within split (including conflicting labels)")
+        seen.add((domain, row.split))
+        splits_by_domain.setdefault(domain, set()).add(row.split)
     leaked_domains = sorted(domain for domain, splits in splits_by_domain.items() if len(splits) > 1)
     if leaked_domains:
         raise ValueError(f"domain leakage across splits: {', '.join(leaked_domains[:3])}")
     malicious_families = {
-        split: {row.family for row in rows if row.label == 1 and row.split == split}
-        for split in ("train", "test")
+        split: {row.family.strip().lower() for row in rows if row.label == 1 and row.split == split}
+        for split in ("train", "validation", "test")
     }
-    leaked_families = malicious_families["train"] & malicious_families["test"]
+    leaked_families = set().union(*(malicious_families[a] & malicious_families[b]
+                                   for a, b in (("train", "validation"), ("train", "test"), ("validation", "test"))))
     if leaked_families:
         raise ValueError(f"malware-family leakage across splits: {', '.join(sorted(leaked_families))}")
 

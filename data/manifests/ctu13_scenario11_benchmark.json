@@ -1,0 +1,34 @@
+{
+  "schema_version": "drastha-corpus-v1",
+  "corpus_id": "ctu13-scenario11-frozen-baseline-v1",
+  "internal_cidrs": ["147.32.0.0/16"],
+  "notes": [
+    "Whole scenario 11, RBot. No row sampling or threshold selection.",
+    "CEST UTC+02:00 from capture timeline; timestamp conversion is explicit.",
+    "147.32.0.0/16 is the explicit experimental internal-network scope, not a discovered inventory.",
+    "CTU source/destination identities are observational Argus endpoints, not guaranteed Zeek initiators.",
+    "Independent external frozen-baseline evaluation; this is not an untouched holdout after its results have been inspected.",
+    "No training or validation data, model or demo allowlist is loaded by this run."
+  ],
+  "artifacts": [
+    {
+      "id": "ctu13-scenario11",
+      "capture_id": "CTU-Malware-Capture-Botnet-52",
+      "group_ids": ["family:rbot", "capture:CTU-Malware-Capture-Botnet-52", "environment:ctu-prague-2011"],
+      "split": "test",
+      "format": "ctu13-binetflow",
+      "expected_records": 107251,
+      "timestamp_utc_offset_minutes": 120,
+      "path": "data/raw/CTU13/capture20110818-2.binetflow",
+      "sha256": "cee542d4b5efe4fa1cd59b87ece5aaea9a13d8f0abe56cd07cee31590736428c",
+      "origin": {
+        "kind": "external",
+        "source_url": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-52/detailed-bidirectional-flow-labels/capture20110818-2.binetflow",
+        "license": "CC BY 2.0 (linked by the CTU-13 publisher)",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "citation": "Sebastian Garcia, Martin Grill, Jan Stiborek and Alejandro Zunino. An empirical comparison of botnet detection methods. Computers and Security 45 (2014), 100-123. doi:10.1016/j.cose.2014.05.011",
+        "retrieved_at": "2026-09-03T21:38:00Z"
+      }
+    }
+  ]
+}

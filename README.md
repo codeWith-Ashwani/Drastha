@@ -11,6 +11,12 @@ The repository contains a complete offline SIH demonstration and the foundation
 of a production system. The SIH demo is complete; production hardening is still
 in progress.
 
+Sprint 10 adds a checksum-pinned, split-audited independent evaluation workflow.
+The external CTU-13 baseline exposed detection gaps and false positives; it does
+not validate the demo's accuracy on real traffic. See [Sprint 10 results and
+reproduction steps](docs/SPRINT_10.md) and the
+[pinned evaluation manifest](data/manifests/ctu13_scenario11_benchmark.json).
+
 > Drastha is a defensive research prototype. Use it only with traffic and
 > systems that you are authorized to monitor. It does not automatically block
 > or attack another system.

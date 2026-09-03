@@ -26,6 +26,9 @@ from aegisflow.ingestion.zeek_encrypted import build_encrypted_metadata_index
 from aegisflow.findings import resolve_findings
 from aegisflow.incidents import IncidentStore
 from aegisflow.models import Alert, DNSEvent, EncryptedSessionMetadata, NetworkEvent
+from aegisflow.passive_features import PassiveFeatureConfig, PassiveFeatureExtractor
+from aegisflow.network_context import NetworkScope
+from aegisflow.passive_context import PassiveDNSContext
 
 
 PassiveEvent = NetworkEvent | DNSEvent | EncryptedSessionMetadata
@@ -44,8 +47,14 @@ class AnalysisProfile:
     allow_domains: tuple[str, ...] = ()
     allow_destinations: tuple[str, ...] = ()
     approved_backup_destinations: tuple[str, ...] = ()
+    feature_mode: str = "compatibility"
+    passive_features: PassiveFeatureConfig = field(default_factory=PassiveFeatureConfig)
+    internal_cidrs: tuple[str, ...] = ()
 
     def __post_init__(self):
+        if self.feature_mode not in {"compatibility", "derived"}:
+            raise ValueError("Unknown passive feature mode")
+        NetworkScope(self.internal_cidrs)
         if not self.enabled or set(self.enabled) - {"recon", "ddos", "c2", "dns", "encrypted", "exfiltration"}:
             raise ValueError("Profile must select known detectors")
 
@@ -60,7 +69,8 @@ STREAM_DEMO = AnalysisProfile(
     ddos=DDoSConfig(syn_attempt_threshold=5, udp_packet_threshold=500),
 )
 # These are existing detector defaults, NOT production-calibrated thresholds.
-DEPLOYMENT_BASELINE = AnalysisProfile("deployment-baseline-uncalibrated-v1")
+DEPLOYMENT_BASELINE = AnalysisProfile("deployment-baseline-uncalibrated-v1", feature_mode="derived",
+                                    ddos=DDoSConfig(require_reflection_service_context=True))
 
 
 def configured_profile(default: AnalysisProfile) -> AnalysisProfile:
@@ -76,7 +86,7 @@ def configured_profile(default: AnalysisProfile) -> AnalysisProfile:
 class AnalysisSession:
     """One independent detector state per replay/stream, never module-global."""
 
-    version = "2.0"
+    version = "3.0"
 
     def __init__(
         self, profile: AnalysisProfile, *, context_policy: ContextPolicy | None = None,
@@ -85,6 +95,10 @@ class AnalysisSession:
         self.profile = profile
         self.context_policy = context_policy or ContextPolicy()
         self.dns_model = dns_model
+        self.feature_extractor = PassiveFeatureExtractor(profile.passive_features)
+        self.network_scope = NetworkScope(profile.internal_cidrs)
+        self.direction_counts = {}
+        self.dns_context = PassiveDNSContext()
         self._latest_timestamp: float | None = None
         self._metadata: dict[tuple[str, str, str], EncryptedSessionMetadata] = {}
         self._alerts: list[Alert] = []
@@ -114,6 +128,9 @@ class AnalysisSession:
         model_path: str | Path | None = None,
     ) -> AnalysisSession:
         root = Path(root)
+        configured_cidrs = os.getenv("DRASTHA_INTERNAL_NETWORKS")
+        if configured_cidrs is not None:
+            profile = replace(profile, internal_cidrs=tuple(x.strip() for x in configured_cidrs.split(",") if x.strip()))
         configured = model_path or os.getenv("DRASTHA_DNS_MODEL")
         path = Path(configured) if configured else root / "output" / "models" / "dns_dga_demo.json"
         if configured and not path.is_absolute():
@@ -132,8 +149,10 @@ class AnalysisSession:
         self._metadata = {key: value for key, value in self._metadata.items()
                           if value.timestamp >= event.timestamp - self.profile.c2.window_seconds}
         if isinstance(event, DNSEvent):
+            self.dns_context.observe(event)
             alerts = self.dns.process(event) if "dns" in self.profile.enabled else []
         elif isinstance(event, EncryptedSessionMetadata):
+            event = self.feature_extractor.enrich(event, allow_supplied=self.profile.feature_mode == "compatibility")
             self._metadata[(event.flow_id, event.src_ip, event.dst_ip)] = event
             alerts = self.encrypted.process(event) if "encrypted" in self.profile.enabled else []
         else:
@@ -141,8 +160,17 @@ class AnalysisSession:
                 value for value in self._metadata.values()
                 if value.src_ip == event.src_ip and value.dst_ip == event.dst_ip
             ])
-            alerts = [alert for detector in self.connection_detectors for alert in detector.process(event)]
-        alerts = [replace(alert, analysis_provenance=self._provenance) for alert in alerts]
+            direction = self.network_scope.direction(event.src_ip, event.dst_ip)
+            self.direction_counts[direction] = self.direction_counts.get(direction, 0) + 1
+            alerts = []
+            for detector in self.connection_detectors:
+                view = event
+                if detector is self.exfiltration and (self.profile.internal_cidrs or self.profile.feature_mode == "derived"):
+                    view = self.network_scope.exfiltration_view(event)
+                if view is not None:
+                    alerts.extend(detector.process(view))
+        dns_evidence = self.dns_context.evidence_for(event) if alerts and not isinstance(event, DNSEvent) else ()
+        alerts = [replace(alert, analysis_provenance=self._provenance, evidence=alert.evidence + dns_evidence) for alert in alerts]
         self._alerts.extend(alerts)
         return alerts
 
@@ -187,4 +215,14 @@ class AnalysisSession:
             "dns_model_version": self.dns_model.payload.get("version") if self.dns_model else None,
             "dns_model_sha256": digest(self.dns_model.payload) if self.dns_model else None,
             "c2_metadata_mode": "observed-event-time-v1",
+            "passive_feature_extractor": PassiveFeatureExtractor.version,
+            "feature_mode": self.profile.feature_mode,
+            "dns_context_mode": "causal-60s-max10000-v1",
         }
+
+    def feature_summary(self):
+        return {**self.feature_extractor.summary(), "mode": self.profile.feature_mode,
+                "network_direction_counts": dict(self.direction_counts),
+                "network_direction_status": "configured" if self.profile.internal_cidrs else "unconfigured",
+                "exfiltration_direction": "legacy-originator-view" if not self.profile.internal_cidrs and
+                    self.profile.feature_mode == "compatibility" else "configured-boundary-required"}

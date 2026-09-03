@@ -39,9 +39,13 @@ def prepare_zeek_directory(directory):
     )
 
 
-def analyse_replay_file(path, repository, *, root=None, profile=DEPLOYMENT_BASELINE, model_path=None):
+def analyse_replay_file(path, repository, *, root=None, profile=DEPLOYMENT_BASELINE, model_path=None,
+                        packet_capture=None):
     path = Path(path)
     prepared = (prepare_zeek_directory(path) if path.is_dir() else
                 prepare_replay(path.read_text(encoding="utf-8"), path.name, maximum_records=None))
+    if packet_capture is not None:
+        from aegisflow.ingestion.capture_join import attach_capture
+        prepared = attach_capture(prepared, packet_capture)
     return analyse_prepared(prepared, repository, filename=path.name, profile=profile,
                             root=root, model_path=model_path)

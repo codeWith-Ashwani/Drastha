@@ -21,6 +21,12 @@ type Metrics = { total_incidents: number; active_incidents: number; critical_inc
 type DemoStage = { name: string; status: string; detail: string; duration_ms?: number; records?: number; rejected?: number; alerts?: number; incidents?: number };
 type DemoRun = { status: string; telemetry_status: string; elapsed_ms?: number; stages: DemoStage[] };
 type Health = { status: string; mode: string; storage: string; return_path_required: boolean; demo_run?: DemoRun | null };
+type FeatureCoverage = { mode: string; counts: Record<string, number>; network_direction_status: string; exfiltration_direction: string };
+
+function FeatureCoverageNote({ value }: { value?: FeatureCoverage }) {
+  if (!value) return null;
+  return <p className="scope-note"><b>Encrypted-session feature coverage ({value.mode}):</b> {value.counts.derived ?? 0} measured, {value.counts.supplied_compatibility ?? 0} supplied demo scores, {value.counts.insufficient_evidence ?? 0} insufficient evidence (including baseline warm-up). Missing evidence does not mean benign. <b>Network boundary:</b> {value.network_direction_status}; exfiltration uses {value.exfiltration_direction}.</p>;
+}
 type UploadResult = {
   verdict: string; headline: string; summary: string; filename: string; file_size_bytes: number;
   analysis_ms: number; quality: {
@@ -29,6 +35,7 @@ type UploadResult = {
     invalid_timestamp_count: number; unsupported_record_count: number;
     degraded_reasons: string[]; errors: string[];
   };
+  feature_coverage?: FeatureCoverage;
   alerts: Alert[]; incidents: Incident[]; top_incident_id?: string; stages: DemoStage[]; scope_note: string;
   telemetry?: { connection_records: number; dns_records: number; encrypted_session_records: number; supplied_labels_ignored: boolean };
   context_policy?: { source: string; trusted_periodic_rules: number; approved_bulk_transfer_rules: number; suppressed_connection_evaluations: number };
@@ -43,6 +50,7 @@ type StreamState = {
   status: "running" | "complete" | "error"; processed: number; total: number;
   latest?: StreamRecord; findings: StreamFinding[]; topIncidentId?: string;
   riskScore: number; elapsedMs?: number;
+  featureCoverage?: FeatureCoverage;
 };
 
 const API = "/api";
@@ -163,7 +171,7 @@ function App() {
         } : current);
       } else if (data.type === "complete") {
         finished = true; source.close();
-        setStream((current) => current ? { ...current, status: "complete", findings: data.findings ?? current.findings, processed: data.processed, total: data.total_records, topIncidentId: data.top_incident_id, riskScore: data.risk_score, elapsedMs: data.elapsed_ms } : current);
+        setStream((current) => current ? { ...current, status: "complete", findings: data.findings ?? current.findings, processed: data.processed, total: data.total_records, topIncidentId: data.top_incident_id, riskScore: data.risk_score, elapsedMs: data.elapsed_ms, featureCoverage: data.feature_coverage } : current);
         setDemoRun({ status: "completed", telemetry_status: data.quality?.status ?? "unavailable", elapsed_ms: data.elapsed_ms, stages: [
           { name: "Receive stream", status: "completed", detail: "Accepted passive IP records", records: data.processed },
           { name: "Check data", status: data.quality?.status ?? "unavailable", detail: "Validated incoming records in source order", records: data.processed },
@@ -245,12 +253,14 @@ function App() {
         {stream.latest && <div className="latest-record"><span>Latest observation</span><b>{stream.latest.src_ip} <ArrowRight size={12} /> {stream.latest.dst_ip}:{stream.latest.dst_port}</b><small>{stream.latest.record_kind === "dns" ? `DNS query · ${stream.latest.query}` : `${stream.latest.protocol.toUpperCase()} · ${stream.latest.outbound_bytes.toLocaleString()} bytes out · flow ${stream.latest.flow_id}`}</small></div>}
         {stream.findings.length > 0 ? <div className="live-findings">{stream.findings.map((item) => <article key={item.alert.alert_id}><div><span className={`severity severity-${item.alert.severity}`}>{item.alert.severity}</span><b>{item.alert.threat_class || label(item.alert.subtype)}</b></div><strong>{Math.round(item.alert.confidence * 100)}% confidence</strong><p>{item.detection_method}</p><small>{item.alert.evidence[0]?.explanation}</small></article>)}</div> : <div className="listening"><Radio size={15} /><span>{stream.status === "running" ? "Listening for behaviour that crosses a detection threshold…" : "No configured threat behaviour was found."}</span></div>}
         {stream.status === "complete" && stream.topIncidentId && <button className="secondary live-review" onClick={() => void openIncident(stream.topIncidentId!)}><Eye size={15} />Open scored intelligence</button>}
+        <FeatureCoverageNote value={stream.featureCoverage} />
       </section>}
 
       {uploadResult && <section className={`result-panel ${uploadResult.verdict === "threat_detected" ? "result-danger" : "result-clear"}`}>
         <div className="result-heading"><div className="verdict-icon">{uploadResult.verdict === "threat_detected" ? <CircleAlert size={22} /> : <Check size={22} />}</div><div><p className="eyebrow">Uploaded replay result</p><h2>{uploadResult.headline}</h2><p>{uploadResult.summary}</p></div>{uploadResult.top_incident_id && <button className="secondary" onClick={() => void openIncident(uploadResult.top_incident_id!)}><Eye size={15} />Review full evidence</button>}</div>
         <div className="result-facts"><span><b>{uploadResult.quality.records_accepted}/{uploadResult.quality.records_received}</b> accepted records</span><span><b>{uploadResult.quality.records_rejected}</b> rejected</span><span><b>{uploadResult.quality.out_of_order_records}</b> out of order</span><span><b>{uploadResult.quality.duplicate_uid_count}</b> duplicate UIDs</span><span><b>{uploadResult.alerts.length}</b> findings</span><span><b>{uploadResult.incidents.length}</b> incidents</span><span><b>{uploadResult.analysis_ms} ms</b> analysis time</span><span><b>{uploadResult.quality.status}</b> data quality</span>{uploadResult.telemetry && <><span><b>{uploadResult.telemetry.dns_records}</b> DNS records</span><span><b>{uploadResult.telemetry.encrypted_session_records}</b> TLS records</span></>}{uploadResult.context_policy && <span><b>{uploadResult.context_policy.suppressed_connection_evaluations}</b> policy-approved records</span>}</div>
         {uploadResult.quality.degraded_reasons.length > 0 && <p className="scope-note"><b>Data-quality reason:</b> {uploadResult.quality.degraded_reasons.join("; ")}</p>}
+        <FeatureCoverageNote value={uploadResult.feature_coverage} />
         {uploadResult.quality.errors.length > 0 && <p className="scope-note"><b>Quarantine sample:</b> {uploadResult.quality.errors.join(" · ")}</p>}
         {uploadResult.evaluation && <div className="result-facts"><span><b>{uploadResult.evaluation.true_positive}</b> TP</span><span><b>{uploadResult.evaluation.false_positive}</b> FP</span><span><b>{uploadResult.evaluation.false_negative}</b> FN</span><span><b>{uploadResult.evaluation.true_negative}</b> TN</span><span><b>{Math.round(uploadResult.evaluation.precision * 100)}%</b> precision</span><span><b>{Math.round(uploadResult.evaluation.recall * 100)}%</b> recall</span><span><b>{Math.round(uploadResult.evaluation.f1_score * 100)}%</b> F1</span><span><b>{Math.round(uploadResult.evaluation.false_positive_rate * 100)}%</b> FPR</span></div>}
         {uploadResult.alerts.length > 0 && <div className="finding-list">{uploadResult.alerts.map((alert) => <article className="finding" key={alert.alert_id}><div className="finding-top"><div><span className={`severity severity-${alert.severity}`}>{alert.severity}</span><h3>{alert.threat_class || label(alert.subtype)}</h3></div><b>{Math.round(alert.confidence * 100)}% confidence</b></div><p className="route">{alert.src_ip} <ArrowRight size={13} /> {alert.dst_ip || "multiple destinations"}</p><p className="finding-meaning">{label(alert.subtype)}</p><div className="evidence-list">{alert.evidence.slice(0, 4).map((item) => <div key={item.name}><span>{label(item.name)}</span><b>{item.observed}</b><small>{item.explanation}</small></div>)}</div><p className="caveat"><b>Keep in mind:</b> {alert.limitations[0]}</p></article>)}</div>}

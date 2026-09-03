@@ -84,6 +84,8 @@ def record_schema(record: dict[str, Any]) -> str:
     features = features if isinstance(features, dict) else {}
     if record.get("query") or record.get("query_name") or features.get("query_name"):
         return "dns"
+    if str(record.get("transport", "")).lower() in {"tls", "quic"}:
+        return str(record["transport"]).lower()
     if any(
         record.get(name) or features.get(name)
         for name in (

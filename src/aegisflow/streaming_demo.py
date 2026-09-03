@@ -177,6 +177,7 @@ def stream_events(root, repository, events, telemetry, quality, *, profile=STREA
     evaluation = score_ground_truth(list(accepted_records), final_alerts)
     if hasattr(repository, "save_analysis_run"):
         repository.save_analysis_run(run_id, {"status": "completed", "quality": quality,
+            "feature_coverage": session.feature_summary(),
             "analysis_provenance": session.provenance(), "alerts": final_records,
             "incidents": incidents, "evaluation": evaluation})
     top_incident = max(incidents, key=lambda item: item["risk_score"], default=None)
@@ -187,6 +188,7 @@ def stream_events(root, repository, events, telemetry, quality, *, profile=STREA
         "total_records": len(events),
         "alerts": len(final_alerts),
         "emitted_alerts": len(alerts),
+        "feature_coverage": session.feature_summary(),
         "findings": [{"alert": item, "detection_method": _detection_method(alert),
                       "incident": next(incident for incident in incidents if item["alert_id"] in incident["alert_ids"])}
                      for item, alert in zip(final_records, final_alerts)],

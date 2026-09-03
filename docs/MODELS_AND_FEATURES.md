@@ -2,6 +2,12 @@
 
 ## Detection strategy
 
+Sprint 10 adds independent corpus evaluation and stronger DNS split checks.
+The existing model is not retrained or promoted; external CTU results are weak
+and retained as measured. See [Sprint 10](SPRINT_10.md) before interpreting
+synthetic-fixture metrics as deployment accuracy. Threshold/probability
+calibration is reserved for feature-compatible development/validation data.
+
 Drastha deliberately uses a hybrid architecture. ML is used where learned lexical
 patterns add value; transparent behavioural and statistical detectors are used
 where the relevant behaviour has a direct measurable definition. This avoids a

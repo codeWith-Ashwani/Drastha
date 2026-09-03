@@ -4,6 +4,15 @@ Last updated: 4 September 2026
 
 ## Production roadmap update
 
+Sprint 10 independent evaluation and dataset controls are complete. The offline
+corpus runner pins source/label hashes, audits splits and evaluates through the
+shared analysis path. 196 tests pass. See `docs/SPRINT_10.md` for exact scope.
+An actual CTU-13 scenario-11 run exposed weak coverage: 0 malicious-flow TP,
+15 verified-normal flow-unit FP, 8,164 FN, 2,694 TN; 96,378 unknown units were
+not relabelled benign. Input quality is genuinely degraded by 275 unsupported
+records. These results are retained, not tuned away. Original demo metrics
+remain healthy and unchanged; feature-compatible calibration is Sprint 11.
+
 Sprint 9 measured passive feature implementation is complete: supported classic
 PCAP headers/JA3, causal sequence baselines and prevalence, explicit network
 boundaries, service-aware UDP response analysis, causal DNS evidence, and visible

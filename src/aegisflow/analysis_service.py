@@ -9,7 +9,7 @@ from aegisflow.evaluation_scoring import score_ground_truth
 
 
 def analyse_prepared(prepared, repository, *, filename="passive-replay", upload_bytes=0,
-                     started=None, profile=UPLOAD_DEMO, root=None, model_path=None):
+                     started=None, profile=UPLOAD_DEMO, root=None, model_path=None, session=None):
     """Shared completed analysis; input adapters own file limits and source loading."""
     started = time.perf_counter() if started is None else started
     safe_name = filename
@@ -19,7 +19,8 @@ def analyse_prepared(prepared, repository, *, filename="passive-replay", upload_
 
     detection_started = time.perf_counter()
     root = Path(root or os.getenv("DRASTHA_ROOT") or Path(__file__).resolve().parents[2])
-    session = AnalysisSession.from_root(root, profile, model_path=model_path)
+    session = session if session is not None else AnalysisSession.from_root(root, profile, model_path=model_path)
+    profile = session.profile
     context_policy = session.context_policy
     session.process_many(prepared.ordered_events())
     alerts = session.findings(complete=True)

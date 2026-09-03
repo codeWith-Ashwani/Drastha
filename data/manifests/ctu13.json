@@ -1,16 +1,20 @@
 {
   "name": "CTU-13 botnet traffic dataset",
-  "status": "manifest-only",
+  "status": "scenario-11-downloaded-and-evaluated; remaining scenarios not downloaded",
   "source": "Stratosphere Laboratory, Czech Technical University",
-  "expected_use": "family/scenario holdout evaluation for C2 beacon detection",
-  "download_url": null,
-  "licence_reviewed": false,
-  "sha256": null,
+  "expected_use": "capture-level external evaluation; generic Botnet labels must not be equated with beaconing",
+  "download_url": "https://www.stratosphereips.org/datasets-ctu13",
+  "licence_reviewed": true,
+  "license": "CC BY 2.0, as linked by publisher",
+  "license_url": "https://creativecommons.org/licenses/by/2.0/",
+  "evaluated_manifest": "data/manifests/ctu13_scenario11_benchmark.json",
+  "sha256": "cee542d4b5efe4fa1cd59b87ece5aaea9a13d8f0abe56cd07cee31590736428c",
+  "checksum_scope": "scenario 11 detailed bidirectional binetflow only, not entire CTU-13",
   "split_policy": [
     "Keep complete capture scenarios together.",
     "Do not place flows from one botnet capture in both training and test sets.",
     "Report results per scenario and traffic class, not only pooled accuracy.",
     "Retain benign scheduled-service examples for false-positive analysis."
   ],
-  "note": "Dataset files are intentionally not committed. Complete licence and provenance review before download."
+  "note": "Raw text-flow data stays outside Git. Scenario 11 is now an inspected benchmark, not an untouched future holdout. To-Botnet and Background remain unknown. Attribution is retained in the pinned manifest."
 }

@@ -1,0 +1,2897 @@
+{
+  "corpus_id": "ctu13-scenario11-frozen-baseline-v1",
+  "elapsed_ms": 50912.437,
+  "executed_at": "2026-09-03T21:48:33.139931+00:00",
+  "limitations": [
+    "Frozen uncalibrated detector thresholds; not a production-accuracy claim.",
+    "Unknown/background labels are excluded from confusion matrices but retained during inference.",
+    "No implicit demo model or allowlist; missing features and rejected records are reported.",
+    "Registered splits and checksums cannot prove source-label correctness or absence of undeclared prior training.",
+    "Flow-based units measure membership in emitted alerts, not full per-flow or packet classification.",
+    "Generic malicious labels do not validate attack-specific classification; inspect per-capture denominators."
+  ],
+  "manifest_sha256": "9d074ae54d2612e888e4ed7e98e61ba255b82439ce02262563333f800c11c327",
+  "per_class": {
+    "any_attack": {
+      "f1": 0.0,
+      "fn": 8164,
+      "fp": 15,
+      "fpr": 0.005537098560354375,
+      "fpr_interval_95": [
+        0.0033584676396787604,
+        0.00911607587286599
+      ],
+      "precision": 0.0,
+      "recall": 0.0,
+      "recall_interval_95": [
+        0,
+        0.0004703150569292234
+      ],
+      "tn": 2694,
+      "tp": 0
+    },
+    "botnet_c2_beaconing": {
+      "f1": 0.0,
+      "fn": 0,
+      "fp": 15,
+      "fpr": 0.005537098560354375,
+      "fpr_interval_95": [
+        0.0033584676396787604,
+        0.00911607587286599
+      ],
+      "precision": 0.0,
+      "recall": null,
+      "recall_interval_95": null,
+      "tn": 2694,
+      "tp": 0
+    },
+    "data_exfiltration": {
+      "f1": null,
+      "fn": 0,
+      "fp": 0,
+      "fpr": 0.0,
+      "fpr_interval_95": [
+        0,
+        0.0014160277624052737
+      ],
+      "precision": null,
+      "recall": null,
+      "recall_interval_95": null,
+      "tn": 2709,
+      "tp": 0
+    },
+    "dga_domain": {
+      "f1": null,
+      "fn": 0,
+      "fp": 0,
+      "fpr": 0.0,
+      "fpr_interval_95": [
+        0,
+        0.0014160277624052737
+      ],
+      "precision": null,
+      "recall": null,
+      "recall_interval_95": null,
+      "tn": 2709,
+      "tp": 0
+    },
+    "dns_tunnelling": {
+      "f1": null,
+      "fn": 0,
+      "fp": 0,
+      "fpr": 0.0,
+      "fpr_interval_95": [
+        0,
+        0.0014160277624052737
+      ],
+      "precision": null,
+      "recall": null,
+      "recall_interval_95": null,
+      "tn": 2709,
+      "tp": 0
+    },
+    "encrypted_session_malware": {
+      "f1": null,
+      "fn": 0,
+      "fp": 0,
+      "fpr": 0.0,
+      "fpr_interval_95": [
+        0,
+        0.0014160277624052737
+      ],
+      "precision": null,
+      "recall": null,
+      "recall_interval_95": null,
+      "tn": 2709,
+      "tp": 0
+    },
+    "reconnaissance_port_scan": {
+      "f1": null,
+      "fn": 0,
+      "fp": 0,
+      "fpr": 0.0,
+      "fpr_interval_95": [
+        0,
+        0.0014160277624052737
+      ],
+      "precision": null,
+      "recall": null,
+      "recall_interval_95": null,
+      "tn": 2709,
+      "tp": 0
+    },
+    "udp_reflection_amplification": {
+      "f1": null,
+      "fn": 0,
+      "fp": 0,
+      "fpr": 0.0,
+      "fpr_interval_95": [
+        0,
+        0.0014160277624052737
+      ],
+      "precision": null,
+      "recall": null,
+      "recall_interval_95": null,
+      "tn": 2709,
+      "tp": 0
+    },
+    "volumetric_ddos_syn_flood": {
+      "f1": null,
+      "fn": 0,
+      "fp": 0,
+      "fpr": 0.0,
+      "fpr_interval_95": [
+        0,
+        0.0014160277624052737
+      ],
+      "precision": null,
+      "recall": null,
+      "recall_interval_95": null,
+      "tn": 2709,
+      "tp": 0
+    },
+    "volumetric_ddos_udp_flood": {
+      "f1": null,
+      "fn": 0,
+      "fp": 0,
+      "fpr": 0.0,
+      "fpr_interval_95": [
+        0,
+        0.0014160277624052737
+      ],
+      "precision": null,
+      "recall": null,
+      "recall_interval_95": null,
+      "tn": 2709,
+      "tp": 0
+    }
+  },
+  "pooled_binary_alert_coverage": {
+    "f1": 0.0,
+    "fn": 8164,
+    "fp": 15,
+    "fpr": 0.005537098560354375,
+    "fpr_interval_95": [
+      0.0033584676396787604,
+      0.00911607587286599
+    ],
+    "precision": 0.0,
+    "recall": 0.0,
+    "recall_interval_95": [
+      0,
+      0.0004703150569292234
+    ],
+    "tn": 2694,
+    "tp": 0
+  },
+  "runs": [
+    {
+      "adapter": {
+        "adapter": "ctu13-argus-v1",
+        "adapter_errors": [
+          {
+            "error": "invalid literal for int() with base 10: ''",
+            "line": 2015
+          },
+          {
+            "error": "invalid literal for int() with base 10: ''",
+            "line": 2908
+          },
+          {
+            "error": "invalid literal for int() with base 10: ''",
+            "line": 15497
+          },
+          {
+            "error": "invalid literal for int() with base 10: ''",
+            "line": 15942
+          },
+          {
+            "error": "invalid literal for int() with base 10: ''",
+            "line": 16438
+          }
+        ],
+        "bytes_semantics": "Argus source/total bytes, not Zeek payload bytes",
+        "direction_note": "Argus source/destination as observed; initiator not guaranteed, especially midstream",
+        "label_scope": "From-Botnet is generic malicious flow, not a beaconing/subtype annotation; To-* and Background remain unknown",
+        "missing_features": [
+          "directional packet counts",
+          "Zeek connection state",
+          "DNS queries",
+          "TLS fingerprints",
+          "packet sequences"
+        ],
+        "source_label_counts": {
+          "flow=Background": 3230,
+          "flow=Background-Attempt-cmpgw-CVUT": 3378,
+          "flow=Background-Established-cmpgw-CVUT": 6981,
+          "flow=Background-TCP-Attempt": 1244,
+          "flow=Background-TCP-Established": 9363,
+          "flow=Background-UDP-Attempt": 1951,
+          "flow=Background-UDP-Established": 37342,
+          "flow=Background-UDP-NTP-Established-1": 287,
+          "flow=Background-ajax.google": 14,
+          "flow=Background-google-analytics1": 40,
+          "flow=Background-google-analytics10": 103,
+          "flow=Background-google-analytics11": 38,
+          "flow=Background-google-analytics12": 70,
+          "flow=Background-google-analytics13": 134,
+          "flow=Background-google-analytics14": 48,
+          "flow=Background-google-analytics15": 69,
+          "flow=Background-google-analytics16": 53,
+          "flow=Background-google-analytics2": 54,
+          "flow=Background-google-analytics3": 76,
+          "flow=Background-google-analytics4": 41,
+          "flow=Background-google-analytics5": 47,
+          "flow=Background-google-analytics6": 54,
+          "flow=Background-google-analytics7": 74,
+          "flow=Background-google-analytics8": 95,
+          "flow=Background-google-analytics9": 43,
+          "flow=Background-google-pop": 13,
+          "flow=Background-google-webmail": 26,
+          "flow=Background-www.fel.cvut.cz": 2,
+          "flow=From-Background-CVUT-Proxy": 48,
+          "flow=From-Botnet-V52-1-ICMP": 4144,
+          "flow=From-Botnet-V52-1-TCP-Established": 1,
+          "flow=From-Botnet-V52-1-TCP-HTTP-Google-Net-Established-6": 1,
+          "flow=From-Botnet-V52-1-UDP-Attempt": 1,
+          "flow=From-Botnet-V52-1-UDP-DNS": 4,
+          "flow=From-Botnet-V52-2-ICMP": 3999,
+          "flow=From-Botnet-V52-2-TCP-CC106-IRC-Not-Encrypted": 1,
+          "flow=From-Botnet-V52-2-TCP-HTTP-Google-Net-Established-6": 1,
+          "flow=From-Botnet-V52-2-UDP-Attempt": 1,
+          "flow=From-Botnet-V52-2-UDP-DNS": 4,
+          "flow=From-Botnet-V52-3-TCP-CC106-IRC-Not-Encrypted": 1,
+          "flow=From-Botnet-V52-3-TCP-HTTP-Google-Net-Established-6": 1,
+          "flow=From-Botnet-V52-3-UDP-Attempt": 1,
+          "flow=From-Botnet-V52-3-UDP-DNS": 4,
+          "flow=From-Normal-V52-CVUT-WebServer": 1,
+          "flow=From-Normal-V52-Grill": 2113,
+          "flow=From-Normal-V52-Jist": 11,
+          "flow=From-Normal-V52-MatLab-Server": 2,
+          "flow=From-Normal-V52-Stribrek": 581,
+          "flow=From-Normal-V52-UDP-CVUT-DNS-Server": 1,
+          "flow=Normal-V52-HTTP-windowsupdate": 1,
+          "flow=To-Background-CVUT-Proxy": 661,
+          "flow=To-Background-CVUT-WebServer": 162,
+          "flow=To-Background-Grill": 9,
+          "flow=To-Background-Jist": 4,
+          "flow=To-Background-MatLab-Server": 41,
+          "flow=To-Background-Stribrek": 6,
+          "flow=To-Background-UDP-CVUT-DNS-Server": 30568,
+          "flow=To-Normal-V52-UDP-NTP-server": 8
+        }
+      },
+      "analysis_ms": 38094.284,
+      "analysis_provenance": {
+        "c2_metadata_mode": "observed-event-time-v1",
+        "configuration": {
+          "allow_destinations": [],
+          "allow_domains": [],
+          "approved_backup_destinations": [],
+          "c2": {
+            "cooldown_seconds": 300.0,
+            "maximum_interval_cv": 0.15,
+            "maximum_mean_interval_seconds": 120.0,
+            "maximum_mean_transfer_bytes": 2048.0,
+            "maximum_size_cv": 0.2,
+            "minimum_completed_ratio": 0.8,
+            "minimum_connections": 6,
+            "minimum_mean_interval_seconds": 2.0,
+            "minimum_observation_span_seconds": 30.0,
+            "window_seconds": 300.0
+          },
+          "ddos": {
+            "cooldown_seconds": 30.0,
+            "distributed_source_entropy_threshold": 0.85,
+            "distributed_source_minimum_sources": 3,
+            "min_incomplete_ratio": 0.8,
+            "minimum_target_port_concentration": 0.8,
+            "require_reflection_service_context": true,
+            "syn_attempt_threshold": 100,
+            "udp_amplification_ratio_threshold": 10.0,
+            "udp_packet_threshold": 1000,
+            "udp_reflection_bytes_threshold": 10000,
+            "udp_reflection_flow_threshold": 4,
+            "window_seconds": 5.0
+          },
+          "dns": {
+            "cooldown_seconds": 120.0,
+            "dga_lexical_digit_ratio_threshold": 0.15,
+            "dga_lexical_entropy_threshold": 3.0,
+            "dga_lexical_label_length_threshold": 10,
+            "dga_lexical_maximum_vowel_ratio": 0.25,
+            "dga_lexical_query_threshold": 3,
+            "dga_probability_threshold": 0.5,
+            "encoded_txt_label_length_threshold": 24.0,
+            "encoded_txt_query_threshold": 4,
+            "tunnel_entropy_threshold": 3.5,
+            "tunnel_label_length_threshold": 18.0,
+            "tunnel_query_threshold": 20,
+            "tunnel_unique_subdomain_threshold": 15,
+            "window_seconds": 60.0
+          },
+          "enabled": [
+            "recon",
+            "ddos",
+            "c2",
+            "dns",
+            "encrypted",
+            "exfiltration"
+          ],
+          "encrypted": {
+            "cooldown_seconds": 120.0,
+            "maximum_fingerprint_prevalence": 0.01,
+            "minimum_packet_size_anomaly": 0.75,
+            "minimum_sessions": 4,
+            "minimum_timing_anomaly": 0.75,
+            "window_seconds": 60.0
+          },
+          "exfiltration": {
+            "baseline_free_minimum_outbound_bytes": 10000000,
+            "baseline_free_minimum_outbound_ratio": 20.0,
+            "baseline_history_size": 50,
+            "baseline_multiplier": 4.0,
+            "cooldown_seconds": 600.0,
+            "minimum_flows": 3,
+            "minimum_outbound_bytes": 1000000,
+            "minimum_outbound_ratio": 8.0,
+            "single_flow_minimum_outbound_bytes": 10000000,
+            "single_flow_minimum_outbound_ratio": 20.0,
+            "window_seconds": 300.0
+          },
+          "feature_mode": "derived",
+          "internal_cidrs": [
+            "147.32.0.0/16"
+          ],
+          "name": "deployment-baseline-uncalibrated-v1",
+          "passive_features": {
+            "anomaly_scale": 6,
+            "history_seconds": 3600,
+            "learning_ceiling": 0.75,
+            "maximum_cohorts": 128,
+            "maximum_history": 5000,
+            "minimum_baseline_sessions": 20,
+            "minimum_packets": 4,
+            "minimum_prevalence_sessions": 100,
+            "sequence_length": 8,
+            "size_scale_floor": 32,
+            "timing_scale_floor": 0.001
+          },
+          "recon": {
+            "cooldown_seconds": 30.0,
+            "unique_host_threshold": 20,
+            "unique_port_threshold": 20,
+            "window_seconds": 10.0
+          }
+        },
+        "configuration_sha256": "b05fdbe99caa7d1c6aef82a4db2a797a41b6fb71ff2affa62b02efe82847b10e",
+        "context_policy_sha256": "98335a89b0d45f4570d2c3b4ba82424118f680a4e891140a460d9bd0eca04cfc",
+        "detector_versions": {
+          "c2.beacon": "0.1.0",
+          "ddos.behavioural": "0.2.0",
+          "dns.analytics": "0.1.0",
+          "encrypted.metadata_anomaly": "0.2.0",
+          "exfiltration.outbound": "0.1.0",
+          "recon.fanout": "0.1.0"
+        },
+        "dns_context_mode": "causal-60s-max10000-v1",
+        "dns_model_sha256": null,
+        "dns_model_version": null,
+        "dns_normalizer_version": "2.0",
+        "engine_version": "3.0",
+        "feature_mode": "derived",
+        "parser_version": "passive-replay-v2",
+        "passive_feature_extractor": "packet-sequence-robust-v1",
+        "profile": "deployment-baseline-uncalibrated-v1"
+      },
+      "artifact_id": "ctu13-scenario11",
+      "capture_id": "CTU-Malware-Capture-Botnet-52",
+      "feature_coverage": {
+        "active_cohorts": 0,
+        "configuration": {
+          "anomaly_scale": 6,
+          "history_seconds": 3600,
+          "learning_ceiling": 0.75,
+          "maximum_cohorts": 128,
+          "maximum_history": 5000,
+          "minimum_baseline_sessions": 20,
+          "minimum_packets": 4,
+          "minimum_prevalence_sessions": 100,
+          "sequence_length": 8,
+          "size_scale_floor": 32,
+          "timing_scale_floor": 0.001
+        },
+        "counts": {},
+        "exfiltration_direction": "configured-boundary-required",
+        "extractor_version": "packet-sequence-robust-v1",
+        "mode": "derived",
+        "network_direction_counts": {
+          "external": 240,
+          "inbound": 34295,
+          "internal": 43860,
+          "outbound": 28581
+        },
+        "network_direction_status": "configured"
+      },
+      "findings": 40,
+      "incidents": 24,
+      "observed_subtypes": {
+        "horizontal_host_scan": 7,
+        "multi_host_port_scan": 7,
+        "outbound_volume_anomaly": 14,
+        "periodic_beacon": 10,
+        "vertical_port_scan": 2
+      },
+      "origin": {
+        "citation": "Sebastian Garcia, Martin Grill, Jan Stiborek and Alejandro Zunino. An empirical comparison of botnet detection methods. Computers and Security 45 (2014), 100-123. doi:10.1016/j.cose.2014.05.011",
+        "kind": "external",
+        "license": "CC BY 2.0 (linked by the CTU-13 publisher)",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "retrieved_at": "2026-09-03T21:38:00Z",
+        "source_url": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-52/detailed-bidirectional-flow-labels/capture20110818-2.binetflow"
+      },
+      "quality": {
+        "conflicting_duplicate_uid_count": 0,
+        "degraded_reasons": [
+          "275 rejected record(s)"
+        ],
+        "duplicate_uid_count": 0,
+        "errors": [
+          "line 110: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+          "line 135: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+          "line 165: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+          "line 232: invalid source IP '00:15:17:2c:e5:2d'. Expected a valid IPv4 or IPv6 address.",
+          "line 252: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp."
+        ],
+        "exact_duplicate_count": 0,
+        "invalid_timestamp_count": 0,
+        "maximum_backward_skew_seconds": 0.0,
+        "out_of_order_records": 0,
+        "quarantined_records": [
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 110,
+            "reason": "line 110: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 135,
+            "reason": "line 135: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 165,
+            "reason": "line 165: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_ip",
+            "field": "id.orig_h",
+            "line_number": 232,
+            "reason": "line 232: invalid source IP '00:15:17:2c:e5:2d'. Expected a valid IPv4 or IPv6 address.",
+            "value": "00:15:17:2c:e5:2d"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 252,
+            "reason": "line 252: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 375,
+            "reason": "line 375: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 376,
+            "reason": "line 376: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 619,
+            "reason": "line 619: unsupported protocol 'ipv6'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "ipv6"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 621,
+            "reason": "line 621: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 697,
+            "reason": "line 697: unsupported protocol 'pim'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "pim"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 1037,
+            "reason": "line 1037: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 1086,
+            "reason": "line 1086: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 1222,
+            "reason": "line 1222: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 1271,
+            "reason": "line 1271: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 1378,
+            "reason": "line 1378: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 1644,
+            "reason": "line 1644: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 2014,
+            "reason": "line 2014: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 2404,
+            "reason": "line 2404: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 2430,
+            "reason": "line 2430: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 2698,
+            "reason": "line 2698: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 2736,
+            "reason": "line 2736: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 2907,
+            "reason": "line 2907: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 2961,
+            "reason": "line 2961: unsupported protocol 'udt'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "udt"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 3763,
+            "reason": "line 3763: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 3864,
+            "reason": "line 3864: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 4223,
+            "reason": "line 4223: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 4442,
+            "reason": "line 4442: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 4491,
+            "reason": "line 4491: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 4678,
+            "reason": "line 4678: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 4975,
+            "reason": "line 4975: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 5201,
+            "reason": "line 5201: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 6025,
+            "reason": "line 6025: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 6236,
+            "reason": "line 6236: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 7163,
+            "reason": "line 7163: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 7175,
+            "reason": "line 7175: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 7727,
+            "reason": "line 7727: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 7735,
+            "reason": "line 7735: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 7806,
+            "reason": "line 7806: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 7893,
+            "reason": "line 7893: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 7931,
+            "reason": "line 7931: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 8529,
+            "reason": "line 8529: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 8640,
+            "reason": "line 8640: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 8940,
+            "reason": "line 8940: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 9618,
+            "reason": "line 9618: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 9762,
+            "reason": "line 9762: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 9991,
+            "reason": "line 9991: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 10091,
+            "reason": "line 10091: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 10241,
+            "reason": "line 10241: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 10445,
+            "reason": "line 10445: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 10636,
+            "reason": "line 10636: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 10704,
+            "reason": "line 10704: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 10784,
+            "reason": "line 10784: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 11939,
+            "reason": "line 11939: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 12307,
+            "reason": "line 12307: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 12364,
+            "reason": "line 12364: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 12603,
+            "reason": "line 12603: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 12656,
+            "reason": "line 12656: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 12860,
+            "reason": "line 12860: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 14050,
+            "reason": "line 14050: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 14158,
+            "reason": "line 14158: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 14224,
+            "reason": "line 14224: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 14523,
+            "reason": "line 14523: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 15496,
+            "reason": "line 15496: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 15941,
+            "reason": "line 15941: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 16175,
+            "reason": "line 16175: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 16223,
+            "reason": "line 16223: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 16243,
+            "reason": "line 16243: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 16307,
+            "reason": "line 16307: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 16437,
+            "reason": "line 16437: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 16459,
+            "reason": "line 16459: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 16460,
+            "reason": "line 16460: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 16844,
+            "reason": "line 16844: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 17016,
+            "reason": "line 17016: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 17261,
+            "reason": "line 17261: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 17863,
+            "reason": "line 17863: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 19424,
+            "reason": "line 19424: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 20076,
+            "reason": "line 20076: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 20421,
+            "reason": "line 20421: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 21092,
+            "reason": "line 21092: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 21095,
+            "reason": "line 21095: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 21342,
+            "reason": "line 21342: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 21508,
+            "reason": "line 21508: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 21999,
+            "reason": "line 21999: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 22590,
+            "reason": "line 22590: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 22727,
+            "reason": "line 22727: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 22728,
+            "reason": "line 22728: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 22733,
+            "reason": "line 22733: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 22799,
+            "reason": "line 22799: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 22878,
+            "reason": "line 22878: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_ip",
+            "field": "id.orig_h",
+            "line_number": 23325,
+            "reason": "line 23325: invalid source IP '00:00:00:00:00:00'. Expected a valid IPv4 or IPv6 address.",
+            "value": "00:00:00:00:00:00"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 23638,
+            "reason": "line 23638: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 24071,
+            "reason": "line 24071: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 24369,
+            "reason": "line 24369: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 24490,
+            "reason": "line 24490: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 24512,
+            "reason": "line 24512: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 24513,
+            "reason": "line 24513: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 24761,
+            "reason": "line 24761: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 28395,
+            "reason": "line 28395: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 29081,
+            "reason": "line 29081: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 29135,
+            "reason": "line 29135: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 29158,
+            "reason": "line 29158: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 29247,
+            "reason": "line 29247: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 29254,
+            "reason": "line 29254: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 29422,
+            "reason": "line 29422: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 30002,
+            "reason": "line 30002: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 30143,
+            "reason": "line 30143: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 30375,
+            "reason": "line 30375: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 30662,
+            "reason": "line 30662: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 30762,
+            "reason": "line 30762: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 31088,
+            "reason": "line 31088: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 31151,
+            "reason": "line 31151: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 32618,
+            "reason": "line 32618: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 34552,
+            "reason": "line 34552: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 35114,
+            "reason": "line 35114: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 35271,
+            "reason": "line 35271: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 35397,
+            "reason": "line 35397: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 35480,
+            "reason": "line 35480: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 35493,
+            "reason": "line 35493: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 35681,
+            "reason": "line 35681: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 36015,
+            "reason": "line 36015: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 36571,
+            "reason": "line 36571: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 36613,
+            "reason": "line 36613: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 37226,
+            "reason": "line 37226: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 37571,
+            "reason": "line 37571: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 37714,
+            "reason": "line 37714: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 37731,
+            "reason": "line 37731: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 37758,
+            "reason": "line 37758: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 38199,
+            "reason": "line 38199: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 38469,
+            "reason": "line 38469: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 39971,
+            "reason": "line 39971: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 40329,
+            "reason": "line 40329: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 40485,
+            "reason": "line 40485: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 40694,
+            "reason": "line 40694: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 41295,
+            "reason": "line 41295: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 41310,
+            "reason": "line 41310: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 41351,
+            "reason": "line 41351: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 41382,
+            "reason": "line 41382: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 41473,
+            "reason": "line 41473: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 41474,
+            "reason": "line 41474: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 41635,
+            "reason": "line 41635: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 41677,
+            "reason": "line 41677: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 41931,
+            "reason": "line 41931: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 42267,
+            "reason": "line 42267: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 42284,
+            "reason": "line 42284: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 42732,
+            "reason": "line 42732: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 42877,
+            "reason": "line 42877: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 43071,
+            "reason": "line 43071: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 43414,
+            "reason": "line 43414: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 43767,
+            "reason": "line 43767: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 45126,
+            "reason": "line 45126: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 45974,
+            "reason": "line 45974: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 46328,
+            "reason": "line 46328: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 46434,
+            "reason": "line 46434: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 46483,
+            "reason": "line 46483: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 46607,
+            "reason": "line 46607: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 48806,
+            "reason": "line 48806: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 49637,
+            "reason": "line 49637: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 50596,
+            "reason": "line 50596: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 52410,
+            "reason": "line 52410: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 52427,
+            "reason": "line 52427: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 52505,
+            "reason": "line 52505: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 52507,
+            "reason": "line 52507: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 52678,
+            "reason": "line 52678: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 53230,
+            "reason": "line 53230: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 53559,
+            "reason": "line 53559: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 54205,
+            "reason": "line 54205: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 55589,
+            "reason": "line 55589: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 56035,
+            "reason": "line 56035: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 56530,
+            "reason": "line 56530: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 56983,
+            "reason": "line 56983: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 58024,
+            "reason": "line 58024: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 58147,
+            "reason": "line 58147: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 58230,
+            "reason": "line 58230: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 58460,
+            "reason": "line 58460: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 58524,
+            "reason": "line 58524: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 58609,
+            "reason": "line 58609: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 58635,
+            "reason": "line 58635: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 59702,
+            "reason": "line 59702: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 60057,
+            "reason": "line 60057: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 60394,
+            "reason": "line 60394: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 60743,
+            "reason": "line 60743: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 61269,
+            "reason": "line 61269: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 61442,
+            "reason": "line 61442: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 61815,
+            "reason": "line 61815: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 62005,
+            "reason": "line 62005: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 63636,
+            "reason": "line 63636: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 63774,
+            "reason": "line 63774: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 63805,
+            "reason": "line 63805: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 63868,
+            "reason": "line 63868: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 63964,
+            "reason": "line 63964: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 64176,
+            "reason": "line 64176: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 64203,
+            "reason": "line 64203: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 67769,
+            "reason": "line 67769: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 68416,
+            "reason": "line 68416: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 68596,
+            "reason": "line 68596: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 68608,
+            "reason": "line 68608: unsupported protocol 'rtp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 68807,
+            "reason": "line 68807: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 69471,
+            "reason": "line 69471: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 69519,
+            "reason": "line 69519: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 69621,
+            "reason": "line 69621: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 69752,
+            "reason": "line 69752: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 70154,
+            "reason": "line 70154: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 70221,
+            "reason": "line 70221: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 73729,
+            "reason": "line 73729: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 74804,
+            "reason": "line 74804: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 75406,
+            "reason": "line 75406: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 75982,
+            "reason": "line 75982: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 76183,
+            "reason": "line 76183: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 76278,
+            "reason": "line 76278: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 76282,
+            "reason": "line 76282: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 76420,
+            "reason": "line 76420: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 76441,
+            "reason": "line 76441: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 76696,
+            "reason": "line 76696: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 76855,
+            "reason": "line 76855: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 77704,
+            "reason": "line 77704: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 78347,
+            "reason": "line 78347: unsupported protocol 'udt'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "udt"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 80336,
+            "reason": "line 80336: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 80754,
+            "reason": "line 80754: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 81680,
+            "reason": "line 81680: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_ip",
+            "field": "id.orig_h",
+            "line_number": 81727,
+            "reason": "line 81727: invalid source IP '00:00:00:00:00:00'. Expected a valid IPv4 or IPv6 address.",
+            "value": "00:00:00:00:00:00"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 81757,
+            "reason": "line 81757: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 81877,
+            "reason": "line 81877: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 81990,
+            "reason": "line 81990: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 81995,
+            "reason": "line 81995: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 82566,
+            "reason": "line 82566: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 84353,
+            "reason": "line 84353: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 85033,
+            "reason": "line 85033: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 85789,
+            "reason": "line 85789: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 87894,
+            "reason": "line 87894: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 87922,
+            "reason": "line 87922: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 87925,
+            "reason": "line 87925: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 87939,
+            "reason": "line 87939: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 87968,
+            "reason": "line 87968: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 88037,
+            "reason": "line 88037: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 88145,
+            "reason": "line 88145: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 88638,
+            "reason": "line 88638: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 89768,
+            "reason": "line 89768: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 90347,
+            "reason": "line 90347: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 91783,
+            "reason": "line 91783: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 96870,
+            "reason": "line 96870: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 96924,
+            "reason": "line 96924: unsupported protocol 'udt'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "udt"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 97330,
+            "reason": "line 97330: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 97381,
+            "reason": "line 97381: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 97466,
+            "reason": "line 97466: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 97793,
+            "reason": "line 97793: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 98175,
+            "reason": "line 98175: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 99010,
+            "reason": "line 99010: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 100220,
+            "reason": "line 100220: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 100909,
+            "reason": "line 100909: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 102085,
+            "reason": "line 102085: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 102100,
+            "reason": "line 102100: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 102396,
+            "reason": "line 102396: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 102743,
+            "reason": "line 102743: unsupported protocol 'udt'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "udt"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 102852,
+            "reason": "line 102852: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 102853,
+            "reason": "line 102853: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 103077,
+            "reason": "line 103077: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 103189,
+            "reason": "line 103189: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 103271,
+            "reason": "line 103271: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 103394,
+            "reason": "line 103394: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 103564,
+            "reason": "line 103564: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 104234,
+            "reason": "line 104234: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 104548,
+            "reason": "line 104548: unsupported protocol 'udt'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "udt"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 105792,
+            "reason": "line 105792: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 105873,
+            "reason": "line 105873: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 105933,
+            "reason": "line 105933: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 106205,
+            "reason": "line 106205: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 106429,
+            "reason": "line 106429: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 106685,
+            "reason": "line 106685: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 106776,
+            "reason": "line 106776: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "missing_required_field",
+            "field": "ts",
+            "line_number": 106798,
+            "reason": "line 106798: missing required timestamp field. Accepted one of: ts, timestamp, time, @timestamp. Detected fields: uid.",
+            "value": null
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 106804,
+            "reason": "line 106804: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 106830,
+            "reason": "line 106830: unsupported protocol 'arp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "arp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 106914,
+            "reason": "line 106914: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 106976,
+            "reason": "line 106976: unsupported protocol 'igmp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "igmp"
+          },
+          {
+            "error_category": "invalid_protocol",
+            "field": "proto",
+            "line_number": 107231,
+            "reason": "line 107231: unsupported protocol 'rtcp'. Expected one of: ah, esp, gre, icmp, icmp6, ipv6-icmp, quic, sctp, tcp, udp.",
+            "value": "rtcp"
+          }
+        ],
+        "records_accepted": 106976,
+        "records_quarantined": 275,
+        "records_received": 107251,
+        "records_rejected": 275,
+        "records_seen": 107251,
+        "rejection_ratio": 0.0026,
+        "source": "ctu13-scenario11",
+        "status": "degraded",
+        "stream": "passive:replay",
+        "unsupported_record_count": 0
+      },
+      "run_id": "3f7281b6998346e98a4ee1697357e1a2",
+      "scores": {
+        "binary_alert_coverage": {
+          "f1": 0.0,
+          "fn": 8164,
+          "fp": 15,
+          "fpr": 0.005537098560354375,
+          "fpr_interval_95": [
+            0.0033584676396787604,
+            0.00911607587286599
+          ],
+          "precision": 0.0,
+          "recall": 0.0,
+          "recall_interval_95": [
+            0,
+            0.0004703150569292234
+          ],
+          "tn": 2694,
+          "tp": 0
+        },
+        "coverage": {
+          "attack_units": 8164,
+          "benign_units": 2709,
+          "units_with_rejected_or_unavailable_records": 275,
+          "unknown_units": 96378,
+          "unknown_units_with_alerts": 10331
+        },
+        "error_examples": {
+          "any_attack": [
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-4271"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-8726"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-12290"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-15493"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-18394"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-21902"
+            },
+            {
+              "error": "fn",
+              "expected_classes": [
+                "any_attack"
+              ],
+              "observed_classes": [],
+              "unit_id": "argus-line-53989"
+            },
+            {
+              "error": "fn",
+              "expected_classes": [
+                "any_attack"
+              ],
+              "observed_classes": [],
+              "unit_id": "argus-line-54224"
+            },
+            {
+              "error": "fn",
+              "expected_classes": [
+                "any_attack"
+              ],
+              "observed_classes": [],
+              "unit_id": "argus-line-54227"
+            },
+            {
+              "error": "fn",
+              "expected_classes": [
+                "any_attack"
+              ],
+              "observed_classes": [],
+              "unit_id": "argus-line-54487"
+            },
+            {
+              "error": "fn",
+              "expected_classes": [
+                "any_attack"
+              ],
+              "observed_classes": [],
+              "unit_id": "argus-line-54488"
+            },
+            {
+              "error": "fn",
+              "expected_classes": [
+                "any_attack"
+              ],
+              "observed_classes": [],
+              "unit_id": "argus-line-54645"
+            },
+            {
+              "error": "fn",
+              "expected_classes": [
+                "any_attack"
+              ],
+              "observed_classes": [],
+              "unit_id": "argus-line-54821"
+            },
+            {
+              "error": "fn",
+              "expected_classes": [
+                "any_attack"
+              ],
+              "observed_classes": [],
+              "unit_id": "argus-line-54822"
+            },
+            {
+              "error": "fn",
+              "expected_classes": [
+                "any_attack"
+              ],
+              "observed_classes": [],
+              "unit_id": "argus-line-55015"
+            },
+            {
+              "error": "fn",
+              "expected_classes": [
+                "any_attack"
+              ],
+              "observed_classes": [],
+              "unit_id": "argus-line-55181"
+            },
+            {
+              "error": "fn",
+              "expected_classes": [
+                "any_attack"
+              ],
+              "observed_classes": [],
+              "unit_id": "argus-line-55185"
+            },
+            {
+              "error": "fn",
+              "expected_classes": [
+                "any_attack"
+              ],
+              "observed_classes": [],
+              "unit_id": "argus-line-55230"
+            },
+            {
+              "error": "fn",
+              "expected_classes": [
+                "any_attack"
+              ],
+              "observed_classes": [],
+              "unit_id": "argus-line-55231"
+            },
+            {
+              "error": "fn",
+              "expected_classes": [
+                "any_attack"
+              ],
+              "observed_classes": [],
+              "unit_id": "argus-line-55495"
+            }
+          ],
+          "botnet_c2_beaconing": [
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-4271"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-8726"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-12290"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-15493"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-18394"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-21902"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-55818"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-58755"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-61586"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-64512"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-67686"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-70265"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-74374"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-77288"
+            },
+            {
+              "error": "fp",
+              "expected_classes": [],
+              "observed_classes": [
+                "botnet_c2_beaconing"
+              ],
+              "unit_id": "argus-line-80175"
+            }
+          ]
+        },
+        "interval_note": "Wilson 95% intervals assume independent units; related flows violate that assumption. Report by capture; these are descriptive only.",
+        "orphan_alert_ids": [],
+        "per_class": {
+          "any_attack": {
+            "f1": 0.0,
+            "fn": 8164,
+            "fp": 15,
+            "fpr": 0.005537098560354375,
+            "fpr_interval_95": [
+              0.0033584676396787604,
+              0.00911607587286599
+            ],
+            "precision": 0.0,
+            "recall": 0.0,
+            "recall_interval_95": [
+              0,
+              0.0004703150569292234
+            ],
+            "tn": 2694,
+            "tp": 0
+          },
+          "botnet_c2_beaconing": {
+            "f1": 0.0,
+            "fn": 0,
+            "fp": 15,
+            "fpr": 0.005537098560354375,
+            "fpr_interval_95": [
+              0.0033584676396787604,
+              0.00911607587286599
+            ],
+            "precision": 0.0,
+            "recall": null,
+            "recall_interval_95": null,
+            "tn": 2694,
+            "tp": 0
+          },
+          "data_exfiltration": {
+            "f1": null,
+            "fn": 0,
+            "fp": 0,
+            "fpr": 0.0,
+            "fpr_interval_95": [
+              0,
+              0.0014160277624052737
+            ],
+            "precision": null,
+            "recall": null,
+            "recall_interval_95": null,
+            "tn": 2709,
+            "tp": 0
+          },
+          "dga_domain": {
+            "f1": null,
+            "fn": 0,
+            "fp": 0,
+            "fpr": 0.0,
+            "fpr_interval_95": [
+              0,
+              0.0014160277624052737
+            ],
+            "precision": null,
+            "recall": null,
+            "recall_interval_95": null,
+            "tn": 2709,
+            "tp": 0
+          },
+          "dns_tunnelling": {
+            "f1": null,
+            "fn": 0,
+            "fp": 0,
+            "fpr": 0.0,
+            "fpr_interval_95": [
+              0,
+              0.0014160277624052737
+            ],
+            "precision": null,
+            "recall": null,
+            "recall_interval_95": null,
+            "tn": 2709,
+            "tp": 0
+          },
+          "encrypted_session_malware": {
+            "f1": null,
+            "fn": 0,
+            "fp": 0,
+            "fpr": 0.0,
+            "fpr_interval_95": [
+              0,
+              0.0014160277624052737
+            ],
+            "precision": null,
+            "recall": null,
+            "recall_interval_95": null,
+            "tn": 2709,
+            "tp": 0
+          },
+          "reconnaissance_port_scan": {
+            "f1": null,
+            "fn": 0,
+            "fp": 0,
+            "fpr": 0.0,
+            "fpr_interval_95": [
+              0,
+              0.0014160277624052737
+            ],
+            "precision": null,
+            "recall": null,
+            "recall_interval_95": null,
+            "tn": 2709,
+            "tp": 0
+          },
+          "udp_reflection_amplification": {
+            "f1": null,
+            "fn": 0,
+            "fp": 0,
+            "fpr": 0.0,
+            "fpr_interval_95": [
+              0,
+              0.0014160277624052737
+            ],
+            "precision": null,
+            "recall": null,
+            "recall_interval_95": null,
+            "tn": 2709,
+            "tp": 0
+          },
+          "volumetric_ddos_syn_flood": {
+            "f1": null,
+            "fn": 0,
+            "fp": 0,
+            "fpr": 0.0,
+            "fpr_interval_95": [
+              0,
+              0.0014160277624052737
+            ],
+            "precision": null,
+            "recall": null,
+            "recall_interval_95": null,
+            "tn": 2709,
+            "tp": 0
+          },
+          "volumetric_ddos_udp_flood": {
+            "f1": null,
+            "fn": 0,
+            "fp": 0,
+            "fpr": 0.0,
+            "fpr_interval_95": [
+              0,
+              0.0014160277624052737
+            ],
+            "precision": null,
+            "recall": null,
+            "recall_interval_95": null,
+            "tn": 2709,
+            "tp": 0
+          }
+        },
+        "scope": "explicit-unit alert coverage; not per-packet accuracy",
+        "unknown_alert_subtypes": {}
+      },
+      "source_sha256": "cee542d4b5efe4fa1cd59b87ece5aaea9a13d8f0abe56cd07cee31590736428c",
+      "split": "test"
+    }
+  ],
+  "schema_version": "drastha-benchmark-v1",
+  "split": "test",
+  "split_audit": {
+    "artifacts": 1,
+    "groups_checked": true,
+    "normalized_cross_split_duplicates": 0,
+    "registered_splits": [
+      "test"
+    ],
+    "resets": "one session per capture artifact, never from labels"
+  },
+  "threshold_selection_performed": false
+}

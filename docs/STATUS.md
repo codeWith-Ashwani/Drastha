@@ -4,6 +4,15 @@ Last updated: 4 September 2026
 
 ## Production roadmap update
 
+Sprint 9 measured passive feature implementation is complete: supported classic
+PCAP headers/JA3, causal sequence baselines and prevalence, explicit network
+boundaries, service-aware UDP response analysis, causal DNS evidence, and visible
+feature coverage. Demo compatibility is labelled separately from derived mode.
+See `docs/SPRINT_9.md` for configuration, supported formats and limitations.
+Full suite: 168 passed (26 new); separate mixed replay check and frontend build
+passed. The 452-record fixture retains 8 TP, 0 FP/FN, 86 TN and healthy quality.
+Independent calibration and sustained production-load validation remain future work.
+
 Sprint 8 implementation and acceptance verification are complete: HTTP upload,
 streamed replay, CLI and PCAP-derived logs share normalization and detector
 execution, with event-time TLS context, common finalization and durable provenance.

@@ -55,8 +55,8 @@ def analyse_prepared(prepared, repository, *, filename="passive-replay", upload_
     else:
         headline = "No configured threat pattern found"
         summary = (
-            "The replay passed validation, but it did not cross the demonstration thresholds "
-            "for scanning, flooding, repeated callbacks or unusual outbound transfer."
+            "No configured detector raised a finding. Inspect data quality and feature coverage: "
+            "missing observations or baseline warm-up are not evidence that traffic is safe."
         )
         verdict = "no_threat_detected"
 
@@ -69,6 +69,7 @@ def analyse_prepared(prepared, repository, *, filename="passive-replay", upload_
         "file_size_bytes": upload_bytes,
         "analysis_ms": elapsed_ms,
         "analysis_provenance": session.provenance(),
+        "feature_coverage": session.feature_summary(),
         "quality": quality.to_dict(),
         "input_schema": prepared.input_schema,
         "telemetry": {

@@ -66,6 +66,7 @@ def _parser() -> argparse.ArgumentParser:
     analyse.add_argument("--model", type=Path)
     analyse.add_argument("--database")
     analyse.add_argument("--report-output", type=Path)
+    analyse.add_argument("--packet-capture", type=Path, help="Optional matching classic Ethernet PCAP for measured packet sequences and JA3")
 
     validate = subparsers.add_parser(
         "validate-replay", help="validate replay format, schema and telemetry quality"
@@ -80,6 +81,7 @@ def _parser() -> argparse.ArgumentParser:
     pcap.add_argument("--wsl-distro")
     _add_detection_arguments(pcap)
     pcap.add_argument("--all-threats", action="store_true", help="analyse conn, DNS and TLS/QUIC logs through shared pipeline")
+    pcap.add_argument("--packet-features", action="store_true", help="With --all-threats, extract metadata from the input classic Ethernet PCAP")
     pcap.add_argument("--profile", choices=("upload-demo", "stream-demo", "deployment-baseline"), default="deployment-baseline")
     pcap.add_argument("--model", type=Path)
     pcap.add_argument("--database")
@@ -586,7 +588,9 @@ def _analyse_shared(path, args):
     profiles = {"upload-demo": UPLOAD_DEMO, "stream-demo": STREAM_DEMO,
                 "deployment-baseline": DEPLOYMENT_BASELINE}
     repository = repository_from_url(args.database) if args.database else _ReportOnlyRepository()
-    return analyse_replay_file(path, repository, root=args.root, profile=profiles[args.profile], model_path=args.model)
+    capture = args.input if getattr(args, "packet_features", False) else getattr(args, "packet_capture", None)
+    return analyse_replay_file(path, repository, root=args.root, profile=profiles[args.profile], model_path=args.model,
+                               packet_capture=capture)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -634,6 +638,8 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(metrics, sort_keys=True))
             return 0
         if args.command == "pcap":
+            if args.packet_features and not args.all_threats:
+                raise ValueError("--packet-features requires --all-threats")
             result = _build_zeek_runner(args).process_pcap(args.input, args.zeek_output)
             if args.all_threats:
                 report = _analyse_shared(result.output_directory, args)

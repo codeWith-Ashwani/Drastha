@@ -23,6 +23,7 @@ class DDoSConfig:
     distributed_source_entropy_threshold: float = 0.85
     distributed_source_minimum_sources: int = 3
     cooldown_seconds: float = 30.0
+    require_reflection_service_context: bool = False
 
     def __post_init__(self) -> None:
         if self.window_seconds <= 0:
@@ -41,12 +42,13 @@ class DDoSConfig:
 
 class DDoSDetector(Detector):
     detector_id = "ddos.behavioural"
-    detector_version = "0.1.0"
+    detector_version = "0.2.0"
     _incomplete_states = frozenset({"S0", "REJ"})
 
     def __init__(self, config: DDoSConfig | None = None) -> None:
         self.config = config or DDoSConfig()
         self._events = KeyedSlidingWindow[str, NetworkEvent](self.config.window_seconds)
+        self._reflection_events = KeyedSlidingWindow[str, NetworkEvent](self.config.window_seconds)
         self._last_alert: dict[tuple[str, str], float] = {}
 
     def process(self, event: NetworkEvent) -> list[Alert]:
@@ -62,7 +64,9 @@ class DDoSDetector(Detector):
             alert = self._detect_udp_flood(event, window)
             if alert:
                 alerts.append(alert)
-            reflection = self._detect_udp_reflection(event, window)
+            reflection_window = (self._reflection_events.add(event.src_ip, event.timestamp, event)
+                                 if self.config.require_reflection_service_context else window)
+            reflection = self._detect_udp_reflection(event, reflection_window)
             if reflection:
                 alerts.append(reflection)
         return alerts
@@ -97,18 +101,7 @@ class DDoSDetector(Detector):
         confidence = min(0.99, 0.65 + 0.20 * ratio + 0.14 * min(len(tcp) / self.config.syn_attempt_threshold - 1, 1))
         span = max(tcp[-1].timestamp - tcp[0].timestamp, 0.001)
         measured_rate = len(tcp) / span
-        supplied_rates = []
-        for item in tcp:
-            features = item.raw.get(
-                "features", item.raw.get("ml_evidence", item.raw.get("evidence", {}))
-            )
-            if isinstance(features, dict):
-                for name in ("syn_rate_per_sec", "new_src_ips_per_sec"):
-                    try:
-                        supplied_rates.append(float(features[name]))
-                    except (KeyError, TypeError, ValueError):
-                        pass
-        observed_rate = max([measured_rate, *supplied_rates])
+        observed_rate = measured_rate
         return self._alert(
             event=event,
             subtype=subtype,
@@ -145,6 +138,12 @@ class DDoSDetector(Detector):
         self, event: NetworkEvent, window: tuple[TimedValue[NetworkEvent], ...]
     ) -> Alert | None:
         udp = [item.value for item in window if item.value.protocol == "udp"]
+        services = {19: "chargen", 53: "dns", 123: "ntp", 389: "cldap", 1900: "ssdp", 11211: "memcached"}
+        strict = self.config.require_reflection_service_context
+        if strict:
+            # Zeek originator is the request side. Responses return from a
+            # recognizable service to that originator, potentially via many hosts.
+            udp = [item for item in udp if item.dst_port in services and item.outbound_bytes > 0]
         if len(udp) < self.config.udp_reflection_flow_threshold:
             return None
         request_bytes = sum(max(item.outbound_bytes, 0) for item in udp)
@@ -156,7 +155,8 @@ class DDoSDetector(Detector):
         ):
             return None
         subtype = "udp_reflection_amplification"
-        if self._cooling_down(event.dst_ip, subtype, event.timestamp):
+        target = event.src_ip if strict else event.dst_ip
+        if self._cooling_down(target, subtype, event.timestamp):
             return None
         sources = {item.src_ip for item in udp}
         confidence = min(
@@ -167,6 +167,7 @@ class DDoSDetector(Detector):
         )
         return self._alert(
             event=event,
+            target=target,
             subtype=subtype,
             confidence=confidence,
             severity="high",
@@ -176,6 +177,9 @@ class DDoSDetector(Detector):
                 Evidence("response_to_request_byte_ratio", round(amplification, 3), f">= {self.config.udp_amplification_ratio_threshold}", "Responder-side volume was much larger than originator-side volume."),
                 Evidence("udp_response_bytes", response_bytes, f">= {self.config.udp_reflection_bytes_threshold}", "The amplified response volume crossed the configured floor."),
                 Evidence("unique_source_ips", len(sources), "context", "Source diversity supports reflection analysis but cannot prove spoofing."),
+                Evidence("observed_udp_services", ",".join(sorted({services.get(item.dst_port, "unknown") for item in udp})), "service context", "Responder port identifies a candidate service, not proof of reflection."),
+                Evidence("response_recipient", event.src_ip if strict else "legacy-target-group", "direction", "In service-aware mode, responses are grouped by the Zeek originator receiving them."),
+                Evidence("responder_host_count", len({item.dst_ip for item in udp}), "context", "Number of observed response-side endpoints."),
             ),
             limitations=(
                 "Flow metadata can identify amplification-shaped traffic but cannot prove that source addresses were spoofed.",
@@ -230,9 +234,11 @@ class DDoSDetector(Detector):
         relevant: list[NetworkEvent],
         evidence: tuple[Evidence, ...],
         limitations: tuple[str, ...],
+        target: str | None = None,
     ) -> Alert:
         start = min(item.timestamp for item in relevant)
-        identity = f"{self.detector_id}|{subtype}|{event.dst_ip}|{start:.6f}|{event.timestamp:.6f}"
+        target = target or event.dst_ip
+        identity = f"{self.detector_id}|{subtype}|{target}|{start:.6f}|{event.timestamp:.6f}"
         return Alert(
             alert_id=sha256(identity.encode("utf-8")).hexdigest()[:20],
             detector_id=self.detector_id,
@@ -244,7 +250,7 @@ class DDoSDetector(Detector):
             window_start=start,
             window_end=event.timestamp,
             src_ip=event.src_ip,
-            dst_ip=event.dst_ip,
+            dst_ip=target,
             flow_ids=tuple(dict.fromkeys(item.flow_id for item in relevant)),
             evidence=evidence,
             limitations=limitations,

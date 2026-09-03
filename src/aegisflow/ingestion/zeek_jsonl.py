@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import ipaddress
 from collections.abc import Iterator
 from datetime import datetime, timezone
@@ -130,13 +131,16 @@ def _number(record: dict[str, Any], key: str, default: float = 0.0) -> float:
 def _timestamp(record: dict[str, Any], key: str = "ts", line_number: int = 1) -> float:
     """Accept native Zeek epoch timestamps and ISO-8601 replay timestamps."""
     value = _required(record, key, line_number)
-    if isinstance(value, (int, float)) and not isinstance(value, bool):
-        return float(value)
     text = str(value).strip()
     try:
-        return float(text)
-    except ValueError:
-        pass
+        numeric = float(text)
+    except (ValueError, OverflowError):
+        numeric = None
+    if numeric is not None:
+        if math.isfinite(numeric):
+            return numeric
+        raise ZeekRecordError(f"line {line_number}: timestamp must be finite",
+                              line_number=line_number, category="invalid_timestamp", field=key, value=text)
     try:
         parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
     except ValueError as exc:

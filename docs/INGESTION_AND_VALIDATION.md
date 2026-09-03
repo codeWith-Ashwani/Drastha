@@ -70,3 +70,11 @@ drastha validate-replay --input examples/drastha_mixed_evaluation_v3.jsonl
 ```
 
 Both commands are passive and use a no-op persistence sink.
+## Sprint 9 capture and feature coverage
+
+`analyse --packet-capture <classic-pcap>` can join an explicitly selected capture
+to the supplied flow records. `pcap --all-threats --packet-features` enables the
+same extraction following Zeek conversion. Supported metadata-only formats,
+causal availability, quality counters and the JSON `packet_observations` contract
+are documented in [Sprint 9](SPRINT_9.md). Missing feature coverage is not benign
+traffic; original timestamp/duplicate/rejection quality checks remain active.

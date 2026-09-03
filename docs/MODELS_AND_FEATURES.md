@@ -114,3 +114,12 @@ Risk 100 means investigate first; it does not mean 100% certainty.
 - Supplied ground-truth labels are ignored during inference.
 - Synthetic results are never presented as production accuracy.
 - Real accuracy, false-positive rate and calibration remain deployment work.
+## Sprint 9 measured-feature update
+
+The deployment-baseline profile now derives encrypted-session prevalence and
+sequence scores from preceding passive observations rather than accepting canned
+anomaly scores. It uses robust unsupervised statistics, not a new supervised
+malware model. The demonstration profiles retain explicitly labelled supplied
+score compatibility. For formulas, cold start, supported PCAP/JA3 scope, network
+direction and limitations, see [Sprint 9](SPRINT_9.md). Older supplied-feature
+examples below remain demonstration inputs, not evidence of measured accuracy.

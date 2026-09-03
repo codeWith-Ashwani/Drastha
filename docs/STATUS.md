@@ -1,6 +1,19 @@
 # Drastha build status
 
-Last updated: 30 August 2026
+Last updated: 4 September 2026
+
+## Production roadmap update
+
+Sprint 8 implementation and acceptance verification are complete: HTTP upload,
+streamed replay, CLI and PCAP-derived logs share normalization and detector
+execution, with event-time TLS context, common finalization and durable provenance.
+142 tests and the frontend build pass. See `docs/SPRINT_8.md` for the acceptance
+matrix, intentional behaviour changes and remaining production-sprint boundaries.
+Git author identity is confirmed as codeWith-Ashwani using its private GitHub email.
+
+The older sprint checklists below are historical snapshots. In particular,
+persistent storage listed as pending under Sprint 4 was subsequently delivered
+under Sprint 5; dataset calibration and production hardening remain outstanding.
 
 ## Overall
 

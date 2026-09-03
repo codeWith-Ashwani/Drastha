@@ -45,6 +45,10 @@ CREATE TABLE IF NOT EXISTS runtime_state (
     payload TEXT NOT NULL,
     updated_at REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS analysis_runs (
+    run_id TEXT PRIMARY KEY,
+    payload TEXT NOT NULL
+);
 """
 
 
@@ -193,6 +197,20 @@ class IncidentRepository:
                 "SELECT payload FROM alerts ORDER BY window_start, alert_id"
             ).fetchall()
         return [json.loads(row["payload"]) for row in rows]
+
+    def save_analysis_run(self, run_id: str, report: dict[str, Any]) -> None:
+        """Persist scoped provisional/final results without polluting incident tables."""
+        with self._connect() as connection:
+            connection.execute(
+                "INSERT INTO analysis_runs(run_id, payload) VALUES (?, ?) "
+                "ON CONFLICT(run_id) DO UPDATE SET payload=excluded.payload",
+                (run_id, json.dumps(report, sort_keys=True)),
+            )
+
+    def get_analysis_run(self, run_id: str) -> dict[str, Any] | None:
+        with self._connect() as connection:
+            row = connection.execute("SELECT payload FROM analysis_runs WHERE run_id = ?", (run_id,)).fetchone()
+        return json.loads(row["payload"]) if row is not None else None
 
     def set_status(self, incident_id: str, status: str, updated_at: float) -> bool:
         if status not in self.VALID_STATUSES:

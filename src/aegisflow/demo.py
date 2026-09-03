@@ -10,15 +10,9 @@ from pathlib import Path
 from typing import Any
 
 from aegisflow.api_store import IncidentRepository, read_jsonl
-from aegisflow.detectors import C2BeaconDetector, ExfiltrationDetector
-from aegisflow.incidents import IncidentStore
-from aegisflow.ingestion.zeek_encrypted import (
-    build_encrypted_metadata_index,
-    normalize_encrypted_record,
-)
-from aegisflow.ingestion.zeek_jsonl import normalize_conn_record
-from aegisflow.pipeline import run_pipeline
-from aegisflow.telemetry_quality import load_jsonl_resilient
+from aegisflow.analysis_session import AnalysisProfile, AnalysisSession
+from aegisflow.ingestion.passive_replay import prepare_replay, ReplayQualityError, event_order
+from aegisflow.telemetry_quality import TelemetryQuality
 
 
 DEMO_FILES = (
@@ -117,21 +111,22 @@ def run_attack_story(root: str | Path, repository: Any) -> dict[str, Any]:
     project_root = Path(root).resolve()
     started = time.perf_counter()
     stage_started = time.perf_counter()
-    c2_events, c2_quality = load_jsonl_resilient(
-        project_root / "examples/zeek_conn_beacon.jsonl",
-        normalize_conn_record,
-        stream="zeek:conn:c2",
-    )
-    encrypted_events, encrypted_quality = load_jsonl_resilient(
-        project_root / "examples/zeek_ssl_beacon.jsonl",
-        lambda record, line: normalize_encrypted_record(record, line, "tls"),
-        stream="zeek:tls",
-    )
-    exfil_events, exfil_quality = load_jsonl_resilient(
-        project_root / "examples/zeek_conn_exfil.jsonl",
-        normalize_conn_record,
-        stream="zeek:conn:exfiltration",
-    )
+    def load(name, kind):
+        path = project_root / "examples" / name
+        try:
+            prepared = prepare_replay(path.read_text(encoding="utf-8"), name, source_kind=kind)
+            return prepared.ordered_events(), prepared.quality
+        except ReplayQualityError as exc:
+            return [], exc.quality
+        except (OSError, ValueError) as exc:
+            quality = TelemetryQuality(stream=kind, source=name,
+                                       status="unavailable" if isinstance(exc, OSError) else "unusable")
+            quality.errors.append(str(exc))
+            return [], quality
+
+    c2_events, c2_quality = load("zeek_conn_beacon.jsonl", "connection")
+    encrypted_events, encrypted_quality = load("zeek_ssl_beacon.jsonl", "tls")
+    exfil_events, exfil_quality = load("zeek_conn_exfil.jsonl", "connection")
     ingestion_ms = round((time.perf_counter() - stage_started) * 1000, 3)
     quality_reports = [c2_quality, encrypted_quality, exfil_quality]
     blocking = [item for item in quality_reports if item.status in {"unavailable", "unusable"}]
@@ -144,19 +139,23 @@ def run_attack_story(root: str | Path, repository: Any) -> dict[str, Any]:
         }
 
     stage_started = time.perf_counter()
-    c2_alerts = list(run_pipeline(c2_events, [C2BeaconDetector(
-        encrypted_metadata=build_encrypted_metadata_index(encrypted_events)
-    )]))
-    c2_ms = round((time.perf_counter() - stage_started) * 1000, 3)
+    session = AnalysisSession(AnalysisProfile("instant-replay-v1", enabled=("c2", "exfiltration")))
+    c2_ms = exfil_ms = 0.0
+    exfil_ids = {event.flow_id for event in exfil_events}
+    for event in sorted([*c2_events, *encrypted_events, *exfil_events], key=event_order):
+        event_started = time.perf_counter()
+        session.process(event)
+        duration = (time.perf_counter() - event_started) * 1000
+        if event.flow_id in exfil_ids:
+            exfil_ms += duration
+        else:
+            c2_ms += duration
+    c2_ms, exfil_ms = round(c2_ms, 3), round(exfil_ms, 3)
+    alerts = session.findings(complete=True)
+    c2_alerts = [alert for alert in alerts if alert.threat_type == "command_and_control"]
+    exfil_alerts = [alert for alert in alerts if alert.threat_type == "data_exfiltration"]
     stage_started = time.perf_counter()
-    exfil_alerts = list(run_pipeline(exfil_events, [ExfiltrationDetector()]))
-    exfil_ms = round((time.perf_counter() - stage_started) * 1000, 3)
-    alerts = c2_alerts + exfil_alerts
-    stage_started = time.perf_counter()
-    correlator = IncidentStore()
-    for alert in alerts:
-        correlator.process(alert)
-    incidents = list(correlator.all())
+    incidents = session.incidents()
     correlation_ms = round((time.perf_counter() - stage_started) * 1000, 3)
     stage_started = time.perf_counter()
     loaded = repository.import_records(
@@ -171,6 +170,7 @@ def run_attack_story(root: str | Path, repository: Any) -> dict[str, Any]:
     return {
         "status": "completed",
         "telemetry_status": overall_quality,
+        "analysis_provenance": session.provenance(),
         "elapsed_ms": elapsed_ms,
         "stages": [
             {"name": "Passive ingestion", "status": "completed",

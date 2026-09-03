@@ -39,3 +39,7 @@ CREATE TABLE IF NOT EXISTS runtime_state (
     payload TEXT NOT NULL,
     updated_at DOUBLE PRECISION NOT NULL
 );
+CREATE TABLE IF NOT EXISTS analysis_runs (
+    run_id TEXT PRIMARY KEY,
+    payload TEXT NOT NULL
+);

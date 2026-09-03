@@ -16,6 +16,7 @@ from aegisflow.api_store import IncidentRepository, read_jsonl, repository_from_
 from aegisflow.demo import run_attack_story
 from aegisflow.upload_analysis import analyse_uploaded_replay
 from aegisflow.streaming_demo import stream_simulated_ip_traffic
+from aegisflow.analysis_session import configured_profile, UPLOAD_DEMO, STREAM_DEMO
 
 
 class StatusUpdate(BaseModel):
@@ -78,6 +79,13 @@ def create_app(repository: IncidentRepository | None = None) -> FastAPI:
     @app.get("/api/metrics")
     def metrics() -> dict[str, Any]:
         return store.metrics()
+
+    @app.get("/api/analysis-runs/{run_id}")
+    def analysis_run(run_id: str) -> dict[str, Any]:
+        report = store.get_analysis_run(run_id)
+        if report is None:
+            raise HTTPException(status_code=404, detail="analysis run not found")
+        return report
 
     @app.get("/api/incidents")
     def incidents(
@@ -159,7 +167,8 @@ def create_app(repository: IncidentRepository | None = None) -> FastAPI:
     @app.post("/api/replays/analyse")
     def analyse_replay(request: ReplayUploadRequest) -> dict[str, Any]:
         try:
-            report = analyse_uploaded_replay(request.filename, request.content, store)
+            report = analyse_uploaded_replay(request.filename, request.content, store,
+                                             profile=configured_profile(UPLOAD_DEMO))
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         app.state.demo_run = {
@@ -183,8 +192,12 @@ def create_app(repository: IncidentRepository | None = None) -> FastAPI:
         interval: float = Query(default=0.10, ge=0.0, le=1.0),
     ) -> StreamingResponse:
         root = Path(os.getenv("DRASTHA_ROOT") or os.getenv("AEGISFLOW_ROOT", Path.cwd()))
+        try:
+            profile = configured_profile(STREAM_DEMO)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
         return StreamingResponse(
-            stream_simulated_ip_traffic(root, store, interval_seconds=interval),
+            stream_simulated_ip_traffic(root, store, interval_seconds=interval, profile=profile),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",

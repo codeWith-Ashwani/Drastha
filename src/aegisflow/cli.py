@@ -5,6 +5,9 @@ import json
 import os
 import sys
 import time
+from aegisflow.analysis_session import AnalysisProfile, AnalysisSession, DEPLOYMENT_BASELINE, UPLOAD_DEMO, STREAM_DEMO
+from aegisflow.ingestion.passive_replay import prepare_replay, event_order
+from aegisflow.replay_service import analyse_replay_file
 from contextlib import nullcontext
 from pathlib import Path
 from typing import TextIO
@@ -12,34 +15,25 @@ from typing import TextIO
 from aegisflow.api_store import repository_from_url
 from aegisflow.context_policy import load_context_policy
 from aegisflow.detectors import (
-    C2BeaconDetector,
     C2Config,
     DNSConfig,
-    DNSDetector,
     DDoSConfig,
-    DDoSDetector,
     ExfiltrationConfig,
-    ExfiltrationDetector,
     ReconConfig,
-    ReconDetector,
 )
-from aegisflow.detectors.base import Detector
 from aegisflow.demo import demo_preflight, prepare_demo, rehearse_demo
 from aegisflow.dns_model import DNSNgramModel
 from aegisflow.dns_training import train_and_evaluate
 from aegisflow.evaluation import evaluate_demo
 from aegisflow.health import ReplayHealth
 from aegisflow.incidents import FeedbackStore, IncidentStore, alert_from_dict
-from aegisflow.ingestion.zeek_dns import read_dns_jsonl
-from aegisflow.ingestion.zeek_encrypted import build_encrypted_metadata_index, read_encrypted_jsonl
-from aegisflow.ingestion.zeek_jsonl import ZeekRecordError, read_conn_jsonl
+from aegisflow.ingestion.zeek_jsonl import ZeekRecordError
 from aegisflow.ingestion.zeek_runner import (
     WSLZeekRunner,
     ZeekExecutionError,
     ZeekRunner,
     ZeekUnavailableError,
 )
-from aegisflow.pipeline import run_dns_pipeline, run_pipeline
 from aegisflow.validate_replay import validation_summary, validate_replay_file
 
 
@@ -65,6 +59,14 @@ def _parser() -> argparse.ArgumentParser:
     replay.add_argument("--input", required=True, type=Path)
     _add_detection_arguments(replay)
 
+    analyse = subparsers.add_parser("analyse", help="analyse mixed replay or a Zeek log directory through the shared pipeline")
+    analyse.add_argument("--input", required=True, type=Path)
+    analyse.add_argument("--root", type=Path, default=Path.cwd())
+    analyse.add_argument("--profile", choices=("upload-demo", "stream-demo", "deployment-baseline"), default="deployment-baseline")
+    analyse.add_argument("--model", type=Path)
+    analyse.add_argument("--database")
+    analyse.add_argument("--report-output", type=Path)
+
     validate = subparsers.add_parser(
         "validate-replay", help="validate replay format, schema and telemetry quality"
     )
@@ -77,6 +79,11 @@ def _parser() -> argparse.ArgumentParser:
     pcap.add_argument("--zeek-binary")
     pcap.add_argument("--wsl-distro")
     _add_detection_arguments(pcap)
+    pcap.add_argument("--all-threats", action="store_true", help="analyse conn, DNS and TLS/QUIC logs through shared pipeline")
+    pcap.add_argument("--profile", choices=("upload-demo", "stream-demo", "deployment-baseline"), default="deployment-baseline")
+    pcap.add_argument("--model", type=Path)
+    pcap.add_argument("--database")
+    pcap.add_argument("--root", type=Path, default=Path.cwd())
 
     readiness = subparsers.add_parser("check-zeek", help="check whether Zeek is available")
     readiness.add_argument("--zeek-mode", choices=("auto", "native", "wsl"), default="auto")
@@ -223,30 +230,18 @@ def _build_zeek_runner(args: argparse.Namespace) -> ZeekRunner | WSLZeekRunner:
     return ZeekRunner(args.zeek_binary or "zeek")
 
 
-def _build_detectors(args: argparse.Namespace) -> list[Detector]:
-    requested = {item.strip().lower() for item in args.detectors.split(",") if item.strip()}
-    unknown = requested - {"recon", "ddos"}
-    if unknown:
-        raise ValueError(f"unknown detector(s): {', '.join(sorted(unknown))}")
-    detectors: list[Detector] = []
-    if "recon" in requested:
-        detectors.append(ReconDetector(ReconConfig(
-            window_seconds=args.recon_window,
-            unique_port_threshold=args.port_threshold,
-            unique_host_threshold=args.host_threshold,
-            cooldown_seconds=args.cooldown,
-        )))
-    if "ddos" in requested:
-        detectors.append(DDoSDetector(DDoSConfig(
-            window_seconds=args.ddos_window,
-            syn_attempt_threshold=args.syn_threshold,
-            min_incomplete_ratio=args.min_incomplete_ratio,
-            udp_packet_threshold=args.udp_packet_threshold,
-            cooldown_seconds=args.cooldown,
-        )))
-    if not detectors:
-        raise ValueError("at least one detector must be selected")
-    return detectors
+def _build_session(args: argparse.Namespace) -> AnalysisSession:
+    requested = tuple(item.strip().lower() for item in args.detectors.split(",") if item.strip())
+    if set(requested) - {"recon", "ddos"} or not requested:
+        raise ValueError("Select at least one detector from recon,ddos")
+    profile = AnalysisProfile(
+        "cli-selected-v1", enabled=requested,
+        recon=ReconConfig(window_seconds=args.recon_window, unique_port_threshold=args.port_threshold,
+                          unique_host_threshold=args.host_threshold, cooldown_seconds=args.cooldown),
+        ddos=DDoSConfig(window_seconds=args.ddos_window, syn_attempt_threshold=args.syn_threshold,
+                        min_incomplete_ratio=args.min_incomplete_ratio,
+                        udp_packet_threshold=args.udp_packet_threshold, cooldown_seconds=args.cooldown))
+    return AnalysisSession(profile)
 
 
 def _run_jsonl(input_path: Path, args: argparse.Namespace) -> int:
@@ -255,22 +250,28 @@ def _run_jsonl(input_path: Path, args: argparse.Namespace) -> int:
     if args.health_output:
         args.health_output.parent.mkdir(parents=True, exist_ok=True)
 
+    session = _build_session(args)
+    prepared = prepare_replay(input_path.read_text(encoding="utf-8"), input_path.name,
+                              maximum_records=None, source_kind="connection")
     health = ReplayHealth()
     health.start()
 
     def observed_events():
-        for event in read_conn_jsonl(input_path):
+        for event in prepared.ordered_events():
             health.record_event(event)
             yield event
 
     output_context = args.output.open("w", encoding="utf-8") if args.output else nullcontext(sys.stdout)
     with output_context as stream:
         output: TextIO = stream
-        for alert in run_pipeline(observed_events(), _build_detectors(args)):
+        session.process_many(observed_events())
+        for alert in session.findings(complete=True):
             output.write(json.dumps(alert.to_dict(), sort_keys=True) + "\n")
             health.record_alert(alert)
     health.finish()
     report = health.to_dict()
+    report["quality"] = prepared.quality.to_dict()
+    report["analysis_provenance"] = session.provenance()
     if args.health_output:
         args.health_output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(
@@ -287,8 +288,8 @@ def _run_dns(input_path: Path, args: argparse.Namespace) -> int:
     if args.report_output:
         args.report_output.parent.mkdir(parents=True, exist_ok=True)
     model = DNSNgramModel.load(args.model) if args.model else None
-    detector = DNSDetector(
-        DNSConfig(
+    session = AnalysisSession(AnalysisProfile("cli-dns-v1", enabled=("dns",),
+        dns=DNSConfig(
             window_seconds=args.window,
             tunnel_query_threshold=args.query_threshold,
             tunnel_unique_subdomain_threshold=args.unique_subdomain_threshold,
@@ -297,25 +298,28 @@ def _run_dns(input_path: Path, args: argparse.Namespace) -> int:
             dga_probability_threshold=args.dga_threshold,
             cooldown_seconds=args.cooldown,
         ),
-        model=model,
-        allowlisted_base_domains=set(args.allow_domain),
-    )
+        allow_domains=tuple(args.allow_domain)), dns_model=model)
+    prepared = prepare_replay(input_path.read_text(encoding="utf-8"), input_path.name,
+                              maximum_records=None, source_kind="dns")
     events = alerts = 0
 
     def observed_events():
         nonlocal events
-        for event in read_dns_jsonl(input_path):
+        for event in prepared.ordered_events():
             events += 1
             yield event
 
     output_context = args.output.open("w", encoding="utf-8") if args.output else nullcontext(sys.stdout)
     with output_context as stream:
         output: TextIO = stream
-        for alert in run_dns_pipeline(observed_events(), [detector]):
+        session.process_many(observed_events())
+        for alert in session.findings(complete=True):
             output.write(json.dumps(alert.to_dict(), sort_keys=True) + "\n")
             alerts += 1
     report = {
         "events_processed": events,
+        "quality": prepared.quality.to_dict(),
+        "analysis_provenance": session.provenance(),
         "alerts_emitted": alerts,
         "dga_model_loaded": model is not None,
         "encrypted_dns_visibility": "not_available_from_zeek_dns_log",
@@ -331,13 +335,13 @@ def _run_c2(input_path: Path, args: argparse.Namespace) -> int:
         args.output.parent.mkdir(parents=True, exist_ok=True)
     if args.report_output:
         args.report_output.parent.mkdir(parents=True, exist_ok=True)
-    metadata_events = (
-        list(read_encrypted_jsonl(args.encrypted_input, args.encrypted_transport))
-        if args.encrypted_input else []
-    )
+    metadata_input = (prepare_replay(args.encrypted_input.read_text(encoding="utf-8"),
+                      args.encrypted_input.name, maximum_records=None, source_kind=args.encrypted_transport)
+                      if args.encrypted_input else None)
+    metadata_events = metadata_input.encrypted_events if metadata_input else []
     context_policy = load_context_policy()
-    detector = C2BeaconDetector(
-        C2Config(
+    session = AnalysisSession(AnalysisProfile("cli-c2-v1", enabled=("c2",),
+        c2=C2Config(
             window_seconds=args.window,
             minimum_connections=args.minimum_connections,
             minimum_mean_interval_seconds=args.minimum_interval,
@@ -346,28 +350,32 @@ def _run_c2(input_path: Path, args: argparse.Namespace) -> int:
             maximum_size_cv=args.maximum_size_cv,
             cooldown_seconds=args.cooldown,
         ),
-        encrypted_metadata=build_encrypted_metadata_index(metadata_events),
-        allowlisted_destinations=set(args.allow_destination),
-        trusted_periodic_endpoints=context_policy.trusted_periodic_endpoints,
-    )
+        allow_destinations=tuple(args.allow_destination)), context_policy=context_policy)
+    prepared = prepare_replay(input_path.read_text(encoding="utf-8"), input_path.name,
+                              maximum_records=None, source_kind="connection")
     events = alerts = 0
 
     def observed_events():
         nonlocal events
-        for event in read_conn_jsonl(input_path):
-            events += 1
+        for event in sorted([*prepared.events, *metadata_events], key=event_order):
+            if hasattr(event, "protocol"):
+                events += 1
             yield event
 
     output_context = args.output.open("w", encoding="utf-8") if args.output else nullcontext(sys.stdout)
     with output_context as stream:
         output: TextIO = stream
-        for alert in run_pipeline(observed_events(), [detector]):
+        session.process_many(observed_events())
+        for alert in session.findings(complete=True):
             output.write(json.dumps(alert.to_dict(), sort_keys=True) + "\n")
             alerts += 1
     report = {
         "events_processed": events,
+        "quality": prepared.quality.to_dict(),
+        "analysis_provenance": session.provenance(),
         "alerts_emitted": alerts,
         "encrypted_metadata_records": len(metadata_events),
+        "encrypted_quality": metadata_input.quality.to_dict() if metadata_input else None,
         "payload_decryption": False,
         "fingerprint_only_alerting": False,
     }
@@ -383,8 +391,8 @@ def _run_exfil(input_path: Path, args: argparse.Namespace) -> int:
     if args.report_output:
         args.report_output.parent.mkdir(parents=True, exist_ok=True)
     context_policy = load_context_policy()
-    detector = ExfiltrationDetector(
-        ExfiltrationConfig(
+    session = AnalysisSession(AnalysisProfile("cli-exfil-v1", enabled=("exfiltration",),
+        exfiltration=ExfiltrationConfig(
             window_seconds=args.window,
             minimum_flows=args.minimum_flows,
             minimum_outbound_bytes=args.minimum_outbound_bytes,
@@ -392,9 +400,10 @@ def _run_exfil(input_path: Path, args: argparse.Namespace) -> int:
             baseline_multiplier=args.baseline_multiplier,
             cooldown_seconds=args.cooldown,
         ),
-        approved_backup_destinations=set(args.approved_backup_destination),
-        approved_bulk_transfer_endpoints=context_policy.approved_bulk_transfer_endpoints,
-    )
+        approved_backup_destinations=tuple(args.approved_backup_destination)), context_policy=context_policy)
+    detector = session.exfiltration
+    prepared = prepare_replay(input_path.read_text(encoding="utf-8"), input_path.name,
+                              maximum_records=None, source_kind="connection")
     repository = repository_from_url(args.database) if args.database else None
     state_restored = False
     if repository is not None:
@@ -409,20 +418,23 @@ def _run_exfil(input_path: Path, args: argparse.Namespace) -> int:
 
     def observed_events():
         nonlocal events
-        for event in read_conn_jsonl(input_path):
+        for event in prepared.ordered_events():
             events += 1
             yield event
 
     output_context = args.output.open("w", encoding="utf-8") if args.output else nullcontext(sys.stdout)
     with output_context as stream:
         output: TextIO = stream
-        for alert in run_pipeline(observed_events(), [detector]):
+        session.process_many(observed_events())
+        for alert in session.findings(complete=True):
             output.write(json.dumps(alert.to_dict(), sort_keys=True) + "\n")
             alerts += 1
     if repository is not None:
         repository.put_runtime_state(args.state_key, detector.export_state(), time.time())
     report = {
         "events_processed": events,
+        "quality": prepared.quality.to_dict(),
+        "analysis_provenance": session.provenance(),
         "alerts_emitted": alerts,
         "approved_backup_destinations": sorted(set(args.approved_backup_destination)),
         "baseline_scope": "persistent_repository" if repository is not None else "in_memory_per_source",
@@ -564,9 +576,27 @@ def _run_demo_rehearsal(args: argparse.Namespace) -> int:
     return 0 if report["ready"] else 1
 
 
+class _ReportOnlyRepository:
+    def import_records(self, incidents, alerts, feedback=()):
+        # No --database means a report-only CLI run, not implicit persistence.
+        return {"incidents": 0, "alerts": 0, "feedback": 0}
+
+
+def _analyse_shared(path, args):
+    profiles = {"upload-demo": UPLOAD_DEMO, "stream-demo": STREAM_DEMO,
+                "deployment-baseline": DEPLOYMENT_BASELINE}
+    repository = repository_from_url(args.database) if args.database else _ReportOnlyRepository()
+    return analyse_replay_file(path, repository, root=args.root, profile=profiles[args.profile], model_path=args.model)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
+        if args.command == "analyse":
+            report = _analyse_shared(args.input, args)
+            _write_report(report, args.report_output)
+            print(json.dumps(report, sort_keys=True))
+            return 0
         if args.command == "demo-preflight":
             return _run_demo_preflight(args)
         if args.command == "demo-prepare":
@@ -605,6 +635,14 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "pcap":
             result = _build_zeek_runner(args).process_pcap(args.input, args.zeek_output)
+            if args.all_threats:
+                report = _analyse_shared(result.output_directory, args)
+                _write_report(report, args.health_output)
+                output_context = args.output.open("w", encoding="utf-8") if args.output else nullcontext(sys.stdout)
+                with output_context as stream:
+                    for alert in report["alerts"]:
+                        stream.write(json.dumps(alert, sort_keys=True) + "\n")
+                return 0
             return _run_jsonl(result.conn_log, args)
     except (OSError, RuntimeError, ValueError, ZeekRecordError, ZeekUnavailableError, ZeekExecutionError) as exc:
         print(f"error: {exc}", file=sys.stderr)

@@ -11,6 +11,11 @@ The repository contains a complete offline SIH demonstration and the foundation
 of a production system. The SIH demo is complete; production hardening is still
 in progress.
 
+Sprint 15 adds [protected local startup and verified SQLite recovery](docs/SPRINT_15.md).
+Use the [operator runbook](docs/OPERATIONS_RUNBOOK.md) for preflight, create-only
+backup/restore and manual cutover. This is a loopback-only staged deployment path,
+not a replacement for the demo Docker setup or a production-readiness certificate.
+
 Sprint 14 adds repeatable paced-load measurements through continuous ingestion,
 SQLite and the analyst API, with explicit latency/resource/failure gates, plus
 an offline Zeek integration checker. These are bounded synthetic measurements,

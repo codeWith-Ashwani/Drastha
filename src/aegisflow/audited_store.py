@@ -124,22 +124,7 @@ class AuditedIncidentRepository(IncidentRepository):
         connection.execute("INSERT INTO evidence_audit VALUES (?, ?, ?)", (record["sequence"], payload, mac))
 
     def _verify(self, connection, state):
-        sequence, previous = 0, "0" * 64
-        expected_state = None
-        try:
-            for row in connection.execute("SELECT * FROM evidence_audit ORDER BY sequence").fetchall():
-                record = json.loads(row["payload"])
-                mac = hmac.new(self._key, row["payload"].encode(), "sha256").hexdigest()
-                if (row["sequence"] != sequence + 1 or record["sequence"] != row["sequence"] or
-                        record["previous_mac"] != previous or record["version"] != "drastha-evidence-hmac-v1" or
-                        not hmac.compare_digest(mac, row["mac"])):
-                    raise EvidenceIntegrityError("Evidence audit chain verification failed")
-                sequence, previous, expected_state = row["sequence"], row["mac"], record["state_sha256"]
-            if expected_state is None or not hmac.compare_digest(expected_state, state_digest(state)):
-                raise EvidenceIntegrityError("Evidence contents do not match the signed audit head")
-        except (KeyError, TypeError, ValueError) as exc:
-            raise EvidenceIntegrityError("Malformed signed evidence ledger") from exc
-        return {"sequence": sequence, "mac": previous, "state_sha256": expected_state}
+        return verify_connection(connection, state, self._key)
 
     def verify_evidence(self, expected_head=None):
         with self._connect() as connection:
@@ -207,3 +192,23 @@ class AuditedIncidentRepository(IncidentRepository):
             connection.event = "retention_applied"
             return {"deleted_reports": len(plan["run_ids"]), "run_ids": plan["run_ids"],
                     "recoverability": "Application deletion is not secure erasure; recovery requires a separately retained backup"}
+
+
+def verify_connection(connection, state, key):
+    """Shared verifier for repository transactions and read-only recovery tools."""
+    sequence, previous = 0, "0" * 64
+    expected_state = None
+    try:
+        for row in connection.execute("SELECT * FROM evidence_audit ORDER BY sequence").fetchall():
+            record = json.loads(row["payload"])
+            mac = hmac.new(key, row["payload"].encode(), "sha256").hexdigest()
+            if (row["sequence"] != sequence + 1 or record["sequence"] != row["sequence"] or
+                    record["previous_mac"] != previous or record["version"] != "drastha-evidence-hmac-v1" or
+                    not hmac.compare_digest(mac, row["mac"])):
+                raise EvidenceIntegrityError("Evidence audit chain verification failed")
+            sequence, previous, expected_state = row["sequence"], row["mac"], record["state_sha256"]
+        if expected_state is None or not hmac.compare_digest(expected_state, state_digest(state)):
+            raise EvidenceIntegrityError("Evidence contents do not match the signed audit head")
+    except (KeyError, TypeError, ValueError) as exc:
+        raise EvidenceIntegrityError("Malformed signed evidence ledger") from exc
+    return {"sequence": sequence, "mac": previous, "state_sha256": expected_state}

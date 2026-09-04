@@ -5,4 +5,17 @@ __pycache__
 tmp
 output/pdf
 output/*.db
+output/*.db-*
+output/*.db.lock*
+output/security
+output/backups
+output/restore
+output/operations
+*.key
+*.pem
+*.pfx
+*.p12
+bootstrap-tokens.json
+.env
+.env.local
 web/node_modules

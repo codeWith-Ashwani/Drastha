@@ -4,6 +4,16 @@ Last updated: 4 September 2026
 
 ## Production roadmap update
 
+Sprint 15's protected local operations/recovery slice is delivered with **314
+Python tests passing**. Read-only preflight, create-only signed SQLite backup and
+restore, selected-head verification, and a loopback HTTPS launcher are implemented.
+A real verifying HTTPS client passed the disposable upload/backup/restore drill;
+mixed replay remains 452 accepted, 8 TP, 0 FP/FN, 86 TN and healthy. See
+`docs/SPRINT_15.md` and `docs/OPERATIONS_RUNBOOK.md`. No existing service or live
+database was changed. Remote deployment, host ACL/encryption, OS supervision,
+real sensor/browser validation and coordinated stream recovery remain open;
+local TLS success is not a production-deployment certificate.
+
 Sprint 14's paced-load and sensor-check tooling slice is delivered with **283
 Python tests passing**. Signed continuous ingestion -> SQLite -> actual analyst
 ASGI API processed 6,000 records at an offered 100 records/sec for 60 seconds,

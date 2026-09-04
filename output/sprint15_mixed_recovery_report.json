@@ -1,0 +1,114 @@
+{
+  "analyst_api_readback": true,
+  "evaluation": {
+    "classification_mismatches": [],
+    "f1_score": 1.0,
+    "false_negative": 0,
+    "false_positive": 0,
+    "false_positive_rate": 0.0,
+    "ground_truth_isolation": "evaluation fields used only after detector inference",
+    "identity_overlap": {
+      "detector_state_reset_from_ground_truth": false,
+      "note": "Ground-truth fields never control detector state. Use distinct identities or explicit externally defined scenario boundaries for isolated evaluation.",
+      "sources_present_in_attack_and_benign_units": [
+        "192.168.20.50",
+        "192.168.20.60"
+      ]
+    },
+    "per_class": {
+      "botnet_c2_beaconing": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      },
+      "data_exfiltration": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      },
+      "dga_domain": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      },
+      "dns_tunnelling": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      },
+      "encrypted_session_malware": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      },
+      "reconnaissance_port_scan": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      },
+      "udp_reflection_amplification": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      },
+      "volumetric_ddos_syn_flood": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      }
+    },
+    "precision": 1.0,
+    "recall": 1.0,
+    "scope": "scenario_endpoint_units",
+    "true_negative": 86,
+    "true_positive": 8,
+    "units": 94,
+    "unmatched_alerts": []
+  },
+  "experiment": "sprint12-finite-append-restart-sqlite-http-v1",
+  "findings": 8,
+  "fixture_records": 452,
+  "fixture_sha256": "5848e73370f34e26583dd3678339e93b63b877c9ae3ed3a26b05d15952d844fd",
+  "incidents": 8,
+  "limitations": [
+    "Finite 452-record synthetic smoke run, not sustained throughput or a capacity guarantee",
+    "Elapsed includes local appends, startup, one recovery, inference, durable journal and analyst projection",
+    "Post-run HTTP comparison/evaluation excluded from elapsed time",
+    "Polling duration is not packet-to-alert latency; no production source timestamps or live sensor tested",
+    "Unbounded retention/state compaction, rotation handoff and long-run capacity remain open"
+  ],
+  "measurement": {
+    "elapsed_seconds": 0.992,
+    "poll_count": 38,
+    "poll_p50_ms": 24.676,
+    "poll_p95_ms": 29.406,
+    "records_per_second": 455.63,
+    "recovery_ms": 39.235
+  },
+  "profile": "upload-demo-v1",
+  "quality": {
+    "conflicting_duplicate_uid_count": 0,
+    "degraded_reasons": [],
+    "duplicate_uid_count": 0,
+    "errors": [],
+    "exact_duplicate_count": 0,
+    "invalid_timestamp_count": 0,
+    "maximum_backward_skew_seconds": 0.0,
+    "out_of_order_records": 0,
+    "quarantined_records": [],
+    "records_accepted": 452,
+    "records_quarantined": 0,
+    "records_received": 452,
+    "records_rejected": 0,
+    "records_seen": 452,
+    "rejection_ratio": 0.0,
+    "source": "sensor.jsonl",
+    "status": "healthy",
+    "stream": "drastha-continuous-v1",
+    "unsupported_record_count": 0
+  },
+  "queue_high_watermark": 17,
+  "recovered_records": 47,
+  "source_bytes_unchanged": true,
+  "upload_http_parity": true
+}

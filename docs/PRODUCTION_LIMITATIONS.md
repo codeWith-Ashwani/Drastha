@@ -33,7 +33,11 @@ deferred because they are production requirements, not demo blockers.
   head anchoring, key custody/rotation, dependency scanning and signed releases
   remain open. Report-only retention is not complete evidence erasure.
 - Complete a formal threat model, penetration test and incident-response procedure.
-- Add high availability, database backup/restore and upgrade/migration testing.
+- Sprint 15 adds verified create-only analyst SQLite backup/restore, a protected
+  loopback launcher, a real local HTTPS recovery drill and operations runbooks.
+  High availability, remote deployment/service supervision, coordinated stream
+  journal recovery, offsite encrypted backup, upgrade/migration and power-loss
+  testing remain open. Readiness never auto-certifies the installation.
 
 ## Integrations and governance
 

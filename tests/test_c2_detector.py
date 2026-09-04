@@ -10,11 +10,12 @@ from aegisflow.context_policy import EndpointRule
 from aegisflow.models import EncryptedSessionMetadata, NetworkEvent
 
 
-def connection(index, timestamp, total_bytes=500, destination="203.0.113.77"):
+def connection(index, timestamp, total_bytes=500, destination="203.0.113.77",
+               source="10.0.0.44"):
     return NetworkEvent(
         timestamp=timestamp,
         flow_id=f"flow-{index}",
-        src_ip="10.0.0.44",
+        src_ip=source,
         dst_ip=destination,
         src_port=50000 + index,
         dst_port=443,
@@ -34,6 +35,19 @@ class C2DetectorTests(unittest.TestCase):
         self.assertEqual(len(alerts), 1)
         self.assertEqual(alerts[0].subtype, "periodic_beacon")
         self.assertTrue(any(item.name == "interval_variation" for item in alerts[0].evidence))
+
+    def test_periodic_detection_is_not_hard_coded_to_fixture_addresses(self):
+        for source, destination in (("172.16.40.9", "192.0.2.80"),
+                                    ("10.44.8.2", "198.51.100.240")):
+            detector = C2BeaconDetector(C2Config(minimum_connections=6))
+            alerts = []
+            for index in range(6):
+                alerts.extend(detector.process(connection(
+                    index, 2000 + index * 15, destination=destination, source=source
+                )))
+            self.assertEqual([alert.subtype for alert in alerts], ["periodic_beacon"])
+            self.assertEqual(alerts[0].src_ip, source)
+            self.assertEqual(alerts[0].dst_ip, destination)
 
     def test_irregular_scheduled_traffic_does_not_alert(self):
         detector = C2BeaconDetector(C2Config(minimum_connections=6))

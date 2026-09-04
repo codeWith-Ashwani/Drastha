@@ -11,6 +11,14 @@ The repository contains a complete offline SIH demonstration and the foundation
 of a production system. The SIH demo is complete; production hardening is still
 in progress.
 
+The corrected 8-threat/false-positive evaluation fixture is the native replay
+[`examples/drastha_accuracy_fp_test_v2.jsonl`](examples/drastha_accuracy_fp_test_v2.jsonl),
+with an equivalent JSON container beside it, assumptions in the adjacent manifest,
+and a reproducible upload-API check
+in `scripts/check_accuracy_fixture.py`. It preserves all 53 supplied scenario
+records and adds 100 prior passive TLS sessions required by the unchanged feature
+extractor; do not describe its synthetic behaviour-level score as production accuracy.
+
 Sprint 17 adds [coordinated journal/analyst backup and same-engine recovery](docs/SPRINT_17.md).
 The operator tools validate a signed recovery point, reconstruct detection state
 on disposable copies, and preserve the selected analyst reviews and holds.
@@ -305,8 +313,12 @@ The findings demonstrate:
 - SYN, distributed-source SYN, UDP-flood, and reflection/amplification paths;
 - encrypted-session anomaly detection from TLS/JA4, size, and timing metadata.
 
-Click **Open scored intelligence** to see the attack timeline, confidence,
-observed values, comparisons, explanations, limitations and score calculation.
+Click **Open scored intelligence** to see a recorded incident conclusion: the
+observed behaviour, likely objective, attack stage, potential impact, evidence
+basis and analytical uncertainty. The same view then separates the detection
+timeline, raw supporting measurements and priority-score calculation. Because
+Drastha is passive, it reports intent as an evidence-backed hypothesis rather
+than a proven fact.
 
 ### Instant attack replay
 
@@ -320,6 +332,7 @@ Open an incident to:
 - change the status;
 - record a malicious, benign or needs-review decision;
 - add investigation notes;
+- review the recorded likely objective and its uncertainty;
 - inspect every contributing alert;
 - export the complete incident as JSON.
 

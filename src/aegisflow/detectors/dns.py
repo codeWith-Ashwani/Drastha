@@ -260,19 +260,21 @@ class DNSDetector:
                 Evidence(
                     "queries_to_base_domain",
                     len(queries),
-                    f">= {self.config.tunnel_query_threshold}",
-                    f"Many DNS queries targeted subdomains of {root} inside one window.",
+                    f">= {self.config.encoded_txt_query_threshold if strong_encoded_txt_signal else self.config.tunnel_query_threshold}",
+                    f"Repeated DNS queries targeted subdomains of {root} inside one window.",
                 ),
                 Evidence(
                     "unique_subdomain_labels",
                     unique_labels,
-                    f">= {self.config.tunnel_unique_subdomain_threshold}",
+                    ("supporting feature for encoded TXT path" if strong_encoded_txt_signal
+                     else f">= {self.config.tunnel_unique_subdomain_threshold}"),
                     "High subdomain variation can carry encoded data.",
                 ),
                 Evidence(
                     "average_subdomain_length",
                     round(average_length, 3),
-                    f">= {self.config.tunnel_label_length_threshold} or entropy threshold",
+                    (f">= {self.config.encoded_txt_label_length_threshold}" if strong_encoded_txt_signal
+                     else f">= {self.config.tunnel_label_length_threshold} or entropy threshold"),
                     "Long labels are consistent with data encoded into DNS names.",
                 ),
                 Evidence(
@@ -284,7 +286,7 @@ class DNSDetector:
                 Evidence(
                     "txt_query_ratio",
                     round(txt_ratio, 3),
-                    "supporting feature",
+                    ">= 0.75" if strong_encoded_txt_signal else "supporting feature",
                     "Repeated long TXT queries strengthen a tunnelling hypothesis but do not prove it alone.",
                 ),
             ),

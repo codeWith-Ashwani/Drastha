@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import json
+import sqlite3
 from pathlib import Path
 
 from aegisflow.api_store import IncidentRepository
@@ -54,6 +56,40 @@ class IncidentRepositoryTests(unittest.TestCase):
         detail = self.store.get_incident("incident-1")
         self.assertEqual(detail["alerts"][0]["alert_id"], "alert-1")
         self.assertEqual(self.store.list_alerts(), [ALERT])
+        self.assertEqual(detail["conclusion"]["inference_basis"], "passive_metadata_only")
+        self.assertIn("command-and-control", detail["conclusion"]["likely_objective"])
+
+    def test_existing_conclusion_is_preserved_without_reinterpretation(self) -> None:
+        incident = {**INCIDENT, "conclusion": {
+            "assessment": "Analyst-approved assessment.",
+            "likely_objective": "Approved objective.",
+            "attack_stage": "Approved stage.",
+            "potential_impact": "Approved impact.",
+            "confidence_basis": ["Approved basis."],
+            "uncertainty": "Approved uncertainty.",
+            "inference_basis": "passive_metadata_only",
+        }}
+        self.store.import_records([incident], [ALERT])
+        self.assertEqual(self.store.get_incident("incident-1")["conclusion"], incident["conclusion"])
+
+    def test_unsigned_legacy_database_is_backfilled_on_reopen(self) -> None:
+        self.store.import_records([INCIDENT], [ALERT])
+        connection = sqlite3.connect(self.store.database_path)
+        try:
+            payload = json.loads(connection.execute(
+                "SELECT payload FROM incidents WHERE incident_id = ?", ("incident-1",)
+            ).fetchone()[0])
+            payload.pop("conclusion")
+            connection.execute(
+                "UPDATE incidents SET payload = ? WHERE incident_id = ?",
+                (json.dumps(payload), "incident-1"),
+            )
+            connection.commit()
+        finally:
+            connection.close()
+        reopened = IncidentRepository(self.store.database_path)
+        conclusion = reopened.get_incident("incident-1")["conclusion"]
+        self.assertIn("command-and-control", conclusion["likely_objective"])
 
     def test_status_and_feedback_persist(self) -> None:
         self.store.import_records([INCIDENT], [ALERT])

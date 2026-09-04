@@ -34,6 +34,17 @@ class ContextPolicyTests(unittest.TestCase):
             policy = load_context_policy(directory)
         self.assertEqual(policy.trusted_periodic_endpoints, ())
         self.assertEqual(policy.approved_bulk_transfer_endpoints, ())
+        self.assertEqual(policy.authorized_scanner_sources, ())
+
+    def test_authorized_scanners_are_operator_policy_not_record_claims(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "config").mkdir()
+            (root / "config/context_policy.json").write_text(json.dumps({
+                "authorized_scanner_sources": ["192.0.2.50"],
+            }))
+            policy = load_context_policy(root)
+        self.assertEqual(policy.authorized_scanner_sources, ("192.0.2.50",))
 
 
 if __name__ == "__main__":

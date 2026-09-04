@@ -36,12 +36,17 @@ class ReconDetector(Detector):
     detector_id = "recon.fanout"
     detector_version = "0.1.0"
 
-    def __init__(self, config: ReconConfig | None = None) -> None:
+    def __init__(self, config: ReconConfig | None = None, *, authorized_sources: set[str] | None = None) -> None:
         self.config = config or ReconConfig()
+        self.authorized_sources = authorized_sources or set()
+        self.context_suppressed_records = 0
         self._contacts: dict[str, deque[_Contact]] = defaultdict(deque)
         self._last_alert: dict[tuple[str, str], float] = {}
 
     def process(self, event: NetworkEvent) -> list[Alert]:
+        if event.src_ip in self.authorized_sources:
+            self.context_suppressed_records += 1
+            return []
         contacts = self._contacts[event.src_ip]
         contacts.append(_Contact(event.timestamp, event.dst_ip, event.dst_port, event.flow_id))
         cutoff = event.timestamp - self.config.window_seconds

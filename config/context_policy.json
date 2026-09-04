@@ -15,6 +15,14 @@
       "protocol": "tcp",
       "service": "ssl",
       "purpose": "approved simulated monitoring health check"
+    },
+    {
+      "src_ip": "192.168.30.10",
+      "dst_ip": "198.51.100.10",
+      "dst_port": 443,
+      "protocol": "tcp",
+      "service": "ssl",
+      "purpose": "approved SIH evaluation health check"
     }
   ],
   "approved_bulk_transfer_endpoints": [
@@ -33,6 +41,15 @@
       "protocol": "tcp",
       "service": "ssl",
       "purpose": "approved simulated backup destination"
+    },
+    {
+      "src_ip": "192.168.30.20",
+      "dst_ip": "203.0.113.50",
+      "dst_port": 443,
+      "protocol": "tcp",
+      "service": "ssl",
+      "purpose": "approved SIH evaluation backup destination"
     }
-  ]
+  ],
+  "authorized_scanner_sources": ["192.168.30.30"]
 }

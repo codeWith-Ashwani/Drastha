@@ -116,6 +116,7 @@ class AnalysisSession:
             approved_bulk_transfer_endpoints=self.context_policy.approved_bulk_transfer_endpoints,
         )
         self.dns = DNSDetector(profile.dns, model=dns_model, allowlisted_base_domains=set(profile.allow_domains))
+        self.profile = replace(profile, dns=self.dns.config)
         self.encrypted = EncryptedSessionAnomalyDetector(profile.encrypted)
         self.connection_detectors = tuple(detector for name, detector in
             (("recon", self.recon), ("ddos", self.ddos), ("c2", self.c2), ("exfiltration", self.exfiltration))
@@ -214,6 +215,9 @@ class AnalysisSession:
                                   (*self.connection_detectors, self.dns, self.encrypted)},
             "dns_model_version": self.dns_model.payload.get("version") if self.dns_model else None,
             "dns_model_sha256": digest(self.dns_model.payload) if self.dns_model else None,
+            "dns_score_semantics": "uncalibrated n-gram class score, not infection probability",
+            "dns_model_input": self.dns_model.payload.get("input_mode", "legacy-two-label-at-detector") if self.dns_model else None,
+            "dns_model_research_status": self.dns_model.payload.get("research_status") if self.dns_model else None,
             "c2_metadata_mode": "observed-event-time-v1",
             "passive_feature_extractor": PassiveFeatureExtractor.version,
             "feature_mode": self.profile.feature_mode,

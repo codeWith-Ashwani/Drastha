@@ -1,0 +1,709 @@
+{
+  "audit": {
+    "duplicate_same_label_rows": 0,
+    "group_policy": "pinned PSL registrable domain, ICANN and private suffixes",
+    "manifest_sha256": "ab1f4e9b5c8505f3ce044486941098a3e9e2ac7f28d822b65b9ceb9cfbb629d1",
+    "public_suffix_sha256": "0e07be8daca66c85f12cf84827c6a9d09efd5950a89385621cf9df5c1c52e001",
+    "raw_records": 21958,
+    "sources": [
+      {
+        "family": "alureon",
+        "raw_records": 1000,
+        "sha256": "4ee6922bf8859b85faa42ad3590c2d890fbe151db79865b8b570c9d274a4e654",
+        "train": 1000
+      },
+      {
+        "family": "banjori",
+        "raw_records": 1000,
+        "sha256": "552770009ba5640d37b5a7eee310434a1d8ff641c5c69702e75f3d6c035bcabb",
+        "train": 1000
+      },
+      {
+        "family": "corebot",
+        "raw_records": 1000,
+        "sha256": "26e2535ead55fbfecef8a0e0e3214914ce62f0c03062c9bbaa744d8f2430d6f2",
+        "train": 1000
+      },
+      {
+        "family": "dircrypt",
+        "raw_records": 1000,
+        "sha256": "97938e517ba99dc9781cd437982cf304cb3c658246cd4267801b81b148832470",
+        "train": 1000
+      },
+      {
+        "family": "matsnu",
+        "raw_records": 996,
+        "sha256": "32fbd0fb5844172b92ff45f34c23c6be4867a3be19db988a6866a0abee2fb2d6",
+        "train": 996
+      },
+      {
+        "family": "necurs",
+        "raw_records": 1000,
+        "sha256": "8c9bf2684cc57717606b0ce1e7a6f3d91d9e83ca9be957ad844a4e3e6596b147",
+        "train": 1000
+      },
+      {
+        "family": "padcrypt",
+        "raw_records": 1000,
+        "sha256": "418e8ea071e74bba4db1d1060f85270a932ac7a8990426318ebd374f9c4806aa",
+        "train": 1000
+      },
+      {
+        "family": "ramnit",
+        "raw_records": 1000,
+        "sha256": "21f274e8f5888354c5d1611a44b5a09cdc42af89c80b02b6e7274bdc85286cc4",
+        "train": 1000
+      },
+      {
+        "family": "cryptolocker",
+        "raw_records": 1000,
+        "sha256": "091c882662a6b72863b0b4e2ead973218c38b2b84e1810e2005daccaf7cc6cb5",
+        "validation": 1000
+      },
+      {
+        "family": "suppobox",
+        "raw_records": 962,
+        "sha256": "0642256e044e525f3b6afff0bce715c1fe826a24d1677a2b0770b5ab9aa44d80",
+        "validation": 962
+      },
+      {
+        "family": "gozi",
+        "raw_records": 1000,
+        "sha256": "399ed0a2364dec4d562d5c48e4a0d175d90a676da9ce5450c5b17ac686d474a2",
+        "test": 1000
+      },
+      {
+        "family": "locky",
+        "raw_records": 1000,
+        "sha256": "c08c5ea5f56c0b92d4249530d85b9310b1e40a382dc44ffca9858d69e1beda95",
+        "test": 1000
+      },
+      {
+        "family": "publisher-legit",
+        "raw_records": 10000,
+        "sha256": "9c2f09e1797ac11ee70301834a41e2237542a2d15d0cda3f8216becce2af3f22",
+        "test": 2016,
+        "train": 6032,
+        "validation": 1952
+      }
+    ],
+    "splits": {
+      "test": {
+        "benign": 2016,
+        "malicious": 2000,
+        "malicious_families": [
+          "gozi",
+          "locky"
+        ],
+        "records": 4016,
+        "sha256": "fa1e8c810eff41ca6ac1014d836b7a0dde2790f547fa52a7a6f28f924d93bc16"
+      },
+      "train": {
+        "benign": 6032,
+        "malicious": 7996,
+        "malicious_families": [
+          "alureon",
+          "banjori",
+          "corebot",
+          "dircrypt",
+          "matsnu",
+          "necurs",
+          "padcrypt",
+          "ramnit"
+        ],
+        "records": 14028,
+        "sha256": "6d29269b0b5c685a428e499a2f4ac46ae633b3b5a320604f7615904981e2c203"
+      },
+      "validation": {
+        "benign": 1952,
+        "malicious": 1962,
+        "malicious_families": [
+          "cryptolocker",
+          "suppobox"
+        ],
+        "records": 3914,
+        "sha256": "685247c036aa8f5fd3f8910ffb959e0c880d31ed8b4b8723cae4dc656979072f"
+      }
+    },
+    "unique_records": 21958
+  },
+  "candidate_sha256": "0143ac2f4ae14b1f6c9504428cf102fbf267d7c83d77e48ae248c931cc631eb9",
+  "corpus_id": "umudga-v1-family-holdout-20260904",
+  "dataset_gates_passed": false,
+  "gates": {
+    "maximum_fpr": 0.01,
+    "minimum_family_recall": 0.5,
+    "minimum_negatives": 500,
+    "minimum_positives": 500,
+    "minimum_recall": 0.7
+  },
+  "limitations": [
+    "Publisher-generated DGA names and publisher legit list; not verified current operational traffic or infection labels.",
+    "uncalibrated n-gram class score; validation-selected operating threshold only",
+    "Same-publisher family holdout, not an independent deployment/time/environment holdout.",
+    "Related domains violate IID assumptions; Wilson bounds are descriptive only.",
+    "Subdomains/operational services and other attack families require separate labelled captures.",
+    "Final holdout is now inspected: further tuning needs a newly reserved final holdout.",
+    "No automatic deployment or promotion, even if these research dataset gates pass."
+  ],
+  "production_approved": false,
+  "schema_version": "drastha-dns-holdout-v1",
+  "test": {
+    "f1": 0.017839444995044598,
+    "fn": 1982,
+    "fp": 0,
+    "fpr": 0.0,
+    "fpr_interval_95": [
+      1.0842021724855044e-19,
+      0.0019018615564693883
+    ],
+    "per_family": {
+      "gozi": {
+        "f1": 0.0,
+        "fn": 1000,
+        "fp": 0,
+        "fpr": null,
+        "fpr_interval_95": null,
+        "precision": null,
+        "recall": 0.0,
+        "recall_interval_95": [
+          2.168404344971009e-19,
+          0.0038267584855551234
+        ],
+        "tn": 0,
+        "tp": 0
+      },
+      "locky": {
+        "f1": 0.03536345776031434,
+        "fn": 982,
+        "fp": 0,
+        "fpr": null,
+        "fpr_interval_95": null,
+        "precision": 1.0,
+        "recall": 0.018,
+        "recall_interval_95": [
+          0.011415740009567788,
+          0.028273255170507345
+        ],
+        "tn": 0,
+        "tp": 18
+      },
+      "publisher-legit": {
+        "f1": null,
+        "fn": 0,
+        "fp": 0,
+        "fpr": 0.0,
+        "fpr_interval_95": [
+          1.0842021724855044e-19,
+          0.0019018615564693883
+        ],
+        "precision": null,
+        "recall": null,
+        "recall_interval_95": null,
+        "tn": 2016,
+        "tp": 0
+      }
+    },
+    "precision": 1.0,
+    "recall": 0.009,
+    "recall_interval_95": [
+      0.005700499728577407,
+      0.014182040701612969
+    ],
+    "records": 4016,
+    "score_diagnostics": {
+      "brier": 0.38564274868467785,
+      "ece_10_bins": 0.3798310589301385,
+      "log_loss": 6.184751394879461,
+      "reliability_bins": [
+        {
+          "bin": 0,
+          "count": 3287,
+          "mean_score": 0.0044493110443395364,
+          "positive_fraction": 0.4326133252205659
+        },
+        {
+          "bin": 1,
+          "count": 85,
+          "mean_score": 0.1483259467571371,
+          "positive_fraction": 0.5176470588235295
+        },
+        {
+          "bin": 2,
+          "count": 60,
+          "mean_score": 0.24504590379957633,
+          "positive_fraction": 0.6833333333333333
+        },
+        {
+          "bin": 3,
+          "count": 46,
+          "mean_score": 0.3525057740868066,
+          "positive_fraction": 0.6086956521739131
+        },
+        {
+          "bin": 4,
+          "count": 42,
+          "mean_score": 0.44706299035481906,
+          "positive_fraction": 0.7380952380952381
+        },
+        {
+          "bin": 5,
+          "count": 39,
+          "mean_score": 0.5464971487904463,
+          "positive_fraction": 0.8974358974358975
+        },
+        {
+          "bin": 6,
+          "count": 33,
+          "mean_score": 0.6451305396827782,
+          "positive_fraction": 0.6060606060606061
+        },
+        {
+          "bin": 7,
+          "count": 46,
+          "mean_score": 0.7539580826888682,
+          "positive_fraction": 0.782608695652174
+        },
+        {
+          "bin": 8,
+          "count": 55,
+          "mean_score": 0.847158281802092,
+          "positive_fraction": 0.7818181818181819
+        },
+        {
+          "bin": 9,
+          "count": 323,
+          "mean_score": 0.9796942299358379,
+          "positive_fraction": 0.9287925696594427
+        }
+      ]
+    },
+    "threshold": 0.99999,
+    "tn": 2016,
+    "tp": 18
+  },
+  "test_gate_failures": [
+    "recall_below_minimum",
+    "family_recall_below_minimum:gozi",
+    "family_recall_below_minimum:locky"
+  ],
+  "upload_analysis": {
+    "analysis_provenance": {
+      "c2_metadata_mode": "observed-event-time-v1",
+      "configuration": {
+        "allow_destinations": [],
+        "allow_domains": [],
+        "approved_backup_destinations": [],
+        "c2": {
+          "cooldown_seconds": 300.0,
+          "maximum_interval_cv": 0.15,
+          "maximum_mean_interval_seconds": 120.0,
+          "maximum_mean_transfer_bytes": 2048.0,
+          "maximum_size_cv": 0.2,
+          "minimum_completed_ratio": 0.8,
+          "minimum_connections": 6,
+          "minimum_mean_interval_seconds": 2.0,
+          "minimum_observation_span_seconds": 30.0,
+          "window_seconds": 300.0
+        },
+        "ddos": {
+          "cooldown_seconds": 30.0,
+          "distributed_source_entropy_threshold": 0.85,
+          "distributed_source_minimum_sources": 3,
+          "min_incomplete_ratio": 0.8,
+          "minimum_target_port_concentration": 0.8,
+          "require_reflection_service_context": true,
+          "syn_attempt_threshold": 100,
+          "udp_amplification_ratio_threshold": 10.0,
+          "udp_packet_threshold": 1000,
+          "udp_reflection_bytes_threshold": 10000,
+          "udp_reflection_flow_threshold": 4,
+          "window_seconds": 5.0
+        },
+        "dns": {
+          "cooldown_seconds": 120.0,
+          "dga_lexical_digit_ratio_threshold": 0.15,
+          "dga_lexical_entropy_threshold": 3.0,
+          "dga_lexical_label_length_threshold": 10,
+          "dga_lexical_maximum_vowel_ratio": 0.25,
+          "dga_lexical_query_threshold": 3,
+          "dga_probability_threshold": 0.99999,
+          "encoded_txt_label_length_threshold": 24.0,
+          "encoded_txt_query_threshold": 4,
+          "tunnel_entropy_threshold": 3.5,
+          "tunnel_label_length_threshold": 18.0,
+          "tunnel_query_threshold": 20,
+          "tunnel_unique_subdomain_threshold": 15,
+          "window_seconds": 60.0
+        },
+        "enabled": [
+          "dns"
+        ],
+        "encrypted": {
+          "cooldown_seconds": 120.0,
+          "maximum_fingerprint_prevalence": 0.01,
+          "minimum_packet_size_anomaly": 0.75,
+          "minimum_sessions": 4,
+          "minimum_timing_anomaly": 0.75,
+          "window_seconds": 60.0
+        },
+        "exfiltration": {
+          "baseline_free_minimum_outbound_bytes": 10000000,
+          "baseline_free_minimum_outbound_ratio": 20.0,
+          "baseline_history_size": 50,
+          "baseline_multiplier": 4.0,
+          "cooldown_seconds": 600.0,
+          "minimum_flows": 3,
+          "minimum_outbound_bytes": 1000000,
+          "minimum_outbound_ratio": 8.0,
+          "single_flow_minimum_outbound_bytes": 10000000,
+          "single_flow_minimum_outbound_ratio": 20.0,
+          "window_seconds": 300.0
+        },
+        "feature_mode": "derived",
+        "internal_cidrs": [],
+        "name": "dns-domain-isolation-research-v1",
+        "passive_features": {
+          "anomaly_scale": 6,
+          "history_seconds": 3600,
+          "learning_ceiling": 0.75,
+          "maximum_cohorts": 128,
+          "maximum_history": 5000,
+          "minimum_baseline_sessions": 20,
+          "minimum_packets": 4,
+          "minimum_prevalence_sessions": 100,
+          "sequence_length": 8,
+          "size_scale_floor": 32,
+          "timing_scale_floor": 0.001
+        },
+        "recon": {
+          "cooldown_seconds": 30.0,
+          "unique_host_threshold": 20,
+          "unique_port_threshold": 20,
+          "window_seconds": 10.0
+        }
+      },
+      "configuration_sha256": "a2f82478342b7e2e1a8f52e56d785dc1a086fd1127d0c0f4e38243dec104510b",
+      "context_policy_sha256": "98335a89b0d45f4570d2c3b4ba82424118f680a4e891140a460d9bd0eca04cfc",
+      "detector_versions": {
+        "dns.analytics": "0.2.0",
+        "encrypted.metadata_anomaly": "0.2.0"
+      },
+      "dns_context_mode": "causal-60s-max10000-v1",
+      "dns_model_input": "full-query-v1",
+      "dns_model_research_status": "not_approved",
+      "dns_model_sha256": "9525690c5ef6924e7b45f790e131095abb3ce52266408b28e511fabbbd6070e2",
+      "dns_model_version": "1.0",
+      "dns_normalizer_version": "2.0",
+      "dns_score_semantics": "uncalibrated n-gram class score, not infection probability",
+      "engine_version": "3.0",
+      "feature_mode": "derived",
+      "parser_version": "passive-replay-v2",
+      "passive_feature_extractor": "packet-sequence-robust-v1",
+      "profile": "dns-domain-isolation-research-v1"
+    },
+    "findings": 1,
+    "incidents": 1,
+    "metrics": {
+      "f1": 0.017839444995044598,
+      "fn": 1982,
+      "fp": 0,
+      "fpr": 0.0,
+      "fpr_interval_95": [
+        1.0842021724855044e-19,
+        0.0019018615564693883
+      ],
+      "per_family": {
+        "gozi": {
+          "f1": 0.0,
+          "fn": 1000,
+          "fp": 0,
+          "fpr": null,
+          "fpr_interval_95": null,
+          "precision": null,
+          "recall": 0.0,
+          "recall_interval_95": [
+            2.168404344971009e-19,
+            0.0038267584855551234
+          ],
+          "tn": 0,
+          "tp": 0
+        },
+        "locky": {
+          "f1": 0.03536345776031434,
+          "fn": 982,
+          "fp": 0,
+          "fpr": null,
+          "fpr_interval_95": null,
+          "precision": 1.0,
+          "recall": 0.018,
+          "recall_interval_95": [
+            0.011415740009567788,
+            0.028273255170507345
+          ],
+          "tn": 0,
+          "tp": 18
+        },
+        "publisher-legit": {
+          "f1": null,
+          "fn": 0,
+          "fp": 0,
+          "fpr": 0.0,
+          "fpr_interval_95": [
+            1.0842021724855044e-19,
+            0.0019018615564693883
+          ],
+          "precision": null,
+          "recall": null,
+          "recall_interval_95": null,
+          "tn": 2016,
+          "tp": 0
+        }
+      },
+      "precision": 1.0,
+      "recall": 0.009,
+      "recall_interval_95": [
+        0.005700499728577407,
+        0.014182040701612969
+      ],
+      "records": 4016,
+      "tn": 2016,
+      "tp": 18
+    },
+    "quality": {
+      "conflicting_duplicate_uid_count": 0,
+      "degraded_reasons": [],
+      "duplicate_uid_count": 0,
+      "errors": [],
+      "exact_duplicate_count": 0,
+      "invalid_timestamp_count": 0,
+      "maximum_backward_skew_seconds": 0.0,
+      "out_of_order_records": 0,
+      "quarantined_records": [],
+      "records_accepted": 4016,
+      "records_quarantined": 0,
+      "records_received": 4016,
+      "records_rejected": 0,
+      "records_seen": 4016,
+      "rejection_ratio": 0.0,
+      "source": "dns-domain-holdout.jsonl",
+      "status": "healthy",
+      "stream": "passive:replay",
+      "unsupported_record_count": 0
+    },
+    "run_id": "8db31f542ccc485193047ee27cb018cd",
+    "scope": "isolated domain queries via actual upload-analysis; not captured flow/campaign accuracy",
+    "telemetry": {
+      "connection_records": 0,
+      "dns_records": 4016,
+      "encrypted_session_records": 0,
+      "supplied_labels_ignored": true
+    },
+    "unexpected_subtypes": {}
+  },
+  "upload_prediction_parity": true,
+  "validation": {
+    "f1": 0.0320962888665998,
+    "fn": 1930,
+    "fp": 0,
+    "fpr": 0.0,
+    "fpr_interval_95": [
+      0,
+      0.001964095199725644
+    ],
+    "per_family": {
+      "cryptolocker": {
+        "f1": 0.06201550387596899,
+        "fn": 968,
+        "fp": 0,
+        "fpr": null,
+        "fpr_interval_95": null,
+        "precision": 1.0,
+        "recall": 0.032,
+        "recall_interval_95": [
+          0.022757107858710962,
+          0.04482473808376865
+        ],
+        "tn": 0,
+        "tp": 32
+      },
+      "publisher-legit": {
+        "f1": null,
+        "fn": 0,
+        "fp": 0,
+        "fpr": 0.0,
+        "fpr_interval_95": [
+          0,
+          0.001964095199725644
+        ],
+        "precision": null,
+        "recall": null,
+        "recall_interval_95": null,
+        "tn": 1952,
+        "tp": 0
+      },
+      "suppobox": {
+        "f1": 0.0,
+        "fn": 962,
+        "fp": 0,
+        "fpr": null,
+        "fpr_interval_95": null,
+        "precision": null,
+        "recall": 0.0,
+        "recall_interval_95": [
+          4.336808689942018e-19,
+          0.003977318208502459
+        ],
+        "tn": 0,
+        "tp": 0
+      }
+    },
+    "precision": 1.0,
+    "recall": 0.0163098878695209,
+    "recall_interval_95": [
+      0.011576620905987023,
+      0.022933516478841627
+    ],
+    "records": 3914,
+    "score_diagnostics": {
+      "brier": 0.3195285264345335,
+      "ece_10_bins": 0.311912116924656,
+      "log_loss": 2.7933310304389156,
+      "reliability_bins": [
+        {
+          "bin": 0,
+          "count": 2898,
+          "mean_score": 0.005092788092049926,
+          "positive_fraction": 0.38164251207729466
+        },
+        {
+          "bin": 1,
+          "count": 95,
+          "mean_score": 0.14023542500771857,
+          "positive_fraction": 0.6526315789473685
+        },
+        {
+          "bin": 2,
+          "count": 52,
+          "mean_score": 0.24453971355940543,
+          "positive_fraction": 0.4423076923076923
+        },
+        {
+          "bin": 3,
+          "count": 49,
+          "mean_score": 0.34977271919584796,
+          "positive_fraction": 0.7755102040816326
+        },
+        {
+          "bin": 4,
+          "count": 38,
+          "mean_score": 0.44827020023607334,
+          "positive_fraction": 0.7105263157894737
+        },
+        {
+          "bin": 5,
+          "count": 33,
+          "mean_score": 0.5546820381642393,
+          "positive_fraction": 0.7878787878787878
+        },
+        {
+          "bin": 6,
+          "count": 49,
+          "mean_score": 0.6535979229215008,
+          "positive_fraction": 0.7346938775510204
+        },
+        {
+          "bin": 7,
+          "count": 67,
+          "mean_score": 0.7465677590690964,
+          "positive_fraction": 0.7910447761194029
+        },
+        {
+          "bin": 8,
+          "count": 68,
+          "mean_score": 0.8545640373967632,
+          "positive_fraction": 0.8676470588235294
+        },
+        {
+          "bin": 9,
+          "count": 565,
+          "mean_score": 0.9845233393759946,
+          "positive_fraction": 0.9415929203539823
+        }
+      ]
+    },
+    "threshold": 0.99999,
+    "tn": 1952,
+    "tp": 32
+  },
+  "validation_candidates": [
+    {
+      "fn": 1256,
+      "fp": 76,
+      "fpr": 0.0389344262295082,
+      "recall": 0.3598369011213048,
+      "threshold": 0.5,
+      "tn": 1876,
+      "tp": 706
+    },
+    {
+      "fn": 1430,
+      "fp": 33,
+      "fpr": 0.016905737704918034,
+      "recall": 0.2711518858307849,
+      "threshold": 0.9,
+      "tn": 1919,
+      "tp": 532
+    },
+    {
+      "fn": 1596,
+      "fp": 9,
+      "fpr": 0.004610655737704918,
+      "recall": 0.18654434250764526,
+      "threshold": 0.99,
+      "tn": 1943,
+      "tp": 366
+    },
+    {
+      "fn": 1746,
+      "fp": 1,
+      "fpr": 0.0005122950819672131,
+      "recall": 0.11009174311926606,
+      "threshold": 0.999,
+      "tn": 1951,
+      "tp": 216
+    },
+    {
+      "fn": 1860,
+      "fp": 1,
+      "fpr": 0.0005122950819672131,
+      "recall": 0.05198776758409786,
+      "threshold": 0.9999,
+      "tn": 1951,
+      "tp": 102
+    },
+    {
+      "fn": 1930,
+      "fp": 0,
+      "fpr": 0.0,
+      "recall": 0.0163098878695209,
+      "threshold": 0.99999,
+      "tn": 1952,
+      "tp": 32
+    },
+    {
+      "fn": 1951,
+      "fp": 0,
+      "fpr": 0.0,
+      "recall": 0.0056065239551478085,
+      "threshold": 0.999999,
+      "tn": 1952,
+      "tp": 11
+    }
+  ],
+  "validation_gate_failures": [
+    "recall_below_minimum",
+    "family_recall_below_minimum:cryptolocker",
+    "family_recall_below_minimum:suppobox"
+  ]
+}

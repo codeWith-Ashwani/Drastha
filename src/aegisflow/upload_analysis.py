@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from aegisflow.analysis_session import AnalysisProfile, UPLOAD_DEMO
+from aegisflow.analysis_session import AnalysisProfile, AnalysisSession, UPLOAD_DEMO
 from aegisflow.ingestion.passive_replay import prepare_replay
 from aegisflow.findings import resolve_findings as _deduplicate_and_resolve_conflicts
 from aegisflow.analysis_service import analyse_prepared
@@ -28,6 +28,7 @@ def analyse_uploaded_replay(
     repository: Any,
     *,
     profile: AnalysisProfile = UPLOAD_DEMO,
+    session: AnalysisSession | None = None,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     safe_name = Path(filename).name[:120]
@@ -40,4 +41,4 @@ def analyse_uploaded_replay(
 
     prepared = prepare_replay(content, safe_name, maximum_records=MAX_UPLOAD_RECORDS)
     return analyse_prepared(prepared, repository, filename=safe_name, upload_bytes=upload_bytes,
-                            started=started, profile=profile)
+                            started=started, profile=profile, session=session)

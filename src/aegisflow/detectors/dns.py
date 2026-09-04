@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from hashlib import sha256
 
-from aegisflow.dns_features import base_domain, leftmost_label, lexical_features, shannon_entropy
+from aegisflow.dns_features import base_domain, leftmost_label, lexical_features, normalized_domain, shannon_entropy
 from aegisflow.dns_model import DNSNgramModel
 from aegisflow.models import Alert, DNSEvent, Evidence
 from aegisflow.windowing import KeyedSlidingWindow
@@ -37,7 +37,7 @@ class DNSConfig:
 
 class DNSDetector:
     detector_id = "dns.analytics"
-    detector_version = "0.1.0"
+    detector_version = "0.2.0"
 
     def __init__(
         self,
@@ -47,6 +47,10 @@ class DNSDetector:
     ) -> None:
         self.config = config or DNSConfig()
         self.model = model
+        # An evaluated operating point belongs to its exact model, not an
+        # unrelated CLI/demo default. Research models enter only trusted sessions.
+        if model and "operating_threshold" in getattr(model, "payload", {}):
+            self.config = replace(self.config, dga_probability_threshold=model.payload["operating_threshold"])
         self.allowlisted_base_domains = {
             base_domain(domain) for domain in (allowlisted_base_domains or set())
         }
@@ -61,12 +65,14 @@ class DNSDetector:
     def process(self, event: DNSEvent) -> list[Alert]:
         alerts: list[Alert] = []
         root = base_domain(event.query)
+        model_input = (normalized_domain(event.query) if self.model and
+                       getattr(self.model, "payload", {}).get("input_mode") == "full-query-v1" else root)
         probability: float | None = None
         if self.model and root not in self.allowlisted_base_domains:
-            probability = self.model.predict_probability(root)
-            key = (event.src_ip, "dga_like_domain", root)
+            probability = self.model.predict_probability(model_input)
+            key = (event.src_ip, "dga_like_domain", model_input)
             if probability >= self.config.dga_probability_threshold and self._cooldown_ready(key, event.timestamp):
-                alerts.append(self._dga_alert(event, probability, root))
+                alerts.append(self._dga_alert(event, probability, model_input))
 
         label = leftmost_label(root)
         label_features = lexical_features(label)
@@ -160,7 +166,7 @@ class DNSDetector:
                     "queried_domain",
                     root,
                     "model input",
-                    "The approximate registered domain evaluated by the model.",
+                    "The exact normalized model input; full query for research candidates, two-label approximation for legacy models.",
                 ),
                 Evidence(
                     "domain_entropy",
@@ -172,6 +178,7 @@ class DNSDetector:
             limitations=(
                 "New legitimate domains, CDNs and hosted services can resemble DGA names.",
                 "The bundled demonstration model is not a production-quality threat classifier.",
+                "The n-gram score is not a calibrated probability of infection; threshold selection alone does not calibrate confidence.",
                 "Encrypted DNS that is not visible to Zeek cannot be evaluated.",
             ),
         )

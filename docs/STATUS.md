@@ -4,6 +4,17 @@ Last updated: 4 September 2026
 
 ## Production roadmap update
 
+Sprint 11's DGA corpus/threshold-selection research slice is delivered with 216
+tests passing. Public UMUDGA data: 21,958 domains, family-separated train,
+validation and reserved test, pinned PSL grouping and frozen candidate hashes.
+The final 4,016-domain upload-path evaluation has 18 TP / 0 FP / 1,982 FN /
+2,016 TN (0.9% recall), healthy telemetry and exact classifier/upload parity.
+The research model failed validation and final recall gates and was **not
+promoted**. Demo defaults/model/452-record results remain unchanged. Full
+production calibration, operational-service captures and probability calibration
+are still pending; see `docs/SPRINT_11.md`. Do not describe the entire calibration
+roadmap as finished or treat zero observed FP as production readiness.
+
 Sprint 10 independent evaluation and dataset controls are complete. The offline
 corpus runner pins source/label hashes, audits splits and evaluates through the
 shared analysis path. 196 tests pass. See `docs/SPRINT_10.md` for exact scope.

@@ -2,6 +2,13 @@
 
 ## Detection strategy
 
+Sprint 11 adds public-domain DGA training and **validation-selected decision
+thresholds**, not calibrated infection probabilities. The candidate failed
+unseen-family recall gates and normal deployment loading rejects it. Its full
+query input, pinned PSL split groups, artifact hashes, per-family measurements,
+score diagnostics and upload-path parity are documented in [Sprint 11](SPRINT_11.md).
+Legacy demo model, detector thresholds and policy remain unchanged.
+
 Sprint 10 adds independent corpus evaluation and stronger DNS split checks.
 The existing model is not retrained or promoted; external CTU results are weak
 and retained as measured. See [Sprint 10](SPRINT_10.md) before interpreting
@@ -15,7 +22,7 @@ single opaque traffic-to-attack model and keeps every finding explainable.
 
 ## DGA model
 
-The implemented supervised model is a Bernoulli/Multinomial-style Naive Bayes
+The implemented supervised model is a multinomial Naive Bayes
 classifier over normalized domain character 3-grams.
 
 ### Input and features

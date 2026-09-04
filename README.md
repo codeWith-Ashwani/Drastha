@@ -11,6 +11,14 @@ The repository contains a complete offline SIH demonstration and the foundation
 of a production system. The SIH demo is complete; production hardening is still
 in progress.
 
+Sprint 14 adds repeatable paced-load measurements through continuous ingestion,
+SQLite and the analyst API, with explicit latency/resource/failure gates, plus
+an offline Zeek integration checker. These are bounded synthetic measurements,
+not a production capacity guarantee; real-sensor and browser validation remain
+open. See [Sprint 14 measurement contract and results](docs/SPRINT_14.md),
+[Sprint 12 continuous-ingestion boundaries](docs/SPRINT_12.md) and
+[Sprint 13 protected access and signed evidence](docs/SPRINT_13.md).
+
 Sprint 11 adds a public DGA corpus, validation-only operating-point selection,
 frozen holdout evaluation through upload analysis, and research-model deployment
 guards. The public-data candidate **failed recall gates and was not promoted**;

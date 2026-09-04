@@ -103,10 +103,21 @@ machine. `drastha evaluate-demo` records an end-to-end prototype benchmark cover
 
 It excludes physical capture, Zeek conversion, HTTP transport, and browser render
 time. The generated report records the environment, iterations, total records,
-median/P95 processing time, sustained records/second, target, and pass/fail result.
+median/P95 processing time, aggregate records/second, target, and pass/fail result.
 The recorded Windows/Python 3.12 run processed 16,750 records at 1,127.74
 records/second (median 57.992 ms and P95 67.9 ms per 67-record iteration), so the
-declared 1,000-record/second prototype target passed on that machine.
+declared 1,000-record/second repeated-demo target passed on that machine. This is
+a repeated short-fixture benchmark, **not sustained independently offered load**;
+it does not prove that a growing signed continuous-ingest store keeps up.
+
+Sprint 14 adds the latter measurement through the real worker, SQLite projection
+and analyst ASGI API. The 60-second signed **1,000 records/sec experiment failed**:
+54,516 of 60,000 offered records were observed before the drain deadline, with
+5,484 pending and P95 visibility of 32.37 seconds among observed records. A signed
+100 records/sec, 60-second run passed the declared gates (6,000 observed, healthy,
+P95 137.11 ms). See [the measurement contract, raw reports and limits](SPRINT_14.md).
+Neither test includes a live mirror, browser rendering or TLS transport, and the
+earlier fast demo result must not be used as the current sustained-capacity claim.
 
 ## Verification commands
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sqlite3
 import sys
 import time
 from aegisflow.analysis_session import AnalysisProfile, AnalysisSession, DEPLOYMENT_BASELINE, UPLOAD_DEMO, STREAM_DEMO
@@ -54,6 +55,20 @@ def _add_detection_arguments(parser: argparse.ArgumentParser) -> None:
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="drastha", description="Drastha passive traffic replay")
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    follow = subparsers.add_parser("follow", help="follow local append-only JSONL with durable checkpoints and bounded recovery")
+    follow.add_argument("--input", required=True, type=Path)
+    follow.add_argument("--checkpoint", required=True, type=Path)
+    follow.add_argument("--database", help="Optional local SQLite analyst store; must differ from source/checkpoint")
+    follow.add_argument("--root", type=Path, default=Path.cwd())
+    follow.add_argument("--profile", choices=("deployment-baseline", "upload-demo", "stream-demo"), default="deployment-baseline")
+    follow.add_argument("--model", type=Path)
+    follow.add_argument("--once", action="store_true", help="drain complete available lines, then exit; future appends resume from checkpoint")
+    follow.add_argument("--poll-seconds", type=float, default=0.5)
+    follow.add_argument("--batch-records", type=int, default=64)
+    follow.add_argument("--max-line-bytes", type=int, default=262_144)
+    follow.add_argument("--max-journal-records", type=int, default=20_000)
+    follow.add_argument("--max-journal-bytes", type=int, default=67_108_864)
 
     replay = subparsers.add_parser("replay", help="replay an existing Zeek conn.log JSONL file")
     replay.add_argument("--input", required=True, type=Path)
@@ -614,6 +629,9 @@ def _analyse_shared(path, args):
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
+        if args.command == "follow":
+            from aegisflow.continuous_ingestion import run_continuous
+            return run_continuous(args)
         if args.command in {"fit-dns-candidate", "evaluate-dns-candidate"}:
             from aegisflow.dns_calibration import fit_candidate, evaluate_candidate, write_new_json
             output = args.candidate_output if args.command == "fit-dns-candidate" else args.report_output
@@ -696,7 +714,10 @@ def main(argv: list[str] | None = None) -> int:
                         stream.write(json.dumps(alert, sort_keys=True) + "\n")
                 return 0
             return _run_jsonl(result.conn_log, args)
-    except (OSError, RuntimeError, ValueError, ZeekRecordError, ZeekUnavailableError, ZeekExecutionError) as exc:
+    except KeyboardInterrupt:
+        print("Stopped; committed stream checkpoint is preserved.", file=sys.stderr)
+        return 130
+    except (OSError, RuntimeError, ValueError, sqlite3.DatabaseError, ZeekRecordError, ZeekUnavailableError, ZeekExecutionError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     return 1

@@ -1,0 +1,17 @@
+# Drastha background image
+
+Generated with the built-in image generation tool. Conceptual illustration, not a literal network wiring diagram.
+
+Asset: `web/public/images/drastha-passive-pipeline-bg.png`
+
+## Final prompt
+
+Use case: stylized-concept
+Asset type: Finished widescreen background image for Drastha, a passive cybersecurity traffic-analysis dashboard. Generate one premium, high-resolution 16:9 landscape image, ideally 2560x1440.
+Primary request: An architecturally meaningful, elegant dark 3D technical illustration showing the project's implementation as a PASSIVE ONE-WAY metadata analysis pipeline, integrated into a subdued network landscape. A usable website background asset, NOT a website screenshot.
+Composition: The left 45 percent must be almost empty deep black negative space for existing white headline and buttons. Concentrate the illustration in the right 55 percent, with comfortable breathing room at all edges. Gradually fade the illustration into black toward the left and outer edges. Restrained perspective, slightly elevated isometric view, highly polished editorial technology rendering, not a busy infographic.
+Subject: On the far-right rear, a charcoal production network backbone connects a few minimal network appliances. Its main connection continues uninterrupted. A small separate passive mirror tap copies a faint stream of orange packet-like light segments into an isolated monitoring enclave toward the right-center foreground. The copied path contains a clear single-direction optical gap/data-diode gateway, with tiny directional chevrons all pointing ONLY into the monitoring enclave. Absolutely no reverse path.
+Inside the enclave, three distinct small precision-machined dark modules are connected in sequence by the orange copied stream: an ingest buffer of stacked record-like slivers, a metadata feature-analysis module with subtle frequency bars and periodic timing traces etched onto its top surface, and a scoring module containing a restrained branching analytical lattice. The stream terminates at a small upright smoked-glass evidence panel with several abstract horizontal record lines and three small orange alert indicators. The panel is sculptural and minimal, NOT a detailed dashboard or legible UI. Small sealed packet blocks remain closed to imply encrypted metadata analysis without opening contents.
+Palette: Match the website exactly: almost-black #030303 background, matte charcoal #121212 and #1b1b1b architecture, subdued grey #303030 connections, selective warm orange #ff7638 and peach-orange #ff985f light. Tiny off-white edge highlights only. No blue, cyan, purple, green, or red. Orange occupies a small proportion of the frame.
+Materials and lighting: matte graphite, black anodized metal, delicately smoked glass, fine bevels, precise micro-details. Dim cinematic lighting, restrained warm edge glow and subtle contact shadows, crisp geometry without flashy bloom. Quiet, credible critical-infrastructure engineering aesthetic.
+Constraints: No text, letters, numbers, logos, watermark, labels, hero copy, buttons, map streets, geography, people, hooded hackers, padlock or shield stock icons, brains, robots, lightning, explosions. No hacking scene, no active probes, no blocking devices on the production link, no decrypted payloads. Not an exact engineering schematic; a concept illustration grounded in this real passive architecture. Preserve wide usable empty black space on the left.

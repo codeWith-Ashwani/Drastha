@@ -1,0 +1,245 @@
+{
+  "api_observed": 100,
+  "api_observed_before_offer_end": 99,
+  "completed_records_per_second_including_drain": 49.5258150834895,
+  "config": {
+    "batch_records": 64,
+    "disk_budget_mib": 512,
+    "drain_seconds": 30,
+    "latency_budget_ms": 1000,
+    "producer_lag_budget_ms": 100,
+    "rate": 50,
+    "rss_budget_mib": 512,
+    "seconds": 2.0,
+    "signed": true
+  },
+  "cpu_percent_one_core": 26.310589263103793,
+  "cpu_seconds": 0.53125,
+  "drain_seconds": 0.019148999999742955,
+  "elapsed_seconds": 2.019148999999743,
+  "emitted": 100,
+  "environment": {
+    "logical_cpus": 16,
+    "platform": "Windows-11-10.0.22631-SP0",
+    "python": "3.12.10"
+  },
+  "errors": [],
+  "experiment": "paced-conn-sqlite-asgi-v1",
+  "final_backlog_records": 0,
+  "findings": 0,
+  "gates": {
+    "all_offered_records_emitted": true,
+    "all_records_api_observed": true,
+    "api_visibility_p95_within_budget": true,
+    "disk_within_budget": true,
+    "no_rejections_healthy": true,
+    "no_runtime_errors": true,
+    "producer_kept_schedule": true,
+    "rss_within_budget": true,
+    "source_bytes_preserved": true
+  },
+  "incidents": 0,
+  "limitations": [
+    "Single-process independent paced producer thread; scheduling lag is a release gate",
+    "Conn-only synthetic workload; not accuracy evaluation, production traffic or all-protocol capacity",
+    "Write-start to first ASGI readback is an upper-bound visibility observation, not packet-to-alert latency",
+    "TestClient runs actual API/auth code but no TCP, TLS handshake, proxy or browser rendering",
+    "RSS/disk/backlog sampled per poll; peaks between samples and transient SQLite sidecars may be higher",
+    "CPU includes producer, worker and API; prepared workload and setup excluded from elapsed, included in RSS",
+    "Deadlines/resource stops checked between bounded polls; not preemptive process limits",
+    "No state resets or disabled quality/integrity checks; finite journal only, not an unlimited-service soak"
+  ],
+  "max_sampled_backlog_records": 1,
+  "offer_window_observed_records_per_second": 49.5,
+  "passed": true,
+  "producer_scheduling_lag_ms": {
+    "count": 100,
+    "max": 16.018500000427593,
+    "p50": 7.9385999979422195,
+    "p95": 14.78309999947669
+  },
+  "provenance": {
+    "c2_metadata_mode": "observed-event-time-v1",
+    "configuration": {
+      "allow_destinations": [],
+      "allow_domains": [],
+      "approved_backup_destinations": [],
+      "c2": {
+        "cooldown_seconds": 300.0,
+        "maximum_interval_cv": 0.15,
+        "maximum_mean_interval_seconds": 120.0,
+        "maximum_mean_transfer_bytes": 2048.0,
+        "maximum_size_cv": 0.2,
+        "minimum_completed_ratio": 0.8,
+        "minimum_connections": 6,
+        "minimum_mean_interval_seconds": 2.0,
+        "minimum_observation_span_seconds": 30.0,
+        "window_seconds": 300.0
+      },
+      "ddos": {
+        "cooldown_seconds": 30.0,
+        "distributed_source_entropy_threshold": 0.85,
+        "distributed_source_minimum_sources": 3,
+        "min_incomplete_ratio": 0.8,
+        "minimum_target_port_concentration": 0.8,
+        "require_reflection_service_context": true,
+        "syn_attempt_threshold": 100,
+        "udp_amplification_ratio_threshold": 10.0,
+        "udp_packet_threshold": 1000,
+        "udp_reflection_bytes_threshold": 10000,
+        "udp_reflection_flow_threshold": 4,
+        "window_seconds": 5.0
+      },
+      "dns": {
+        "cooldown_seconds": 120.0,
+        "dga_lexical_digit_ratio_threshold": 0.15,
+        "dga_lexical_entropy_threshold": 3.0,
+        "dga_lexical_label_length_threshold": 10,
+        "dga_lexical_maximum_vowel_ratio": 0.25,
+        "dga_lexical_query_threshold": 3,
+        "dga_probability_threshold": 0.5,
+        "encoded_txt_label_length_threshold": 24.0,
+        "encoded_txt_query_threshold": 4,
+        "tunnel_entropy_threshold": 3.5,
+        "tunnel_label_length_threshold": 18.0,
+        "tunnel_query_threshold": 20,
+        "tunnel_unique_subdomain_threshold": 15,
+        "window_seconds": 60.0
+      },
+      "enabled": [
+        "recon",
+        "ddos",
+        "c2",
+        "dns",
+        "encrypted",
+        "exfiltration"
+      ],
+      "encrypted": {
+        "cooldown_seconds": 120.0,
+        "maximum_fingerprint_prevalence": 0.01,
+        "minimum_packet_size_anomaly": 0.75,
+        "minimum_sessions": 4,
+        "minimum_timing_anomaly": 0.75,
+        "window_seconds": 60.0
+      },
+      "exfiltration": {
+        "baseline_free_minimum_outbound_bytes": 10000000,
+        "baseline_free_minimum_outbound_ratio": 20.0,
+        "baseline_history_size": 50,
+        "baseline_multiplier": 4.0,
+        "cooldown_seconds": 600.0,
+        "minimum_flows": 3,
+        "minimum_outbound_bytes": 1000000,
+        "minimum_outbound_ratio": 8.0,
+        "single_flow_minimum_outbound_bytes": 10000000,
+        "single_flow_minimum_outbound_ratio": 20.0,
+        "window_seconds": 300.0
+      },
+      "feature_mode": "derived",
+      "internal_cidrs": [],
+      "name": "deployment-baseline-uncalibrated-v1",
+      "passive_features": {
+        "anomaly_scale": 6,
+        "history_seconds": 3600,
+        "learning_ceiling": 0.75,
+        "maximum_cohorts": 128,
+        "maximum_history": 5000,
+        "minimum_baseline_sessions": 20,
+        "minimum_packets": 4,
+        "minimum_prevalence_sessions": 100,
+        "sequence_length": 8,
+        "size_scale_floor": 32,
+        "timing_scale_floor": 0.001
+      },
+      "recon": {
+        "cooldown_seconds": 30.0,
+        "unique_host_threshold": 20,
+        "unique_port_threshold": 20,
+        "window_seconds": 10.0
+      }
+    },
+    "configuration_sha256": "b128531814a8b0983ac879acc4d5147f880ffa9a924180336ef5e8a66562b659",
+    "context_policy_sha256": "98335a89b0d45f4570d2c3b4ba82424118f680a4e891140a460d9bd0eca04cfc",
+    "detector_versions": {
+      "c2.beacon": "0.1.0",
+      "ddos.behavioural": "0.2.0",
+      "dns.analytics": "0.2.0",
+      "encrypted.metadata_anomaly": "0.2.0",
+      "exfiltration.outbound": "0.1.0",
+      "recon.fanout": "0.1.0"
+    },
+    "dns_context_mode": "causal-60s-max10000-v1",
+    "dns_model_input": null,
+    "dns_model_research_status": null,
+    "dns_model_sha256": null,
+    "dns_model_version": null,
+    "dns_normalizer_version": "2.0",
+    "dns_score_semantics": "uncalibrated n-gram class score, not infection probability",
+    "engine_version": "3.0",
+    "feature_mode": "derived",
+    "parser_version": "passive-replay-v2",
+    "passive_feature_extractor": "packet-sequence-robust-v1",
+    "profile": "deployment-baseline-uncalibrated-v1"
+  },
+  "quality": {
+    "conflicting_duplicate_uid_count": 0,
+    "degraded_reasons": [],
+    "duplicate_uid_count": 0,
+    "errors": [],
+    "exact_duplicate_count": 0,
+    "invalid_timestamp_count": 0,
+    "maximum_backward_skew_seconds": 0.0,
+    "out_of_order_records": 0,
+    "quarantined_records": [],
+    "records_accepted": 100,
+    "records_quarantined": 0,
+    "records_received": 100,
+    "records_rejected": 0,
+    "records_seen": 100,
+    "rejection_ratio": 0.0,
+    "source": "sensor.jsonl",
+    "status": "healthy",
+    "stream": "drastha-continuous-v1",
+    "unsupported_record_count": 0
+  },
+  "queue_high_watermark": 2,
+  "sampled_peak_disk_mib": 0.2813692092895508,
+  "sampled_peak_rss_mib": 50.96875,
+  "samples": [
+    {
+      "api_observed": 0,
+      "backlog_records": 1,
+      "elapsed_seconds": 0.017,
+      "emitted": 1,
+      "rss_mib": 49.516
+    },
+    {
+      "api_observed": 52,
+      "backlog_records": 1,
+      "elapsed_seconds": 1.048,
+      "emitted": 53,
+      "rss_mib": 50.555
+    }
+  ],
+  "sustained_run": false,
+  "sustained_target_demonstrated": false,
+  "unobserved": 0,
+  "worker_poll_ms": {
+    "count": 78,
+    "max": 17.399999998815474,
+    "p50": 13.473400000293623,
+    "p95": 15.757500001200242
+  },
+  "workload": {
+    "bytes": 24189,
+    "name": "synthetic-conn-90pct-balanced-10pct-scan-v1",
+    "records": 100,
+    "sha256": "1e0644e47eb85c23e3426d3202ba56f725c8b1c604d340d5636825bfc0a6f9c4"
+  },
+  "write_to_api_observation_ms": {
+    "count": 100,
+    "max": 39.39690000152041,
+    "p50": 24.380299999393173,
+    "p95": 36.617699999624165
+  }
+}

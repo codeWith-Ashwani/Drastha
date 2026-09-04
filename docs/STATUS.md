@@ -4,6 +4,15 @@ Last updated: 4 September 2026
 
 ## Production roadmap update
 
+Sprint 13's protected-access/signed-evidence slice is delivered with 267 Python
+tests passing. Opt-in HTTPS-only role-based credentials, authenticated review
+identity, HMAC chain/current-state verification, export receipts and admin-only
+completed-report retention/holds are implemented for SQLite. The local demo is
+unchanged and security was not enabled on the running installation. Protected
+HTTP mixed replay still yields 452 accepted, 8 TP, 0 FP/FN, 86 TN and healthy
+quality. See `docs/SPRINT_13.md`: identity lifecycle, external audit anchoring,
+full evidence retention/encryption and production-load validation remain open.
+
 Sprint 12's bounded single-file continuous-ingestion/recovery slice is delivered:
 read-only JSONL follower, bounded batches, durable SQLite journal, strict late and
 duplicate quarantine, verified detector-state reconstruction and idempotent analyst

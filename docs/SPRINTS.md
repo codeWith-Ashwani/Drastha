@@ -17,7 +17,9 @@ Production follow-on sequence (the original sprint plan below is historical):
 - Sprint 12: bounded append-only JSONL ingestion, backpressure, transactional
   checkpoints and verified recovery slice delivered (see `SPRINT_12.md`).
   Seamless rotation, state compaction and unlimited-service operation remain open.
-- Sprint 13: authentication, retention and tamper-evident evidence.
+- Sprint 13: opt-in role-based token/Basic access, signed SQLite evidence and
+  dry-run completed-report retention slice delivered (see `SPRINT_13.md`).
+  SSO/session lifecycle, external anchoring and full evidence retention remain open.
 - Sprint 14: sustained end-to-end throughput and real-sensor/browser validation.
 - Sprint 15: operational deployment and runbooks.
 

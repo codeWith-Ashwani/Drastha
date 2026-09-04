@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 from pathlib import Path
 from typing import Any, Iterable
@@ -89,6 +90,11 @@ class IncidentRepository:
         self.database_path = Path(database_path)
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
         self.initialize()
+        if not hasattr(self, "_key"):
+            with self._connect() as connection:
+                table = connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='evidence_audit'").fetchone()
+                if table and connection.execute("SELECT 1 FROM evidence_audit LIMIT 1").fetchone():
+                    raise RuntimeError("Signed evidence store requires its configured audit key")
 
     def _connect(self) -> _SQLiteConnection:
         return _SQLiteConnection(self.database_path)
@@ -318,6 +324,12 @@ def read_jsonl(path: str | Path) -> list[dict[str, Any]]:
 
 def repository_from_url(database: str | Path) -> IncidentRepository:
     value = str(database)
+    if os.getenv("DRASTHA_AUDIT_KEY_FILE"):
+        if value.startswith(("postgres://", "postgresql://")):
+            raise ValueError("Signed evidence mode currently supports local SQLite only")
+        from aegisflow.security import load_audit_key
+        from aegisflow.audited_store import AuditedIncidentRepository
+        return AuditedIncidentRepository(value, load_audit_key())
     if value.startswith(("postgres://", "postgresql://")):
         from aegisflow.postgres_store import PostgreSQLIncidentRepository
         return PostgreSQLIncidentRepository(value)

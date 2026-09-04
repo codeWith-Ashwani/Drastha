@@ -7,9 +7,9 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from aegisflow.api_store import IncidentRepository, read_jsonl, repository_from_url
@@ -17,6 +17,8 @@ from aegisflow.demo import run_attack_story
 from aegisflow.upload_analysis import analyse_uploaded_replay
 from aegisflow.streaming_demo import stream_simulated_ip_traffic
 from aegisflow.analysis_session import configured_profile, UPLOAD_DEMO, STREAM_DEMO
+from aegisflow.security import AccessSettings, AccessMiddleware
+from aegisflow.audited_store import AuditedIncidentRepository, EvidenceIntegrityError
 
 
 class StatusUpdate(BaseModel):
@@ -34,6 +36,15 @@ class ReplayUploadRequest(BaseModel):
     content: str = Field(min_length=1, max_length=5_000_000)
 
 
+class RetentionRequest(BaseModel):
+    before: float
+    plan_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
+class RetentionHold(BaseModel):
+    held: bool
+
+
 def _repository() -> IncidentRepository:
     database = os.getenv("DRASTHA_DB") or os.getenv("AEGISFLOW_DB", "output/drastha.db")
     return repository_from_url(database)
@@ -49,8 +60,13 @@ def _load_demo(repository: IncidentRepository, root: Path) -> dict[str, int]:
     return repository.import_records(incidents, alerts, feedback)
 
 
-def create_app(repository: IncidentRepository | None = None) -> FastAPI:
+def create_app(repository: IncidentRepository | None = None, *, access: AccessSettings | None = None) -> FastAPI:
+    settings = access or AccessSettings.from_environment()
+    if settings.mode == "required" and repository is None and not os.getenv("DRASTHA_AUDIT_KEY_FILE"):
+        raise ValueError("Protected mode requires DRASTHA_AUDIT_KEY_FILE before opening a repository")
     store = repository or _repository()
+    if settings.mode == "required" and not isinstance(store, AuditedIncidentRepository):
+        raise ValueError("Protected mode requires a signed SQLite evidence store and external audit key")
     app = FastAPI(
         title="Drastha Analyst API",
         version="0.2.0",
@@ -60,16 +76,54 @@ def create_app(repository: IncidentRepository | None = None) -> FastAPI:
     app.state.demo_run = None
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+        allow_origins=list(settings.allowed_origins),
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(AccessMiddleware, settings=settings)
+
+    @app.exception_handler(EvidenceIntegrityError)
+    async def integrity_failure(request: Request, exc: EvidenceIntegrityError):
+        return JSONResponse({"detail": "Evidence integrity verification failed; operator review required"}, status_code=503)
+
+    def signed_admin_store():
+        if settings.mode != "required" or not isinstance(store, AuditedIncidentRepository):
+            raise HTTPException(status_code=403, detail="Protected administrator mode required")
+        return store
+
+    @app.get("/api/security/audit")
+    def verify_audit():
+        return signed_admin_store().verify_evidence()
+
+    @app.get("/api/security/retention")
+    def preview_retention(before: float):
+        try:
+            return signed_admin_store().retention_plan(before)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @app.post("/api/security/retention")
+    def apply_retention(request: RetentionRequest):
+        try:
+            return signed_admin_store().apply_retention(request.before, request.plan_sha256)
+        except ValueError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    @app.put("/api/security/retention/holds/{run_id}")
+    def retention_hold(run_id: str, request: RetentionHold):
+        try:
+            signed_admin_store().set_retention_hold(run_id, request.held)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail="analysis run not found") from exc
+        return {"run_id": run_id, "held": request.held}
 
     @app.get("/api/health")
     def health() -> dict[str, Any]:
         return {
             "status": "healthy",
             "mode": "passive_offline",
+            "access_mode": settings.mode,
+            "evidence_integrity": "hmac-verified-on-access" if isinstance(store, AuditedIncidentRepository) else "unsigned-demo",
             "return_path_required": False,
             "storage": "postgresql" if hasattr(store, "database_url") else "sqlite",
             "timestamp": time.time(),
@@ -112,14 +166,16 @@ def create_app(repository: IncidentRepository | None = None) -> FastAPI:
         return {"incident_id": incident_id, "status": request.status}
 
     @app.post("/api/incidents/{incident_id}/feedback", status_code=201)
-    def add_feedback(incident_id: str, request: FeedbackRequest) -> dict[str, Any]:
+    def add_feedback(incident_id: str, request: FeedbackRequest, http_request: Request) -> dict[str, Any]:
         timestamp = time.time()
-        identity = f"{incident_id}|{request.analyst}|{timestamp:.6f}|{request.disposition}"
+        principal = http_request.scope.get("drastha_principal")
+        analyst = principal.principal if principal else request.analyst
+        identity = f"{incident_id}|{analyst}|{timestamp:.6f}|{request.disposition}"
         record = {
             "feedback_id": sha256(identity.encode("utf-8")).hexdigest()[:20],
             "incident_id": incident_id,
             "disposition": request.disposition,
-            "analyst": request.analyst,
+            "analyst": analyst,
             "timestamp": timestamp,
             "notes": request.notes,
         }
@@ -135,11 +191,12 @@ def create_app(repository: IncidentRepository | None = None) -> FastAPI:
         incident = store.get_incident(incident_id)
         if incident is None:
             raise HTTPException(status_code=404, detail="incident not found")
-        return {
+        payload = {
             "format": "drastha-incident-v1",
             "exported_at": time.time(),
             "incident": incident,
         }
+        return {**payload, "integrity": store.sign_export(payload) if isinstance(store, AuditedIncidentRepository) else None}
 
     @app.post("/api/demo/load")
     def load_demo() -> dict[str, Any]:

@@ -31,6 +31,12 @@ output/*.db-journal
 output/*.db-wal
 output/*.db-shm
 output/*.db.lock-journal
+# Local security material; never version real credentials or signing keys.
+output/security/
+.env
+.env.local
+*.key
+bootstrap-tokens.json
 web/node_modules/
 web/dist/
 *.tsbuildinfo

@@ -75,6 +75,19 @@ class Evidence:
 
 
 @dataclass(frozen=True, slots=True)
+class IncidentConclusion:
+    """Evidence-backed analyst narrative inferred from passive telemetry."""
+
+    assessment: str
+    likely_objective: str
+    attack_stage: str
+    potential_impact: str
+    confidence_basis: tuple[str, ...]
+    uncertainty: str
+    inference_basis: str = "passive_metadata_only"
+
+
+@dataclass(frozen=True, slots=True)
 class Alert:
     alert_id: str
     detector_id: str
@@ -119,7 +132,27 @@ class Incident:
     risk_score: int
     severity: str
     scoring_factors: tuple[Evidence, ...]
+    conclusion: IncidentConclusion | None = None
     status: str = "open"
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
+class AggregateRisk:
+    """Replay-wide investigation priority derived from correlated incidents."""
+
+    score: int
+    severity: str
+    incident_count: int
+    distinct_threat_types: int
+    affected_sources: int
+    dominant_incident_id: str | None
+    dominant_threat_types: tuple[str, ...]
+    scoring_factors: tuple[Evidence, ...]
+    assessment: str
+    uncertainty: str
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

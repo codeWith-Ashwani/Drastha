@@ -8,6 +8,16 @@ const hero = read("hero.css");
 const root = base.match(/:root\s*\{([^}]+)\}/)[1];
 const tokens = new Map([...root.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2]]));
 
+test("header uses the selected blue glowing logo with accessible text and preserved proportions", () => {
+  const app = read("App.tsx");
+  assert.match(app, /className="brand-logo" src="\/images\/drastha-logo-blue\.png" alt="Drastha"/);
+  assert.match(base, /\.brand-logo\s*\{[^}]*height: auto;[^}]*object-fit: contain;/);
+  const png = readFileSync(new URL("../public/images/drastha-logo-blue.png", import.meta.url));
+  assert.equal(png.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+  assert.equal(png.readUInt32BE(16), 1536);
+  assert.equal(png.readUInt32BE(20), 1024);
+});
+
 test("hero and analyst surfaces share defined design tokens", () => {
   for (const source of [base, hero]) {
     for (const match of source.matchAll(/var\((--[\w-]+)/g)) {
@@ -53,4 +63,23 @@ test("severity and telemetry status retain distinct semantic colours", () => {
   assert.notEqual(tokens.get("--green"), tokens.get("--accent"));
   assert.match(base, /\.live-complete \{ border-left-color: var\(--green\)/);
   assert.match(base, /\.live-error \{ border-left-color: var\(--red\)/);
+});
+
+test("uploaded replay separates all four analysis outcome categories", () => {
+  const app = read("App.tsx");
+  for (const heading of ["Detected threat", "Approved context", "Insufficient evidence", "Invalid / rejected input"]) {
+    assert.match(app, new RegExp(heading.replace("/", "\\/")));
+  }
+  assert.match(app, /Not classified as benign or malicious/);
+  assert.match(app, /suppressed_by_detector/);
+  assert.match(base, /\.analysis-status-grid/);
+});
+
+test("dashboard presents one bounded replay-wide risk without calling it probability", () => {
+  const app = read("App.tsx");
+  const component = read("OverallRisk.tsx");
+  assert.match(app, /uploadResult\.overall_risk && <OverallRisk value=\{uploadResult\.overall_risk\}/);
+  assert.match(component, /Overall replay risk/);
+  assert.match(component, /overall investigation priority/);
+  assert.match(base, /\.overall-risk/);
 });

@@ -3,8 +3,11 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Iterable
+
+from aegisflow.incidents import alert_from_dict, build_incident_conclusion
 
 
 SCHEMA = """
@@ -95,6 +98,7 @@ class IncidentRepository:
                 table = connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='evidence_audit'").fetchone()
                 if table and connection.execute("SELECT 1 FROM evidence_audit LIMIT 1").fetchone():
                     raise RuntimeError("Signed evidence store requires its configured audit key")
+                self._backfill_incident_conclusions(connection)
 
     def _connect(self) -> _SQLiteConnection:
         return _SQLiteConnection(self.database_path)
@@ -114,9 +118,18 @@ class IncidentRepository:
 
     def _import_records(self, connection, incidents, alerts, feedback=()):
         """Connection-scoped upserts, shared by imports and atomic projection."""
-        incident_records = list(incidents)
+        incident_records = [dict(incident) for incident in incidents]
         alert_records = list(alerts)
         feedback_records = list(feedback)
+        alerts_by_id = {alert["alert_id"]: alert for alert in alert_records}
+        # Upgrade legacy/imported incidents once, at persistence time, so every
+        # review surface and export uses the same recorded conclusion.
+        for incident in incident_records:
+            if incident.get("conclusion"):
+                continue
+            conclusion = self._conclusion_for_record(incident, alerts_by_id)
+            if conclusion:
+                incident["conclusion"] = conclusion
         alert_to_incident = {
             alert_id: incident["incident_id"]
             for incident in incident_records
@@ -161,6 +174,43 @@ class IncidentRepository:
             "feedback": len(feedback_records),
         }
 
+    @staticmethod
+    def _conclusion_for_record(
+        incident: dict[str, Any], alerts_by_id: dict[str, dict[str, Any]]
+    ) -> dict[str, Any] | None:
+        members = [alerts_by_id[alert_id] for alert_id in incident.get("alert_ids", ())
+                   if alert_id in alerts_by_id]
+        if not members:
+            return None
+        return asdict(build_incident_conclusion(
+            [alert_from_dict(member) for member in members]
+        ))
+
+    def _backfill_incident_conclusions(self, connection: Any) -> None:
+        """Upgrade unsigned legacy rows without changing detection outcomes."""
+        incident_rows = connection.execute(
+            "SELECT incident_id, payload FROM incidents"
+        ).fetchall()
+        legacy = [(row["incident_id"], json.loads(row["payload"])) for row in incident_rows]
+        if not any(not payload.get("conclusion") for _, payload in legacy):
+            return
+        alert_rows = connection.execute("SELECT payload FROM alerts").fetchall()
+        alerts_by_id = {
+            alert["alert_id"]: alert
+            for row in alert_rows
+            for alert in (json.loads(row["payload"]),)
+        }
+        for incident_id, payload in legacy:
+            if payload.get("conclusion"):
+                continue
+            conclusion = self._conclusion_for_record(payload, alerts_by_id)
+            if conclusion:
+                payload["conclusion"] = conclusion
+                connection.execute(
+                    "UPDATE incidents SET payload = ? WHERE incident_id = ?",
+                    (json.dumps(payload, sort_keys=True), incident_id),
+                )
+
     def list_incidents(
         self, *, status: str | None = None, severity: str | None = None
     ) -> list[dict[str, Any]]:
@@ -197,7 +247,12 @@ class IncidentRepository:
                 (incident_id,),
             ).fetchall()
         incident = self._incident_from_row(row)
-        incident["alerts"] = [json.loads(item["payload"]) for item in alert_rows]
+        # The global queue is an upserted projection, not a historical run.
+        # Replays may reuse a source/start-time incident identity. Older rows
+        # remain for custody, but are not members of the current incident payload.
+        member_ids = set(incident.get("alert_ids", ()))
+        incident["alerts"] = [alert for item in alert_rows
+                              if (alert := json.loads(item["payload"]))["alert_id"] in member_ids]
         incident["feedback"] = [dict(item) for item in feedback_rows]
         return incident
 

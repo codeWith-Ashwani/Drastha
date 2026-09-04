@@ -43,6 +43,9 @@ class AnalystAPITests(unittest.TestCase):
         exported = self.client.get("/api/incidents/incident-1/export").json()
         self.assertEqual(exported["format"], "drastha-incident-v1")
         self.assertEqual(exported["incident"]["status"], "investigating")
+        self.assertEqual(exported["incident"]["conclusion"]["inference_basis"],
+                         "passive_metadata_only")
+        self.assertTrue(exported["incident"]["conclusion"]["likely_objective"])
 
     def test_invalid_status_and_missing_incident_are_visible(self) -> None:
         response = self.client.patch(

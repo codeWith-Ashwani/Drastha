@@ -46,7 +46,8 @@ class PassiveFeaturesTests(unittest.TestCase):
                                               "timing_sequence_anomaly": 1})
         next_rare = extractor.enrich(normalize_encrypted_record(metadata(401, attack=True)))
         self.assertEqual(next_rare.raw["feature_provenance"]["baseline_sessions"], 400)
-        self.assertAlmostEqual(next_rare.raw["features"]["fingerprint_prevalence"], 1/401)
+        self.assertEqual(next_rare.raw["features"]["fingerprint_prevalence"], 0)
+        self.assertEqual(extractor.summary()["counts"]["anomalous_sessions_excluded_from_baseline"], 2)
 
     def test_missing_sequences_and_warmup_are_not_benign_scores(self):
         extractor = PassiveFeatureExtractor()

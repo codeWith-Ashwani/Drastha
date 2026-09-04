@@ -1,0 +1,142 @@
+{
+  "baseline_records_added": 100,
+  "c2_source": "192.168.20.60",
+  "context_policy": {
+    "approved_bulk_transfer_rules": 3,
+    "authorized_scanner_sources": 1,
+    "source": "F:\\Drastha\\Drastha\\config\\context_policy.json",
+    "suppressed_connection_evaluations": 14,
+    "trusted_periodic_rules": 3
+  },
+  "evaluation": {
+    "classification_mismatches": [],
+    "f1_score": 1.0,
+    "false_negative": 0,
+    "false_positive": 0,
+    "false_positive_rate": 0.0,
+    "ground_truth_isolation": "evaluation fields used only after detector inference",
+    "identity_overlap": {
+      "detector_state_reset_from_ground_truth": false,
+      "note": "Ground-truth fields never control detector state. Use distinct identities or explicit externally defined scenario boundaries for isolated evaluation.",
+      "sources_present_in_attack_and_benign_units": []
+    },
+    "per_class": {
+      "botnet_c2_beaconing": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      },
+      "data_exfiltration": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      },
+      "dga_domain": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      },
+      "dns_tunnelling": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      },
+      "encrypted_session_malware": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      },
+      "reconnaissance_port_scan": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      },
+      "udp_reflection_amplification": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      },
+      "volumetric_ddos_syn_flood": {
+        "detected_units": 1,
+        "expected_units": 1,
+        "missed_units": 0
+      }
+    },
+    "precision": 1.0,
+    "recall": 1.0,
+    "scope": "scenario_endpoint_units",
+    "true_negative": 107,
+    "true_positive": 8,
+    "units": 115,
+    "unmatched_alerts": []
+  },
+  "feature_coverage": {
+    "active_cohorts": 1,
+    "configuration": {
+      "anomaly_scale": 6,
+      "history_seconds": 3600,
+      "learning_ceiling": 0.75,
+      "maximum_cohorts": 128,
+      "maximum_history": 5000,
+      "minimum_baseline_sessions": 20,
+      "minimum_packets": 4,
+      "minimum_prevalence_sessions": 100,
+      "sequence_length": 8,
+      "size_scale_floor": 32,
+      "timing_scale_floor": 0.001
+    },
+    "counts": {
+      "anomalous_sessions_excluded_from_baseline": 4,
+      "derived": 4,
+      "insufficient_evidence": 100,
+      "observations": 104,
+      "prevalence_warmup": 100,
+      "sequence_baseline_warmup": 20
+    },
+    "exfiltration_direction": "legacy-originator-view",
+    "extractor_version": "packet-sequence-robust-v1",
+    "mode": "compatibility",
+    "network_direction_counts": {
+      "unknown": 146
+    },
+    "network_direction_status": "unconfigured"
+  },
+  "findings": 8,
+  "fixture": "F:\\Drastha\\Drastha\\examples\\drastha_accuracy_fp_test_v2.json",
+  "incidents": 8,
+  "passed": true,
+  "quality": {
+    "conflicting_duplicate_uid_count": 0,
+    "degraded_reasons": [],
+    "duplicate_uid_count": 0,
+    "errors": [],
+    "exact_duplicate_count": 0,
+    "invalid_timestamp_count": 0,
+    "maximum_backward_skew_seconds": 0.0,
+    "out_of_order_records": 0,
+    "quarantined_records": [],
+    "records_accepted": 153,
+    "records_quarantined": 0,
+    "records_received": 153,
+    "records_rejected": 0,
+    "records_seen": 153,
+    "rejection_ratio": 0.0,
+    "source": "drastha_accuracy_fp_test_v2.json",
+    "status": "healthy",
+    "stream": "passive:replay",
+    "unsupported_record_count": 0
+  },
+  "records": 153,
+  "source_invalid_timestamps_corrected": 4,
+  "source_records_preserved": 53,
+  "subtypes": [
+    "dga_like_domain",
+    "distributed_source_syn_flood",
+    "dns_tunnelling",
+    "encrypted_session_metadata_anomaly",
+    "multi_host_port_scan",
+    "outbound_volume_anomaly",
+    "periodic_beacon",
+    "udp_reflection_amplification"
+  ]
+}

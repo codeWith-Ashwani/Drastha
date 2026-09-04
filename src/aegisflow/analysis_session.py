@@ -104,7 +104,7 @@ class AnalysisSession:
         self._alerts: list[Alert] = []
         self._finished = False
         self._final_alerts: list[Alert] = []
-        self.recon = ReconDetector(profile.recon)
+        self.recon = ReconDetector(profile.recon, authorized_sources=set(self.context_policy.authorized_scanner_sources))
         self.ddos = DDoSDetector(profile.ddos)
         self.c2 = C2BeaconDetector(
             profile.c2, allowlisted_destinations=set(profile.allow_destinations),

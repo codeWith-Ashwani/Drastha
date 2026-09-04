@@ -111,12 +111,49 @@ suppress an alert. Policy matches and suppression counts are exposed in replay o
 for auditability. Rules must be change-controlled because an overly broad approval
 can hide genuinely malicious traffic.
 
+## Evidence and quality states
+
+The dashboard reports four outcomes separately. A **detected threat** crossed a
+detector threshold. **Approved context** means an exact operator-owned policy
+suppressed a behavioural evaluation; per-detector counts remain visible.
+**Insufficient evidence** means an encrypted session could not yet be scored,
+usually during prevalence or sequence-baseline warm-up; it is neither benign nor
+malicious. **Invalid/rejected input** means strict schema, timestamp, duplicate,
+or ordering validation quarantined a record. Sorting for detector processing never
+erases an input-quality failure.
+
+The controlled accuracy fixture contains 53 supplied scenario records plus 100
+prior passive encrypted-session observations needed by the unchanged rarity and
+sequence extractor. Its 153-record behaviour-level result is a deterministic
+regression check, not a claim of production accuracy or generalization.
+
+## Overall replay risk
+
+After incident correlation, Drastha reports one replay-wide **investigation-priority
+score**. The highest individual incident risk is the base, so averaging can never
+hide a serious incident. Two transparent policy components are then added: three
+points per additional incident (maximum 15) and three points per additional threat
+category (maximum 15). The result is capped at 100 and uses the same low, medium,
+high, and critical priority bands as individual incidents.
+
+The aggregate is not a probability of compromise and does not claim that separate
+incidents are coordinated. It is a bounded triage signal for the complete replay.
+Poor input quality or insufficient feature coverage can still understate it.
+
 ## Confidence, severity, and risk
 
 - **Confidence** measures how strongly the observed features satisfy one detector.
 - **Severity** is the detector/policy impact category.
 - **Risk score** prioritizes a correlated incident using distinct threat weights,
   detector agreement, and a bounded confidence contribution.
+
+Every newly correlated incident also stores an analyst-facing conclusion derived
+only from its detector subtypes and measured evidence. It records the observed
+behaviour, likely objective, attack stage, potential impact, up to four supporting
+measurements, and combined detector limitations. This is deterministic narrative
+correlation rather than another ML classifier. It never reads evaluation labels,
+and its wording explicitly distinguishes a likely objective from proven attacker
+intent.
 
 Risk 100 means investigate first; it does not mean 100% certainty.
 

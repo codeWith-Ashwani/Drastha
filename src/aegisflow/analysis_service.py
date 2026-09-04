@@ -6,6 +6,7 @@ from pathlib import Path
 from uuid import uuid4
 from aegisflow.analysis_session import AnalysisSession, UPLOAD_DEMO
 from aegisflow.evaluation_scoring import score_ground_truth
+from aegisflow.incidents import aggregate_incident_risk
 
 
 def analyse_prepared(prepared, repository, *, filename="passive-replay", upload_bytes=0,
@@ -31,6 +32,7 @@ def analyse_prepared(prepared, repository, *, filename="passive-replay", upload_
 
     correlation_started = time.perf_counter()
     incidents = session.incidents()
+    overall_risk = aggregate_incident_risk(incidents)
     correlation_ms = round((time.perf_counter() - correlation_started) * 1000, 3)
 
     persistence_started = time.perf_counter()
@@ -85,14 +87,22 @@ def analyse_prepared(prepared, repository, *, filename="passive-replay", upload_
             "approved_bulk_transfer_rules": len(
                 context_policy.approved_bulk_transfer_endpoints
             ),
+            "authorized_scanner_sources": len(context_policy.authorized_scanner_sources),
             "suppressed_connection_evaluations": (
                 session.c2.context_suppressed_records
                 + session.exfiltration.context_suppressed_records
+                + session.recon.context_suppressed_records
             ),
+            "suppressed_by_detector": {
+                "command_and_control": session.c2.context_suppressed_records,
+                "data_exfiltration": session.exfiltration.context_suppressed_records,
+                "reconnaissance": session.recon.context_suppressed_records,
+            },
         },
         "evaluation": evaluation,
         "alerts": alert_records,
         "incidents": incident_records,
+        "overall_risk": overall_risk.to_dict(),
         "top_incident_id": top_incident["incident_id"] if top_incident else None,
         "loaded": loaded,
         "stages": [

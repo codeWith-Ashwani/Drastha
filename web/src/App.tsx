@@ -1,22 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { HeroTopology } from "./HeroTopology";
+import { IncidentConclusion, type IncidentConclusionData } from "./IncidentConclusion";
+import { ReplayEvidence } from "./ReplayEvidence";
+import { OverallRisk, type OverallRiskData } from "./OverallRisk";
 import {
   Activity, ArrowRight, Check, ChevronRight, CircleAlert, Download, Eye,
-  FileJson, FileUp, Filter, Network, Radio, RefreshCw, Search, Shield, X,
+  FileJson, FileUp, Filter, Network, Radio, RefreshCw, Search, X,
 } from "lucide-react";
 
 type Evidence = { name: string; observed: number | string; comparison: string; explanation: string };
 type Alert = {
-  alert_id: string; detector_id: string; threat_type: string; threat_class?: string; subtype: string;
+  alert_id: string; detector_id: string; detector_version?: string; threat_type: string; threat_class?: string; subtype: string;
   severity: string; confidence: number; window_start: number; window_end: number;
-  src_ip: string; dst_ip?: string; evidence: Evidence[]; limitations: string[];
+  src_ip: string; dst_ip?: string; flow_ids?: string[]; evidence: Evidence[]; limitations: string[];
 };
 type Feedback = { feedback_id: string; disposition: string; analyst: string; timestamp: number; notes: string };
 type Incident = {
   incident_id: string; src_ip: string; first_seen: number; last_seen: number;
   alert_ids: string[]; detector_ids: string[]; threat_types: string[];
   confidence: number; risk_score: number; severity: string; status: string;
-  scoring_factors: Evidence[]; alerts?: Alert[]; feedback?: Feedback[];
+  scoring_factors: Evidence[]; conclusion?: IncidentConclusionData | null; alerts?: Alert[]; feedback?: Feedback[];
 };
 type Metrics = { total_incidents: number; active_incidents: number; critical_incidents: number; feedback_records: number; average_risk_score: number };
 type DemoStage = { name: string; status: string; detail: string; duration_ms?: number; records?: number; rejected?: number; alerts?: number; incidents?: number };
@@ -28,7 +31,8 @@ function FeatureCoverageNote({ value }: { value?: FeatureCoverage }) {
   if (!value) return null;
   return <p className="scope-note"><b>Encrypted-session feature coverage ({value.mode}):</b> {value.counts.derived ?? 0} measured, {value.counts.supplied_compatibility ?? 0} supplied demo scores, {value.counts.insufficient_evidence ?? 0} insufficient evidence (including baseline warm-up). Missing evidence does not mean benign. <b>Network boundary:</b> {value.network_direction_status}; exfiltration uses {value.exfiltration_direction}.</p>;
 }
-type UploadResult = {
+export type UploadResult = {
+  run_id: string;
   verdict: string; headline: string; summary: string; filename: string; file_size_bytes: number;
   analysis_ms: number; quality: {
     status: string; records_received: number; records_accepted: number; records_rejected: number;
@@ -38,8 +42,13 @@ type UploadResult = {
   };
   feature_coverage?: FeatureCoverage;
   alerts: Alert[]; incidents: Incident[]; top_incident_id?: string; stages: DemoStage[]; scope_note: string;
+  overall_risk?: OverallRiskData;
   telemetry?: { connection_records: number; dns_records: number; encrypted_session_records: number; supplied_labels_ignored: boolean };
-  context_policy?: { source: string; trusted_periodic_rules: number; approved_bulk_transfer_rules: number; suppressed_connection_evaluations: number };
+  context_policy?: {
+    source: string; trusted_periodic_rules: number; approved_bulk_transfer_rules: number;
+    authorized_scanner_sources?: number; suppressed_connection_evaluations: number;
+    suppressed_by_detector?: Record<string, number>;
+  };
   evaluation?: { true_positive: number; false_positive: number; false_negative: number; true_negative: number; precision: number; recall: number; f1_score: number; false_positive_rate: number } | null;
 };
 type StreamRecord = {
@@ -74,12 +83,31 @@ const LABELS: Record<string, string> = {
   syn_flood: "Many incomplete connections to one service", udp_flood: "Unusually high UDP traffic",
   distributed_source_syn_flood: "Distributed-source SYN flood",
   udp_reflection_amplification: "UDP reflection or amplification pattern",
+  dominant_incident_risk: "Dominant incident",
+  incident_breadth_bonus: "Incident breadth",
+  threat_diversity_bonus: "Threat diversity",
   target_port_concentration: "Traffic focused on one service", distinct_suspicious_domains: "Generated-looking domains",
   model_probability: "ML model score", queried_domain: "Domain checked by the model",
   txt_query_ratio: "TXT-query share", fingerprint_prevalence: "Fingerprint prevalence",
   packet_size_sequence_anomaly: "Packet-size anomaly", timing_sequence_anomaly: "Timing anomaly",
   outbound_to_inbound_ratio: "Outbound-to-inbound ratio", related_findings_merged: "Repeated findings merged",
 };
+
+function ReplayOutcomeStatus({ result }: { result: UploadResult }) {
+  const insufficient = result.feature_coverage?.counts.insufficient_evidence ?? 0;
+  const suppressed = result.context_policy?.suppressed_connection_evaluations ?? 0;
+  const breakdown = result.context_policy?.suppressed_by_detector;
+  return <div className="analysis-status-grid" aria-label="Replay outcome categories">
+    <article className="outcome-detected"><span>Detected threat</span><b>{result.alerts.length} findings</b>
+      <small>Behaviour crossed a detector threshold and was correlated for review.</small></article>
+    <article className="outcome-suppressed"><span>Approved context</span><b>{suppressed} records suppressed</b>
+      <small>{breakdown ? `${breakdown.command_and_control ?? 0} C2 · ${breakdown.data_exfiltration ?? 0} exfiltration · ${breakdown.reconnaissance ?? 0} recon` : "Matched operator-controlled policy; retained as an auditable count."}</small></article>
+    <article className="outcome-insufficient"><span>Insufficient evidence</span><b>{insufficient} encrypted sessions</b>
+      <small>Not classified as benign or malicious; more passive baseline evidence is required.</small></article>
+    <article className="outcome-rejected"><span>Invalid / rejected input</span><b>{result.quality.records_rejected} records</b>
+      <small>Quarantined by strict schema, timestamp and quality validation.</small></article>
+  </div>;
+}
 const label = (value: string) => LABELS[value] || value.replaceAll("_", " ");
 const timeLabel = (value: number, origin?: number) => value < 946684800
   ? origin === undefined ? `Capture +${Math.round(value)}s` : `+${Math.max(0, Math.round(value - origin))}s`
@@ -96,6 +124,8 @@ function App() {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
   const [selected, setSelected] = useState<Incident | null>(null);
+  const [evidenceRun, setEvidenceRun] = useState<{ run: UploadResult; incidentId?: string } | null>(null);
+  const detailRequest = useRef(0);
   const [query, setQuery] = useState("");
   const [severity, setSeverity] = useState("all");
   const [loading, setLoading] = useState(true);
@@ -118,13 +148,13 @@ function App() {
       const [queue, summary, service] = await Promise.all([api<Incident[]>("/incidents"), api<Metrics>("/metrics"), api<Health>("/health")]);
       setIncidents(queue); setMetrics(summary); setHealth(service);
       if (service.demo_run) { setDemoRun(service.demo_run); setVisibleStages(service.demo_run.stages.length); }
-      if (keepSelection && selected) setSelected(await api<Incident>(`/incidents/${selected.incident_id}`));
+      if (keepSelection && selected) await openIncident(selected.incident_id);
     } catch (error) { setMessage((error as Error).message); }
     finally { setLoading(false); }
   };
   useEffect(() => {
     void refresh(false);
-    return () => eventSource.current?.close();
+    return () => { eventSource.current?.close(); detailRequest.current += 1; };
   }, []);
 
   const filtered = useMemo(() => incidents.filter((item) => {
@@ -132,8 +162,18 @@ function App() {
     return text.includes(query.toLowerCase()) && (severity === "all" || item.severity === severity);
   }), [incidents, query, severity]);
   const openIncident = async (id: string) => {
-    try { setSelected(await api<Incident>(`/incidents/${id}`)); }
-    catch (error) { setMessage((error as Error).message); }
+    const request = ++detailRequest.current;
+    setSelected(null); setEvidenceRun(null); setNotes("");
+    try {
+      const incident = await api<Incident>(`/incidents/${id}`);
+      if (request === detailRequest.current) setSelected(incident);
+    } catch (error) { if (request === detailRequest.current) setMessage((error as Error).message); }
+  };
+  const closeEvidence = () => {
+    detailRequest.current += 1; setSelected(null); setEvidenceRun(null); setNotes("");
+  };
+  const openReplayEvidence = (run: UploadResult, incidentId?: string) => {
+    closeEvidence(); setEvidenceRun({ run, incidentId });
   };
   const revealStages = async (stages: DemoStage[]) => {
     setVisibleStages(0);
@@ -142,6 +182,8 @@ function App() {
     }
   };
   const runDemo = async () => {
+    if (running || uploading || stream?.status === "running") return;
+    closeEvidence(); setStream(null);
     setRunning(true); setUploadResult(null); setMessage("Running the known attack replay…");
     try {
       const result = await api<DemoRun>("/demo/run", { method: "POST" });
@@ -151,6 +193,8 @@ function App() {
     finally { setRunning(false); }
   };
   const startLiveStream = () => {
+    if (running || uploading || stream?.status === "running") return;
+    closeEvidence();
     eventSource.current?.close();
     setUploadResult(null); setStream({ status: "running", processed: 0, total: 0, findings: [], riskScore: 0 });
     setMessage("Listening to the simulated one-way IP stream…");
@@ -191,8 +235,10 @@ function App() {
     };
   };
   const analyseFile = async (file?: File) => {
+    if (running || uploading || stream?.status === "running") return;
     if (!file) return;
     if (file.size > 5_000_000) { setMessage("Choose a replay smaller than 5 MB."); return; }
+    closeEvidence(); setStream(null);
     setUploading(true); setUploadResult(null); setMessage(`Analysing ${file.name}…`);
     try {
       const content = await file.text();
@@ -225,17 +271,17 @@ function App() {
 
   return <div className="app-shell">
     <header className="topbar">
-      <a className="brand" href="#top"><span><Shield size={18} /></span><div><b>Drastha</b><small>Passive threat review</small></div></a>
+      <a className="brand" href="#top"><img className="brand-logo" src="/images/drastha-logo-blue.png" alt="Drastha" width={1536} height={1024} /><div><small>Passive threat review</small></div></a>
       <div className="system-state"><span><i className={health?.status === "healthy" ? "online" : "offline"} />{health?.status === "healthy" ? "Sensor online" : "Checking sensor"}</span><span>{health?.storage || "local"} storage</span><span>One-way monitoring</span></div>
     </header>
 
     <main id="top">
       <section className="workbench" aria-labelledby="hero-heading">
-        <HeroTopology />
-        <div className="intro"><p className="eyebrow">Passive near-real-time intelligence</p><h1 id="hero-heading">Watch threats emerge from a one-way IP stream.</h1><p>Drastha passively receives simulated network records, detects and classifies suspicious behaviour, scores the risk and publishes explainable alerts as the stream arrives.</p><div className="intro-actions"><button className="primary" disabled={stream?.status === "running" || running || uploading} onClick={startLiveStream}><Radio size={16} />{stream?.status === "running" ? "Stream running…" : "Start live IP simulation"}<ArrowRight size={17} aria-hidden="true" /></button><button className="text-button" disabled={running || stream?.status === "running"} onClick={runDemo}><Activity size={14} />Run instant replay</button></div></div>
+        <HeroTopology active={running || uploading || stream?.status === "running"} />
+        <div className="intro"><p className="eyebrow">Passive near-real-time intelligence</p><h1 id="hero-heading">Watch threats emerge from a one-way IP stream.</h1><p>Drastha passively receives simulated network records, detects and classifies suspicious behaviour, scores the risk and publishes explainable alerts as the stream arrives.</p><div className="intro-actions"><button className="primary" disabled={stream?.status === "running" || running || uploading} onClick={startLiveStream}><Radio size={16} />{stream?.status === "running" ? "Stream running…" : "Start live IP simulation"}<ArrowRight size={17} aria-hidden="true" /></button><button className="text-button" disabled={running || uploading || stream?.status === "running"} onClick={runDemo}><Activity size={14} />Run instant replay</button></div></div>
         <div className="upload-card">
           <div className="upload-title"><FileUp size={19} /><div><b>Analyse your own replay</b><span>Zeek connection, DNS and TLS metadata · JSONL or JSON · up to 5 MB</span></div></div>
-          <button className={`dropzone ${dragging ? "dragging" : ""}`} disabled={uploading || running} onClick={() => fileInput.current?.click()} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); void analyseFile(event.dataTransfer.files[0]); }}>
+          <button className={`dropzone ${dragging ? "dragging" : ""}`} disabled={uploading || running || stream?.status === "running"} onClick={() => fileInput.current?.click()} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); void analyseFile(event.dataTransfer.files[0]); }}>
             <FileJson size={23} /><b>{uploading ? "Checking the replay…" : "Choose or drop a replay file"}</b><span>The file stays on this computer and is used only for this analysis.</span>
           </button>
           <input ref={fileInput} hidden type="file" accept=".jsonl,.ndjson,.json,application/json" onChange={(event) => void analyseFile(event.target.files?.[0])} />
@@ -259,14 +305,16 @@ function App() {
       </section>}
 
       {uploadResult && <section className={`result-panel ${uploadResult.verdict === "threat_detected" ? "result-danger" : "result-clear"}`}>
-        <div className="result-heading"><div className="verdict-icon">{uploadResult.verdict === "threat_detected" ? <CircleAlert size={22} /> : <Check size={22} />}</div><div><p className="eyebrow">Uploaded replay result</p><h2>{uploadResult.headline}</h2><p>{uploadResult.summary}</p></div>{uploadResult.top_incident_id && <button className="secondary" onClick={() => void openIncident(uploadResult.top_incident_id!)}><Eye size={15} />Review full evidence</button>}</div>
+        <div className="result-heading"><div className="verdict-icon">{uploadResult.verdict === "threat_detected" ? <CircleAlert size={22} /> : <Check size={22} />}</div><div><p className="eyebrow">Uploaded replay result · {uploadResult.filename}</p><h2>{uploadResult.headline}</h2><p>{uploadResult.summary}</p></div><button className="secondary" onClick={() => openReplayEvidence(uploadResult)}><Eye size={15} />Review full evidence</button></div>
+        {uploadResult.overall_risk && <OverallRisk value={uploadResult.overall_risk} label={label} />}
+        <ReplayOutcomeStatus result={uploadResult} />
         <div className="result-facts"><span><b>{uploadResult.quality.records_accepted}/{uploadResult.quality.records_received}</b> accepted records</span><span><b>{uploadResult.quality.records_rejected}</b> rejected</span><span><b>{uploadResult.quality.out_of_order_records}</b> out of order</span><span><b>{uploadResult.quality.duplicate_uid_count}</b> duplicate UIDs</span><span><b>{uploadResult.alerts.length}</b> findings</span><span><b>{uploadResult.incidents.length}</b> incidents</span><span><b>{uploadResult.analysis_ms} ms</b> analysis time</span><span><b>{uploadResult.quality.status}</b> data quality</span>{uploadResult.telemetry && <><span><b>{uploadResult.telemetry.dns_records}</b> DNS records</span><span><b>{uploadResult.telemetry.encrypted_session_records}</b> TLS records</span></>}{uploadResult.context_policy && <span><b>{uploadResult.context_policy.suppressed_connection_evaluations}</b> policy-approved records</span>}</div>
         {uploadResult.quality.degraded_reasons.length > 0 && <p className="scope-note"><b>Data-quality reason:</b> {uploadResult.quality.degraded_reasons.join("; ")}</p>}
         <FeatureCoverageNote value={uploadResult.feature_coverage} />
         {uploadResult.quality.errors.length > 0 && <p className="scope-note"><b>Quarantine sample:</b> {uploadResult.quality.errors.join(" · ")}</p>}
         {uploadResult.evaluation && <div className="result-facts"><span><b>{uploadResult.evaluation.true_positive}</b> TP</span><span><b>{uploadResult.evaluation.false_positive}</b> FP</span><span><b>{uploadResult.evaluation.false_negative}</b> FN</span><span><b>{uploadResult.evaluation.true_negative}</b> TN</span><span><b>{Math.round(uploadResult.evaluation.precision * 100)}%</b> precision</span><span><b>{Math.round(uploadResult.evaluation.recall * 100)}%</b> recall</span><span><b>{Math.round(uploadResult.evaluation.f1_score * 100)}%</b> F1</span><span><b>{Math.round(uploadResult.evaluation.false_positive_rate * 100)}%</b> FPR</span></div>}
         {uploadResult.evaluation && <p className="scope-note">These are behaviour-level scores against labels in this replay, not independent production accuracy. Separately pinned datasets are evaluated with the offline corpus workflow; unknown/background traffic is not assumed benign.</p>}
-        {uploadResult.alerts.length > 0 && <div className="finding-list">{uploadResult.alerts.map((alert) => <article className="finding" key={alert.alert_id}><div className="finding-top"><div><span className={`severity severity-${alert.severity}`}>{alert.severity}</span><h3>{alert.threat_class || label(alert.subtype)}</h3></div><b>{Math.round(alert.confidence * 100)}% confidence</b></div><p className="route">{alert.src_ip} <ArrowRight size={13} /> {alert.dst_ip || "multiple destinations"}</p><p className="finding-meaning">{label(alert.subtype)}</p><div className="evidence-list">{alert.evidence.slice(0, 4).map((item) => <div key={item.name}><span>{label(item.name)}</span><b>{item.observed}</b><small>{item.explanation}</small></div>)}</div><p className="caveat"><b>Keep in mind:</b> {alert.limitations[0]}</p></article>)}</div>}
+        {uploadResult.alerts.length > 0 && <div className="finding-list">{uploadResult.alerts.map((alert) => <article className="finding" key={alert.alert_id}><div className="finding-top"><div><span className={`severity severity-${alert.severity}`}>{alert.severity}</span><h3>{alert.threat_class || label(alert.subtype)}</h3></div><b>{Math.round(alert.confidence * 100)}% confidence</b></div><p className="route">{alert.src_ip} <ArrowRight size={13} /> {alert.dst_ip || "multiple destinations"}</p><p className="finding-meaning">{label(alert.subtype)}</p><div className="evidence-list">{alert.evidence.slice(0, 4).map((item) => <div key={item.name}><span>{label(item.name)}</span><b>{item.observed}</b><small>{item.explanation}</small></div>)}</div><p className="caveat"><b>Keep in mind:</b> {alert.limitations[0]}</p><button className="secondary" onClick={() => openReplayEvidence(uploadResult, uploadResult.incidents.find((item) => item.alert_ids.includes(alert.alert_id))?.incident_id)}><Eye size={14} />Review this incident</button></article>)}</div>}
         <p className="scope-note">{uploadResult.scope_note}</p>
       </section>}
 
@@ -277,10 +325,12 @@ function App() {
       </section>
     </main>
 
-    {selected && <div className="drawer-backdrop" onMouseDown={(event) => { if (event.currentTarget === event.target) setSelected(null); }}><aside className="drawer" aria-label="Incident details"><div className="drawer-head"><div><p className="eyebrow">Incident review</p><h2>{selected.threat_types.map(label).join(" + ")}</h2><span>{selected.src_ip} · #{selected.incident_id}</span></div><button aria-label="Close" onClick={() => setSelected(null)}><X size={19} /></button></div><div className="incident-verdict"><div className={`risk risk-${selected.severity}`}><b>{selected.risk_score}</b><span>risk</span></div><div><b>{selected.severity} priority</b><span>{Math.round(selected.confidence * 100)}% detector confidence</span><small>Risk is investigation priority, not certainty.</small></div></div><div className="drawer-actions"><label><span>Status</span><select value={selected.status} onChange={(event) => void setStatus(event.target.value)}><option value="open">Open</option><option value="investigating">Investigating</option><option value="resolved">Resolved</option><option value="false_positive">False positive</option></select></label><button onClick={() => void exportIncident()}><Download size={14} />Export evidence</button></div>
-        <section className="detail-section"><h3>What happened</h3><div className="timeline">{selected.alerts?.map((alert, index) => <article key={alert.alert_id}><span>{index + 1}</span><div><time>{timeLabel(alert.window_start, selected.first_seen)}</time><b>{label(alert.subtype)}</b><p>{alert.src_ip} → {alert.dst_ip || "multiple destinations"}</p></div></article>)}</div></section>
-        <section className="detail-section"><h3>Why Drastha flagged it</h3>{selected.alerts?.map((alert) => <div className="detail-finding" key={alert.alert_id}><div><b>{label(alert.subtype)}</b><span>{Math.round(alert.confidence * 100)}% confidence</span></div><div className="evidence-list">{alert.evidence.map((item) => <div key={item.name}><span>{label(item.name)}</span><b>{item.observed}</b><small>{item.explanation}</small><em>{item.comparison}</em></div>)}</div><p className="caveat"><b>Possible alternative:</b> {alert.limitations[0]}</p></div>)}</section>
-        <section className="detail-section"><h3>Why it is prioritized</h3><div className="score-list">{selected.scoring_factors.map((item) => <div key={item.name}><span>{label(item.name)}</span><b>+{item.observed}</b><small>{item.explanation}</small></div>)}</div></section>
+    {evidenceRun && <ReplayEvidence key={`${evidenceRun.run.run_id}:${evidenceRun.incidentId ?? "all"}`} run={evidenceRun.run} initialIncidentId={evidenceRun.incidentId} label={label} onClose={closeEvidence} />}
+    {selected && <div className="drawer-backdrop" onMouseDown={(event) => { if (event.currentTarget === event.target) closeEvidence(); }}><aside className="drawer" aria-label="Incident details"><div className="drawer-head"><div><p className="eyebrow">Incident review · latest saved state</p><h2>{selected.threat_types.map(label).join(" + ")}</h2><span>{selected.src_ip} · #{selected.incident_id}</span></div><button aria-label="Close" onClick={closeEvidence}><X size={19} /></button></div><div className="incident-verdict"><div className={`risk risk-${selected.severity}`}><b>{selected.risk_score}</b><span>risk</span></div><div><b>{selected.severity} priority</b><span>{Math.round(selected.confidence * 100)}% detector confidence</span><small>Risk is investigation priority, not certainty.</small></div></div><div className="drawer-actions"><label><span>Status</span><select value={selected.status} onChange={(event) => void setStatus(event.target.value)}><option value="open">Open</option><option value="investigating">Investigating</option><option value="resolved">Resolved</option><option value="false_positive">False positive</option></select></label><button onClick={() => void exportIncident()}><Download size={14} />Export evidence</button></div>
+        <IncidentConclusion value={selected.conclusion} />
+        <section className="detail-section"><h3>Detection timeline</h3><div className="timeline">{selected.alerts?.map((alert, index) => <article key={alert.alert_id}><span>{index + 1}</span><div><time>{timeLabel(alert.window_start, selected.first_seen)}</time><b>{label(alert.subtype)}</b><p>{alert.src_ip} → {alert.dst_ip || "multiple destinations"}</p></div></article>)}</div></section>
+        <section className="detail-section"><h3>Supporting measurements</h3>{selected.alerts?.map((alert) => <div className="detail-finding" key={alert.alert_id}><div><b>{label(alert.subtype)}</b><span>{Math.round(alert.confidence * 100)}% confidence</span></div><div className="evidence-list">{alert.evidence.map((item) => <div key={item.name}><span>{label(item.name)}</span><b>{item.observed}</b><small>{item.explanation}</small><em>{item.comparison}</em></div>)}</div><p className="caveat"><b>Possible alternative:</b> {alert.limitations[0]}</p></div>)}</section>
+        <section className="detail-section"><h3>Priority score</h3><div className="score-list">{selected.scoring_factors.map((item) => <div key={item.name}><span>{label(item.name)}</span><b>+{item.observed}</b><small>{item.explanation}</small></div>)}</div></section>
         <section className="detail-section"><h3>Record the decision</h3><div className="review-form"><input value={analyst} onChange={(event) => setAnalyst(event.target.value)} placeholder="Analyst name" /><textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="What did you verify?" rows={3} /><div><button className="danger" onClick={() => void submitFeedback("confirmed_malicious")}>Malicious</button><button onClick={() => void submitFeedback("needs_review")}>Needs review</button><button onClick={() => void submitFeedback("benign")}>Benign</button></div></div>{!!selected.feedback?.length && <div className="feedback-list">{selected.feedback.map((item) => <article key={item.feedback_id}><b>{label(item.disposition)}</b><span>{item.analyst}</span><p>{item.notes || "No notes added."}</p></article>)}</div>}</section>
       </aside></div>}
     {message && <button className="toast" onClick={() => setMessage("")}>{message}<X size={14} /></button>}

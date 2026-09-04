@@ -82,6 +82,11 @@ class DNSDetectorTests(unittest.TestCase):
         for index in range(4):
             alerts.extend(detector.process(event(index * 3, query)))
         self.assertEqual([item.subtype for item in alerts], ["dns_tunnelling"])
+        evidence = {item.name: item for item in alerts[0].evidence}
+        self.assertEqual(evidence["queries_to_base_domain"].comparison, ">= 4")
+        self.assertEqual(evidence["unique_subdomain_labels"].comparison,
+                         "supporting feature for encoded TXT path")
+        self.assertEqual(evidence["txt_query_ratio"].comparison, ">= 0.75")
 
 
 if __name__ == "__main__":

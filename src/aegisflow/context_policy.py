@@ -33,6 +33,7 @@ class EndpointRule:
 class ContextPolicy:
     trusted_periodic_endpoints: tuple[EndpointRule, ...] = ()
     approved_bulk_transfer_endpoints: tuple[EndpointRule, ...] = ()
+    authorized_scanner_sources: tuple[str, ...] = ()
     source: str = "none"
 
 
@@ -71,6 +72,9 @@ def load_context_policy(root: str | Path | None = None) -> ContextPolicy:
         raise ValueError(f"Could not load context policy {path}: {exc}") from exc
     if not isinstance(payload, dict):
         raise ValueError("context policy root must be an object")
+    scanners = payload.get("authorized_scanner_sources", [])
+    if not isinstance(scanners, list) or any(not isinstance(item, str) or not item.strip() for item in scanners):
+        raise ValueError("context policy authorized_scanner_sources must be an array of IP strings")
     return ContextPolicy(
         trusted_periodic_endpoints=_rules(
             payload.get("trusted_periodic_endpoints"), "trusted_periodic_endpoints"
@@ -79,5 +83,6 @@ def load_context_policy(root: str | Path | None = None) -> ContextPolicy:
             payload.get("approved_bulk_transfer_endpoints"),
             "approved_bulk_transfer_endpoints",
         ),
+        authorized_scanner_sources=tuple(item.strip() for item in scanners),
         source=str(path),
     )

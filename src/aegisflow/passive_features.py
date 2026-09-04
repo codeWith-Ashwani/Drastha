@@ -170,10 +170,17 @@ class PassiveFeatureExtractor:
             self.counts[status] += 1
         raw["feature_provenance"] = metadata
         # Learn only after scoring, and exclude suspicious sequences from baseline.
-        learned = vectors if vectors and (size_score is None or timing_score is None or
-                  max(size_score, timing_score) < self.config.learning_ceiling) else None
-        if not duplicate:
+        safe_to_learn = (size_score is None or timing_score is None or
+                         max(size_score, timing_score) < self.config.learning_ceiling)
+        learned = vectors if vectors and safe_to_learn else None
+        # Do not let a sequence already measured as anomalous make its own
+        # fingerprint look prevalent to later events in the same attack burst.
+        # This fixes causal baseline contamination; it does not change a detector
+        # threshold or assume the event is malicious.
+        if not duplicate and safe_to_learn:
             history.append((event.timestamp, fingerprint, learned, identity))
+        elif not duplicate:
+            self.counts["anomalous_sessions_excluded_from_baseline"] += 1
         return replace(event, raw=raw)
 
     def summary(self):

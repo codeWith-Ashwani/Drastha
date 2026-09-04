@@ -2,7 +2,6 @@
 .app-shell { overflow-x: clip; }
 .topbar { height: 100px; justify-content: flex-start; gap: var(--space-10); border-bottom: 0; background: color-mix(in srgb, var(--bg) 94%, transparent); }
 .topbar .brand { gap: var(--space-3); }
-.topbar .brand > span { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-line); border-radius: var(--radius-control); width: 40px; height: 40px; }
 .topbar .brand b { color: var(--text); font-size: 1.625rem; font-weight: 600; letter-spacing: -.06em; }
 .topbar .brand small { color: var(--muted); font-size: var(--font-meta); }
 .topbar .system-state { gap: 0; padding: var(--space-1); border: 1px solid var(--line); border-radius: var(--radius-pill); background: var(--surface); color: var(--text-secondary); font-size: var(--font-label); }
@@ -20,7 +19,13 @@
 .hero-topology::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--bg) 2%, color-mix(in srgb, var(--bg) 97%, transparent) 17%, color-mix(in srgb, var(--bg) 78%, transparent) 38%, color-mix(in srgb, var(--bg) 8%, transparent) 67%); }
 .topology-links { stroke: var(--line); stroke-linecap: round; stroke-linejoin: round; }
 .topology-junctions { fill: var(--surface-inset); stroke: var(--line-strong); }
-.topology-pulse { transform-box: fill-box; transform-origin: center; animation: route-pulse 4s ease-out infinite; }
+.topology-pulse { transform-box: fill-box; transform-origin: center; }
+.topology-flow { stroke: var(--accent); opacity: .65; }
+.topology-packets { stroke: var(--text); filter: drop-shadow(0 0 6px var(--accent)); }
+.hero-topology[data-active="true"] .topology-pulse { animation: route-pulse 2.4s ease-out infinite; }
+.hero-topology[data-active="true"] .topology-receiver { animation-delay: -.8s; }
+.hero-topology[data-active="true"] .topology-packets { animation: maze-flow 3s linear infinite; }
+.hero-topology[data-active="true"] .topology-flow { animation: maze-flow 8s linear infinite; }
 .workbench .intro { grid-column: 1 / -1; max-width: 740px; }
 .workbench .eyebrow { margin-bottom: var(--space-6); color: var(--accent-bright); font-size: var(--font-meta); letter-spacing: .15em; }
 .workbench h1 { max-width: 740px; margin-bottom: var(--space-6); font-size: clamp(52px, 5.6vw, 82px); font-weight: 600; line-height: 1.035; letter-spacing: -.06em; text-wrap: balance; }
@@ -47,6 +52,7 @@
 .workbench .sample-link svg { color: var(--accent); }
 .workbench :is(button, a):focus-visible, .topbar a:focus-visible { outline: 2px solid var(--accent-bright); outline-offset: 5px; }
 @keyframes route-pulse { 0%, 15% { transform: scale(.85); opacity: .9; } 90%, 100% { transform: scale(1.5); opacity: 0; } }
+@keyframes maze-flow { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -100; } }
 @media (min-width: 1600px) {
   .workbench { padding-top: 92px; min-height: 840px; }
 }
@@ -81,5 +87,5 @@
   .hero-topology svg { width: 210%; margin-left: -90%; opacity: .35; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .topology-pulse { animation: none; }
+  .hero-topology[data-active="true"] :is(.topology-pulse, .topology-packets, .topology-flow) { animation: none; }
 }

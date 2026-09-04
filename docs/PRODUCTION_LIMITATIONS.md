@@ -12,6 +12,12 @@ deferred because they are production requirements, not demo blockers.
 
 ## Capture and scale
 
+- Sprint 16 reduces repeated transaction/normalization work without bypassing
+  integrity checks. Default batch-64 still fails 1,000 records/sec latency;
+  explicit batch-256 meets visibility latency but fails producer scheduling.
+  Neither certifies that target. See `SPRINT_16.md` for retained measurements.
+  Full source-prefix/state scans and bounded journal recovery still limit scale;
+  verified checkpoint migration and compaction are not implemented.
 - Pin and harden the Zeek runtime used for continuous capture.
 - Sprint 14 adds 60-second synthetic conn-load/SQLite/ASGI timing and resource
   measurements. Signed 100 records/sec passed; signed 1,000 records/sec failed

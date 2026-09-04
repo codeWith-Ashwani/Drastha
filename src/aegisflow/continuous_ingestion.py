@@ -18,7 +18,7 @@ import time
 from uuid import uuid4
 
 from aegisflow.analysis_session import AnalysisSession
-from aegisflow.ingestion.passive_replay import prepare_replay, ReplayQualityError
+from aegisflow.ingestion.passive_replay import prepare_stream_record, ReplayQualityError
 from aegisflow.ingestion.replay_input import record_schema
 from aegisflow.telemetry_quality import TelemetryQuality
 
@@ -186,7 +186,7 @@ class ContinuousIngestor:
                 raise ValueError("Expected one JSON object per line; containers/manifests are not streams")
             if "records" in record:
                 raise ValueError("JSON containers/manifests are not individual stream records")
-            prepared = prepare_replay(_json(record), self.source.name, maximum_records=1)
+            prepared = prepare_stream_record(record, self.source.name)
         except (ValueError, UnicodeError, RecursionError) as exc:
             if isinstance(exc, UnicodeError):
                 self.quality.records_seen += 1
@@ -260,8 +260,13 @@ class ContinuousIngestor:
         row = self._db.execute("SELECT payload FROM stream_snapshot WHERE id=1").fetchone()
         if row:
             report = json.loads(row[0])
-            self.repository.import_records(report["incidents"], report["alerts"])
-            self.repository.save_analysis_run(report["run_id"], report)
+            project = getattr(self.repository, "project_analysis_run", None)
+            if callable(project):
+                project(report)
+            else:
+                # Compatibility for external repositories without atomic projection.
+                self.repository.import_records(report["incidents"], report["alerts"])
+                self.repository.save_analysis_run(report["run_id"], report)
 
     def poll(self):
         if self._closed or self._failed:

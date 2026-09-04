@@ -4,6 +4,14 @@ Last updated: 4 September 2026
 
 ## Production roadmap update
 
+Sprint 12's bounded single-file continuous-ingestion/recovery slice is delivered:
+read-only JSONL follower, bounded batches, durable SQLite journal, strict late and
+duplicate quarantine, verified detector-state reconstruction and idempotent analyst
+projection. 240 Python tests pass, including abrupt child-process termination and
+HTTP mixed-fixture parity (452 accepted, 8 TP, 0 FP/FN, 86 TN, healthy). See
+`docs/SPRINT_12.md` for measured results and limits. This is not unbounded production
+streaming: compaction, rotation handoff and sustained capacity remain open.
+
 Sprint 11's DGA corpus/threshold-selection research slice is delivered with 216
 tests passing. Public UMUDGA data: 21,958 domains, family-separated train,
 validation and reserved test, pinned PSL grouping and frozen candidate hashes.

@@ -14,7 +14,9 @@ deferred because they are production requirements, not demo blockers.
 
 - Pin and harden the Zeek runtime used for continuous capture.
 - Measure packet loss, sustained throughput, end-to-end latency, CPU, memory and disk.
-- Add backpressure, queue retention, replay checkpoints and multi-sensor ordering.
+- Sprint 12 adds bounded local-file backpressure and durable checkpoints/recovery.
+  Seamless rotation, state compaction/retention, multi-sensor ordering and sustained
+  overload capacity remain open; see `SPRINT_12.md` for explicit session budgets.
 - Add service-aware UDP reflection/amplification attribution.
 
 ## Security and operations

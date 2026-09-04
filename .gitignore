@@ -25,6 +25,12 @@ output/models/*
 !output/models/dns_dga_demo.json
 output/real_*
 output/*.db
+# Continuous-ingest journals contain local traffic; never commit SQLite sidecars.
+output/*.db.lock
+output/*.db-journal
+output/*.db-wal
+output/*.db-shm
+output/*.db.lock-journal
 web/node_modules/
 web/dist/
 *.tsbuildinfo

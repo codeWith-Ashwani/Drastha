@@ -14,7 +14,9 @@ Production follow-on sequence (the original sprint plan below is historical):
   threshold selection and release safeguards. The candidate failed recall gates;
   operational captures, production DGA generalization and probability calibration
   remain open. This is not a completed production-calibration milestone.
-- Sprint 12: continuous ingestion, backpressure, checkpoints and recovery.
+- Sprint 12: bounded append-only JSONL ingestion, backpressure, transactional
+  checkpoints and verified recovery slice delivered (see `SPRINT_12.md`).
+  Seamless rotation, state compaction and unlimited-service operation remain open.
 - Sprint 13: authentication, retention and tamper-evident evidence.
 - Sprint 14: sustained end-to-end throughput and real-sensor/browser validation.
 - Sprint 15: operational deployment and runbooks.

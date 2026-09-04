@@ -600,6 +600,7 @@ See [`docs/FINAL_JUDGE_DEMO_GUIDE.md`](docs/FINAL_JUDGE_DEMO_GUIDE.md).
 
 ## Documentation
 
+- [Protected access, signed evidence and retention (Sprint 13)](docs/SPRINT_13.md)
 - [Continuous ingestion and recovery (Sprint 12)](docs/SPRINT_12.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Build walkthrough](docs/BUILD_WALKTHROUGH.md)

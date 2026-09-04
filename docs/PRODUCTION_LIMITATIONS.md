@@ -21,9 +21,13 @@ deferred because they are production requirements, not demo blockers.
 
 ## Security and operations
 
-- Add authentication, role-based authorization and session management.
+- Sprint 13 adds opt-in HTTPS-only opaque-token/Basic roles for SQLite. SSO/MFA,
+  session/revocation lifecycle, rate limiting and production identity operations
+  remain open. Existing demo mode is still explicitly unprotected.
 - Protect secrets, encrypt stored evidence and define retention/deletion policy.
-- Add tamper-evident audit logs, dependency scanning and signed releases.
+- Sprint 13 adds HMAC audit/state verification and signed export receipts; external
+  head anchoring, key custody/rotation, dependency scanning and signed releases
+  remain open. Report-only retention is not complete evidence erasure.
 - Complete a formal threat model, penetration test and incident-response procedure.
 - Add high availability, database backup/restore and upgrade/migration testing.
 

@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import sqlite3
 from pathlib import Path
 import sys
 
@@ -30,6 +31,21 @@ def main(argv=None):
     restore.add_argument("--destination", type=Path, required=True)
     restore.add_argument("--audit-key", type=Path, required=True)
     restore.add_argument("--expected-head", type=Path, required=True)
+    for name in ("stream-backup", "stream-check", "stream-restore"):
+        cmd = commands.add_parser(name, help="Coordinated same-engine recovery; never automatic cutover")
+        cmd.add_argument("--source", type=Path, required=True)
+        cmd.add_argument("--audit-key", type=Path, required=True)
+        cmd.add_argument("--root", type=Path, default=ROOT)
+        cmd.add_argument("--model", type=Path)
+        cmd.add_argument("--profile", choices=("deployment-baseline", "upload-demo", "stream-demo"), default="deployment-baseline")
+        if name == "stream-backup":
+            cmd.add_argument("--journal", type=Path, required=True)
+            cmd.add_argument("--database", type=Path, required=True)
+        else:
+            cmd.add_argument("--bundle", type=Path, required=True)
+            cmd.add_argument("--expected-anchor", type=Path, required=True)
+        if name != "stream-check":
+            cmd.add_argument("--destination", type=Path, required=True)
     for name in ("preflight", "serve"):
         cmd = commands.add_parser(name)
         for option in ("database", "audit-key", "auth", "cert", "tls-key", "web"):
@@ -40,7 +56,19 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         key = read_key(args.audit_key)
-        if args.command == "init-store":
+        if args.command.startswith("stream-"):
+            from aegisflow.analysis_session import AnalysisSession, DEPLOYMENT_BASELINE, UPLOAD_DEMO, STREAM_DEMO
+            from aegisflow.stream_recovery import backup_stream, restore_stream, check_stream
+            profile = {"deployment-baseline": DEPLOYMENT_BASELINE, "upload-demo": UPLOAD_DEMO,
+                       "stream-demo": STREAM_DEMO}[args.profile]
+            factory = lambda: AnalysisSession.from_root(args.root, profile, model_path=args.model)
+            if args.command == "stream-backup":
+                result = backup_stream(args.source, args.journal, args.database, args.destination, key, factory)
+            elif args.command == "stream-check":
+                result = check_stream(args.bundle, args.source, key, read_json(args.expected_anchor), factory)
+            else:
+                result = restore_stream(args.bundle, args.source, args.destination, key, read_json(args.expected_anchor), factory)
+        elif args.command == "init-store":
             args.directory.mkdir(mode=0o700, parents=False, exist_ok=False)
             result = AuditedIncidentRepository(args.directory / "analyst.db", key).verify_evidence()
         elif args.command == "verify":
@@ -66,7 +94,7 @@ def main(argv=None):
                 return 0
         print(json.dumps(result, sort_keys=True))
         return 0
-    except (OSError, ValueError, RuntimeError, KeyError) as exc:
+    except (OSError, ValueError, RuntimeError, KeyError, TypeError, sqlite3.Error) as exc:
         print(f"Operation refused: {exc}", file=sys.stderr)
         return 2
 

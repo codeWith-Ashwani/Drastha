@@ -11,6 +11,12 @@ The repository contains a complete offline SIH demonstration and the foundation
 of a production system. The SIH demo is complete; production hardening is still
 in progress.
 
+Sprint 17 adds [coordinated journal/analyst backup and same-engine recovery](docs/SPRINT_17.md).
+The operator tools validate a signed recovery point, reconstruct detection state
+on disposable copies, and preserve the selected analyst reviews and holds.
+Original source identity is required; cross-version migration and automatic
+cutover remain unsupported. Follow the [recovery runbook](docs/OPERATIONS_RUNBOOK.md#8-coordinated-stream-recovery-sprint-17).
+
 Sprint 16 adds [atomic continuous-ingest publication and measured optimization](docs/SPRINT_16.md)
 while retaining full source and signed-evidence verification. The finite profiler
 run is about 23% faster; both 1,000 records/sec experiments still fail at least one

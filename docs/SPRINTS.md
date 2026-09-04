@@ -23,7 +23,10 @@ Production follow-on sequence (the original sprint plan below is historical):
 - Sprint 14: paced continuous-ingest/SQLite/API load and sensor-check tooling
   slice delivered (see `SPRINT_14.md`). Real Zeek execution is blocked by the
   missing installation; browser/TLS validation and broader capacity remain open.
-- Sprint 15: operational deployment and runbooks.
+- Sprint 15: protected loopback launch, read-only preflight, verified analyst-store
+  backup/restore and operations runbook slice delivered (see `SPRINT_15.md`).
+  Remote deployment/service supervision, coordinated stream recovery and host
+  security controls remain open; production readiness is not claimed.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

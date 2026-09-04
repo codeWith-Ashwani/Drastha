@@ -76,6 +76,11 @@ class AccessSettings:
             return cls(mode=mode)
         if mode != "required" or not path:
             raise ValueError("Protected mode requires DRASTHA_AUTH_FILE")
+        return cls.from_file(path)
+
+    @classmethod
+    def from_file(cls, path):
+        """Load explicit protected configuration without mutating environment."""
         config_path = Path(path)
         if config_path.stat().st_size > 65_536:
             raise ValueError("Auth configuration too large")
@@ -83,7 +88,7 @@ class AccessSettings:
             config = json.loads(config_path.read_text(encoding="utf-8"))
             credentials = tuple(Credential(**item) for item in config["credentials"])
             origins = tuple(config.get("allowed_origins", ()))
-            return cls(mode, credentials, origins)
+            return cls("required", credentials, origins)
         except (KeyError, TypeError) as exc:
             raise ValueError("Malformed auth configuration") from exc
 

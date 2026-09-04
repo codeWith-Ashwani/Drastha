@@ -33,6 +33,9 @@ output/*.db-shm
 output/*.db.lock-journal
 # Local security material; never version real credentials or signing keys.
 output/security/
+output/backups/
+output/restore/
+output/operations/
 .env
 .env.local
 *.key

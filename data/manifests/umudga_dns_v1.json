@@ -1,0 +1,37 @@
+{
+  "schema_version": "drastha-dns-corpus-v1",
+  "corpus_id": "umudga-v1-family-holdout-20260904",
+  "source_url": "https://data.mendeley.com/datasets/y8ph45msv8/1",
+  "license": "MIT",
+  "license_url": "https://data.mendeley.com/datasets/y8ph45msv8/1",
+  "citation": "Zago, Gil Perez and Martinez Perez (2020), UMUDGA, DOI 10.17632/y8ph45msv8.1",
+  "label_caveat": "Publisher-generated DGA names and publisher legit list; not verified current operational traffic or infection labels.",
+  "split_seed": "drastha-sprint11-v1",
+  "public_suffix_list": {
+    "path": "data/raw/UMUDGA/public_suffix_list.txt",
+    "sha256": "0e07be8daca66c85f12cf84827c6a9d09efd5950a89385621cf9df5c1c52e001",
+    "size": 333246,
+    "source_url": "https://publicsuffix.org/list/public_suffix_list.dat",
+    "version": "2026-09-02_06-03-53_UTC",
+    "commit": "0f1fa47ec45056a19c2fdcd32a08442de9715d12",
+    "license": "MPL-2.0",
+    "license_url": "https://mozilla.org/MPL/2.0/"
+  },
+  "threshold_grid": [0.5, 0.9, 0.99, 0.999, 0.9999, 0.99999, 0.999999],
+  "gates": {"maximum_fpr": 0.01, "minimum_recall": 0.7, "minimum_family_recall": 0.5, "minimum_positives": 500, "minimum_negatives": 500},
+  "sources": [
+    {"family":"alureon","label":1,"split":"train","path":"data/raw/UMUDGA/alureon.txt","file_id":"0a556836-5e33-446f-824b-d593983f0f1f","sha256":"4ee6922bf8859b85faa42ad3590c2d890fbe151db79865b8b570c9d274a4e654","size":15000,"records":1000},
+    {"family":"banjori","label":1,"split":"train","path":"data/raw/UMUDGA/banjori.txt","file_id":"3ac2a3d8-ee3c-47ee-8031-8005a234d548","sha256":"552770009ba5640d37b5a7eee310434a1d8ff641c5c69702e75f3d6c035bcabb","size":24000,"records":1000},
+    {"family":"corebot","label":1,"split":"train","path":"data/raw/UMUDGA/corebot.txt","file_id":"d473f06f-0692-4ac5-ad48-657519ce539f","sha256":"26e2535ead55fbfecef8a0e0e3214914ce62f0c03062c9bbaa744d8f2430d6f2","size":27623,"records":1000},
+    {"family":"dircrypt","label":1,"split":"train","path":"data/raw/UMUDGA/dircrypt.txt","file_id":"40ac4804-aaf0-4122-b315-fce0740431ed","sha256":"97938e517ba99dc9781cd437982cf304cb3c658246cd4267801b81b148832470","size":19056,"records":1000},
+    {"family":"matsnu","label":1,"split":"train","path":"data/raw/UMUDGA/matsnu.txt","file_id":"ce44a56c-394e-42b0-8eb1-2c4fbf128eb2","sha256":"32fbd0fb5844172b92ff45f34c23c6be4867a3be19db988a6866a0abee2fb2d6","size":20377,"records":996},
+    {"family":"necurs","label":1,"split":"train","path":"data/raw/UMUDGA/necurs.txt","file_id":"4b87ed44-a77a-4f9f-8d10-4af6e1d97f37","sha256":"8c9bf2684cc57717606b0ce1e7a6f3d91d9e83ca9be957ad844a4e3e6596b147","size":17919,"records":1000},
+    {"family":"padcrypt","label":1,"split":"train","path":"data/raw/UMUDGA/padcrypt.txt","file_id":"6b559ca1-4a41-418f-94b7-a13c23045c37","sha256":"418e8ea071e74bba4db1d1060f85270a932ac7a8990426318ebd374f9c4806aa","size":21456,"records":1000},
+    {"family":"ramnit","label":1,"split":"train","path":"data/raw/UMUDGA/ramnit.txt","file_id":"214ed392-19a2-40e8-a5e2-fc179ba0bb4d","sha256":"21f274e8f5888354c5d1611a44b5a09cdc42af89c80b02b6e7274bdc85286cc4","size":18113,"records":1000},
+    {"family":"cryptolocker","label":1,"split":"validation","path":"data/raw/UMUDGA/cryptolocker.txt","file_id":"288f753d-8f14-4400-a4f8-2035161f5784","sha256":"091c882662a6b72863b0b4e2ead973218c38b2b84e1810e2005daccaf7cc6cb5","size":18797,"records":1000},
+    {"family":"suppobox","label":1,"split":"validation","path":"data/raw/UMUDGA/suppobox.txt","file_id":"9184bf29-17ef-4d60-adf1-df14d0bbc717","sha256":"0642256e044e525f3b6afff0bce715c1fe826a24d1677a2b0770b5ab9aa44d80","size":17262,"records":962},
+    {"family":"gozi","label":1,"split":"test","path":"data/raw/UMUDGA/gozi.txt","file_id":"c73c1327-3905-4823-8225-42713dfd73ed","sha256":"399ed0a2364dec4d562d5c48e4a0d175d90a676da9ce5450c5b17ac686d474a2","size":23479,"records":1000},
+    {"family":"locky","label":1,"split":"test","path":"data/raw/UMUDGA/locky.txt","file_id":"c4cc5f8b-6d27-4c27-b0c5-e51e81aea259","sha256":"c08c5ea5f56c0b92d4249530d85b9310b1e40a382dc44ffca9858d69e1beda95","size":17081,"records":1000},
+    {"family":"publisher-legit","label":0,"split":"group-hash-60-20-20","path":"data/raw/UMUDGA/legit.txt","file_id":"1a9e4fea-f464-4912-b22f-089ff3fa009a","sha256":"9c2f09e1797ac11ee70301834a41e2237542a2d15d0cda3f8216becce2af3f22","size":131023,"records":10000}
+  ]
+}

@@ -10,6 +10,10 @@ Production follow-on sequence (the original sprint plan below is historical):
   external baseline findings and limitations are in `SPRINT_10.md`.
 - Sprint 11: feature-compatible labelled corpora, validation-only calibration and
   an independently reserved final holdout; no tuning on the inspected CTU run.
+  DGA research slice delivered (see `SPRINT_11.md`): public-domain corpus,
+  threshold selection and release safeguards. The candidate failed recall gates;
+  operational captures, production DGA generalization and probability calibration
+  remain open. This is not a completed production-calibration milestone.
 - Sprint 12: continuous ingestion, backpressure, checkpoints and recovery.
 - Sprint 13: authentication, retention and tamper-evident evidence.
 - Sprint 14: sustained end-to-end throughput and real-sensor/browser validation.

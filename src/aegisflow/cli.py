@@ -164,6 +164,17 @@ def _parser() -> argparse.ArgumentParser:
     training.add_argument("--metrics-output", required=True, type=Path)
     training.add_argument("--model-card-output", required=True, type=Path)
 
+    candidate = subparsers.add_parser("fit-dns-candidate", help="fit train-only DGA model and select a validation-only operating threshold")
+    candidate.add_argument("--manifest", required=True, type=Path)
+    candidate.add_argument("--data-root", required=True, type=Path)
+    candidate.add_argument("--candidate-output", required=True, type=Path)
+
+    holdout = subparsers.add_parser("evaluate-dns-candidate", help="evaluate a frozen research candidate on reserved domains through upload analysis")
+    holdout.add_argument("--candidate", required=True, type=Path)
+    holdout.add_argument("--manifest", required=True, type=Path)
+    holdout.add_argument("--data-root", required=True, type=Path)
+    holdout.add_argument("--report-output", required=True, type=Path)
+
     c2 = subparsers.add_parser("c2-replay", help="replay conn.log for periodic C2-like beacons")
     c2.add_argument("--input", required=True, type=Path)
     c2.add_argument("--encrypted-input", type=Path, help="optional Zeek ssl.log or quic.log JSONL")
@@ -603,6 +614,25 @@ def _analyse_shared(path, args):
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
+        if args.command in {"fit-dns-candidate", "evaluate-dns-candidate"}:
+            from aegisflow.dns_calibration import fit_candidate, evaluate_candidate, write_new_json
+            output = args.candidate_output if args.command == "fit-dns-candidate" else args.report_output
+            if output.exists():
+                raise ValueError("Research outputs are create-only; choose a new path, never overwrite an experiment")
+            if args.command == "fit-dns-candidate":
+                report = fit_candidate(args.manifest, args.data_root)
+                summary = {"candidate_sha256": report["candidate_sha256"],
+                           "threshold": report["validation"]["threshold"],
+                           "validation_gate_failures": report["validation_gate_failures"]}
+            else:
+                report = evaluate_candidate(args.candidate, args.manifest, args.data_root)
+                summary = {"candidate_sha256": report["candidate_sha256"],
+                           "dataset_gates_passed": report["dataset_gates_passed"],
+                           "test_gate_failures": report["test_gate_failures"],
+                           "upload_prediction_parity": report["upload_prediction_parity"]}
+            write_new_json(output, report)
+            print(json.dumps({**summary, "production_approved": False, "output": str(output)}))
+            return 0
         if args.command == "evaluate-corpus":
             from aegisflow.benchmark import run_benchmark, protect_outputs
             protect_outputs(args.manifest, args.data_root, (args.report_output, args.database))

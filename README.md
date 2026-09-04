@@ -11,6 +11,12 @@ The repository contains a complete offline SIH demonstration and the foundation
 of a production system. The SIH demo is complete; production hardening is still
 in progress.
 
+Sprint 11 adds a public DGA corpus, validation-only operating-point selection,
+frozen holdout evaluation through upload analysis, and research-model deployment
+guards. The public-data candidate **failed recall gates and was not promoted**;
+the demonstration model remains unchanged. See [Sprint 11 scope, measured failures
+and reproduction](docs/SPRINT_11.md). Production calibration remains unfinished.
+
 Sprint 10 adds a checksum-pinned, split-audited independent evaluation workflow.
 The external CTU-13 baseline exposed detection gaps and false positives; it does
 not validate the demo's accuracy on real traffic. See [Sprint 10 results and
@@ -67,7 +73,7 @@ return connection to the monitored network.
 | Horizontal host scan | Behavioural fan-out analysis | Unique hosts, destination service and time window |
 | SYN flood | Traffic-rate analysis | Attempt count, incomplete ratio and source diversity |
 | UDP flood | Traffic-rate analysis | Packet volume, bytes and source diversity |
-| DGA-like domain | Character 3-gram Naive Bayes ML model | Model probability, domain and entropy context |
+| DGA-like domain | Character 3-gram Naive Bayes ML model | Uncalibrated model score, domain and entropy context |
 | DNS tunnelling | Volume and entropy analysis | Query count, unique labels, length and entropy |
 | C2-style callback | Statistical timing analysis | Interval consistency, size consistency and connection count |
 | Possible data exfiltration | Adaptive baseline analysis | Outbound bytes, direction ratio and baseline comparison |

@@ -84,7 +84,10 @@ class DNSNgramModel:
 
     @classmethod
     def load(cls, path: str | Path) -> "DNSNgramModel":
-        return cls(json.loads(Path(path).read_text(encoding="utf-8")))
+        payload = json.loads(Path(path).read_text(encoding="utf-8"))
+        if payload.get("schema_version") == "drastha-dns-candidate-v1" or payload.get("research_status"):
+            raise ValueError("Research DNS candidate is not approved for deployment; use evaluate-dns-candidate")
+        return cls(payload)
 
 
 def read_dns_dataset(path: str | Path) -> list[DNSLabelledDomain]:

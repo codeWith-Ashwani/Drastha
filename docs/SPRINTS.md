@@ -20,7 +20,9 @@ Production follow-on sequence (the original sprint plan below is historical):
 - Sprint 13: opt-in role-based token/Basic access, signed SQLite evidence and
   dry-run completed-report retention slice delivered (see `SPRINT_13.md`).
   SSO/session lifecycle, external anchoring and full evidence retention remain open.
-- Sprint 14: sustained end-to-end throughput and real-sensor/browser validation.
+- Sprint 14: paced continuous-ingest/SQLite/API load and sensor-check tooling
+  slice delivered (see `SPRINT_14.md`). Real Zeek execution is blocked by the
+  missing installation; browser/TLS validation and broader capacity remain open.
 - Sprint 15: operational deployment and runbooks.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.

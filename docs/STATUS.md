@@ -4,6 +4,17 @@ Last updated: 4 September 2026
 
 ## Production roadmap update
 
+Sprint 14's paced-load and sensor-check tooling slice is delivered with **283
+Python tests passing**. Signed continuous ingestion -> SQLite -> actual analyst
+ASGI API processed 6,000 records at an offered 100 records/sec for 60 seconds,
+healthy with zero rejections and P95 visibility 137.11 ms. The 1,000 records/sec
+signed stress run **failed** (5,484 of 60,000 inputs remained unobserved at the
+drain deadline); its failure report is retained. No detector/quality/security
+checks were weakened. See `docs/SPRINT_14.md` for exact boundaries and results.
+Real Zeek validation is blocked by the missing native/WSL installation; browser
+approval, real TLS transport, all-protocol/long-duration capacity and scaling
+remain open. This is not a fully completed production-validation milestone.
+
 Sprint 13's protected-access/signed-evidence slice is delivered with 267 Python
 tests passing. Opt-in HTTPS-only role-based credentials, authenticated review
 identity, HMAC chain/current-state verification, export receipts and admin-only

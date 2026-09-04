@@ -13,7 +13,11 @@ deferred because they are production requirements, not demo blockers.
 ## Capture and scale
 
 - Pin and harden the Zeek runtime used for continuous capture.
-- Measure packet loss, sustained throughput, end-to-end latency, CPU, memory and disk.
+- Sprint 14 adds 60-second synthetic conn-load/SQLite/ASGI timing and resource
+  measurements. Signed 100 records/sec passed; signed 1,000 records/sec failed
+  delivery/latency gates. See `SPRINT_14.md`. Real Zeek is unavailable on the
+  tested machine. Live packet loss, all-protocol capacity, TLS/browser latency,
+  multi-client contention and longer operational soaks remain unverified.
 - Sprint 12 adds bounded local-file backpressure and durable checkpoints/recovery.
   Seamless rotation, state compaction/retention, multi-sensor ordering and sustained
   overload capacity remain open; see `SPRINT_12.md` for explicit session budgets.

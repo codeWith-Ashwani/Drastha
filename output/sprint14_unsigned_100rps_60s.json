@@ -1,0 +1,651 @@
+{
+  "api_observed": 6000,
+  "api_observed_before_offer_end": 5995,
+  "completed_records_per_second_including_drain": 99.93632740116153,
+  "config": {
+    "batch_records": 64,
+    "disk_budget_mib": 512,
+    "drain_seconds": 30,
+    "latency_budget_ms": 1000,
+    "producer_lag_budget_ms": 100,
+    "rate": 100,
+    "rss_budget_mib": 512,
+    "seconds": 60.0,
+    "signed": false
+  },
+  "cpu_percent_one_core": 32.60943183168109,
+  "cpu_seconds": 19.578125,
+  "drain_seconds": 0.03822790000049281,
+  "elapsed_seconds": 60.03822790000049,
+  "emitted": 6000,
+  "environment": {
+    "logical_cpus": 16,
+    "platform": "Windows-11-10.0.22631-SP0",
+    "python": "3.12.10"
+  },
+  "errors": [],
+  "experiment": "paced-conn-sqlite-asgi-v1",
+  "final_backlog_records": 0,
+  "findings": 1,
+  "gates": {
+    "all_offered_records_emitted": true,
+    "all_records_api_observed": true,
+    "api_visibility_p95_within_budget": true,
+    "disk_within_budget": true,
+    "no_rejections_healthy": true,
+    "no_runtime_errors": true,
+    "producer_kept_schedule": false,
+    "rss_within_budget": true,
+    "source_bytes_preserved": true
+  },
+  "incidents": 1,
+  "limitations": [
+    "Single-process independent paced producer thread; scheduling lag is a release gate",
+    "Conn-only synthetic workload; not accuracy evaluation, production traffic or all-protocol capacity",
+    "Write-start to first ASGI readback is an upper-bound visibility observation, not packet-to-alert latency",
+    "TestClient runs actual API/auth code but no TCP, TLS handshake, proxy or browser rendering",
+    "RSS/disk/backlog sampled per poll; peaks between samples and transient SQLite sidecars may be higher",
+    "CPU includes producer, worker and API; prepared workload and setup excluded from elapsed, included in RSS",
+    "Deadlines/resource stops checked between bounded polls; not preemptive process limits",
+    "No state resets or disabled quality/integrity checks; finite journal only, not an unlimited-service soak"
+  ],
+  "max_sampled_backlog_records": 13,
+  "offer_window_observed_records_per_second": 99.91666666666667,
+  "passed": false,
+  "producer_scheduling_lag_ms": {
+    "count": 6000,
+    "max": 123.2756999997946,
+    "p50": 7.67690000066068,
+    "p95": 14.832500000920845
+  },
+  "provenance": {
+    "c2_metadata_mode": "observed-event-time-v1",
+    "configuration": {
+      "allow_destinations": [],
+      "allow_domains": [],
+      "approved_backup_destinations": [],
+      "c2": {
+        "cooldown_seconds": 300.0,
+        "maximum_interval_cv": 0.15,
+        "maximum_mean_interval_seconds": 120.0,
+        "maximum_mean_transfer_bytes": 2048.0,
+        "maximum_size_cv": 0.2,
+        "minimum_completed_ratio": 0.8,
+        "minimum_connections": 6,
+        "minimum_mean_interval_seconds": 2.0,
+        "minimum_observation_span_seconds": 30.0,
+        "window_seconds": 300.0
+      },
+      "ddos": {
+        "cooldown_seconds": 30.0,
+        "distributed_source_entropy_threshold": 0.85,
+        "distributed_source_minimum_sources": 3,
+        "min_incomplete_ratio": 0.8,
+        "minimum_target_port_concentration": 0.8,
+        "require_reflection_service_context": true,
+        "syn_attempt_threshold": 100,
+        "udp_amplification_ratio_threshold": 10.0,
+        "udp_packet_threshold": 1000,
+        "udp_reflection_bytes_threshold": 10000,
+        "udp_reflection_flow_threshold": 4,
+        "window_seconds": 5.0
+      },
+      "dns": {
+        "cooldown_seconds": 120.0,
+        "dga_lexical_digit_ratio_threshold": 0.15,
+        "dga_lexical_entropy_threshold": 3.0,
+        "dga_lexical_label_length_threshold": 10,
+        "dga_lexical_maximum_vowel_ratio": 0.25,
+        "dga_lexical_query_threshold": 3,
+        "dga_probability_threshold": 0.5,
+        "encoded_txt_label_length_threshold": 24.0,
+        "encoded_txt_query_threshold": 4,
+        "tunnel_entropy_threshold": 3.5,
+        "tunnel_label_length_threshold": 18.0,
+        "tunnel_query_threshold": 20,
+        "tunnel_unique_subdomain_threshold": 15,
+        "window_seconds": 60.0
+      },
+      "enabled": [
+        "recon",
+        "ddos",
+        "c2",
+        "dns",
+        "encrypted",
+        "exfiltration"
+      ],
+      "encrypted": {
+        "cooldown_seconds": 120.0,
+        "maximum_fingerprint_prevalence": 0.01,
+        "minimum_packet_size_anomaly": 0.75,
+        "minimum_sessions": 4,
+        "minimum_timing_anomaly": 0.75,
+        "window_seconds": 60.0
+      },
+      "exfiltration": {
+        "baseline_free_minimum_outbound_bytes": 10000000,
+        "baseline_free_minimum_outbound_ratio": 20.0,
+        "baseline_history_size": 50,
+        "baseline_multiplier": 4.0,
+        "cooldown_seconds": 600.0,
+        "minimum_flows": 3,
+        "minimum_outbound_bytes": 1000000,
+        "minimum_outbound_ratio": 8.0,
+        "single_flow_minimum_outbound_bytes": 10000000,
+        "single_flow_minimum_outbound_ratio": 20.0,
+        "window_seconds": 300.0
+      },
+      "feature_mode": "derived",
+      "internal_cidrs": [],
+      "name": "deployment-baseline-uncalibrated-v1",
+      "passive_features": {
+        "anomaly_scale": 6,
+        "history_seconds": 3600,
+        "learning_ceiling": 0.75,
+        "maximum_cohorts": 128,
+        "maximum_history": 5000,
+        "minimum_baseline_sessions": 20,
+        "minimum_packets": 4,
+        "minimum_prevalence_sessions": 100,
+        "sequence_length": 8,
+        "size_scale_floor": 32,
+        "timing_scale_floor": 0.001
+      },
+      "recon": {
+        "cooldown_seconds": 30.0,
+        "unique_host_threshold": 20,
+        "unique_port_threshold": 20,
+        "window_seconds": 10.0
+      }
+    },
+    "configuration_sha256": "b128531814a8b0983ac879acc4d5147f880ffa9a924180336ef5e8a66562b659",
+    "context_policy_sha256": "98335a89b0d45f4570d2c3b4ba82424118f680a4e891140a460d9bd0eca04cfc",
+    "detector_versions": {
+      "c2.beacon": "0.1.0",
+      "ddos.behavioural": "0.2.0",
+      "dns.analytics": "0.2.0",
+      "encrypted.metadata_anomaly": "0.2.0",
+      "exfiltration.outbound": "0.1.0",
+      "recon.fanout": "0.1.0"
+    },
+    "dns_context_mode": "causal-60s-max10000-v1",
+    "dns_model_input": null,
+    "dns_model_research_status": null,
+    "dns_model_sha256": null,
+    "dns_model_version": null,
+    "dns_normalizer_version": "2.0",
+    "dns_score_semantics": "uncalibrated n-gram class score, not infection probability",
+    "engine_version": "3.0",
+    "feature_mode": "derived",
+    "parser_version": "passive-replay-v2",
+    "passive_feature_extractor": "packet-sequence-robust-v1",
+    "profile": "deployment-baseline-uncalibrated-v1"
+  },
+  "quality": {
+    "conflicting_duplicate_uid_count": 0,
+    "degraded_reasons": [],
+    "duplicate_uid_count": 0,
+    "errors": [],
+    "exact_duplicate_count": 0,
+    "invalid_timestamp_count": 0,
+    "maximum_backward_skew_seconds": 0.0,
+    "out_of_order_records": 0,
+    "quarantined_records": [],
+    "records_accepted": 6000,
+    "records_quarantined": 0,
+    "records_received": 6000,
+    "records_rejected": 0,
+    "records_seen": 6000,
+    "rejection_ratio": 0.0,
+    "source": "sensor.jsonl",
+    "status": "healthy",
+    "stream": "drastha-continuous-v1",
+    "unsupported_record_count": 0
+  },
+  "queue_high_watermark": 14,
+  "sampled_peak_disk_mib": 3.1386470794677734,
+  "sampled_peak_rss_mib": 90.3515625,
+  "samples": [
+    {
+      "api_observed": 0,
+      "backlog_records": 1,
+      "elapsed_seconds": 0.014,
+      "emitted": 1,
+      "rss_mib": 52.777
+    },
+    {
+      "api_observed": 102,
+      "backlog_records": 0,
+      "elapsed_seconds": 1.032,
+      "emitted": 102,
+      "rss_mib": 53.766
+    },
+    {
+      "api_observed": 201,
+      "backlog_records": 1,
+      "elapsed_seconds": 2.033,
+      "emitted": 202,
+      "rss_mib": 54.637
+    },
+    {
+      "api_observed": 302,
+      "backlog_records": 2,
+      "elapsed_seconds": 3.05,
+      "emitted": 304,
+      "rss_mib": 56.656
+    },
+    {
+      "api_observed": 405,
+      "backlog_records": 1,
+      "elapsed_seconds": 4.069,
+      "emitted": 406,
+      "rss_mib": 57.242
+    },
+    {
+      "api_observed": 507,
+      "backlog_records": 2,
+      "elapsed_seconds": 5.091,
+      "emitted": 509,
+      "rss_mib": 57.766
+    },
+    {
+      "api_observed": 607,
+      "backlog_records": 2,
+      "elapsed_seconds": 6.096,
+      "emitted": 609,
+      "rss_mib": 58.566
+    },
+    {
+      "api_observed": 713,
+      "backlog_records": 3,
+      "elapsed_seconds": 7.176,
+      "emitted": 716,
+      "rss_mib": 59.629
+    },
+    {
+      "api_observed": 816,
+      "backlog_records": 1,
+      "elapsed_seconds": 8.181,
+      "emitted": 817,
+      "rss_mib": 60.137
+    },
+    {
+      "api_observed": 918,
+      "backlog_records": 1,
+      "elapsed_seconds": 9.194,
+      "emitted": 919,
+      "rss_mib": 60.875
+    },
+    {
+      "api_observed": 1018,
+      "backlog_records": 2,
+      "elapsed_seconds": 10.202,
+      "emitted": 1020,
+      "rss_mib": 61.594
+    },
+    {
+      "api_observed": 1120,
+      "backlog_records": 1,
+      "elapsed_seconds": 11.221,
+      "emitted": 1121,
+      "rss_mib": 62.305
+    },
+    {
+      "api_observed": 1222,
+      "backlog_records": 2,
+      "elapsed_seconds": 12.239,
+      "emitted": 1224,
+      "rss_mib": 63.195
+    },
+    {
+      "api_observed": 1324,
+      "backlog_records": 1,
+      "elapsed_seconds": 13.262,
+      "emitted": 1325,
+      "rss_mib": 63.953
+    },
+    {
+      "api_observed": 1425,
+      "backlog_records": 2,
+      "elapsed_seconds": 14.27,
+      "emitted": 1427,
+      "rss_mib": 64.453
+    },
+    {
+      "api_observed": 1528,
+      "backlog_records": 1,
+      "elapsed_seconds": 15.293,
+      "emitted": 1529,
+      "rss_mib": 64.922
+    },
+    {
+      "api_observed": 1630,
+      "backlog_records": 1,
+      "elapsed_seconds": 16.317,
+      "emitted": 1631,
+      "rss_mib": 65.82
+    },
+    {
+      "api_observed": 1732,
+      "backlog_records": 2,
+      "elapsed_seconds": 17.34,
+      "emitted": 1734,
+      "rss_mib": 66.566
+    },
+    {
+      "api_observed": 1824,
+      "backlog_records": 11,
+      "elapsed_seconds": 18.351,
+      "emitted": 1835,
+      "rss_mib": 67.395
+    },
+    {
+      "api_observed": 1934,
+      "backlog_records": 2,
+      "elapsed_seconds": 19.367,
+      "emitted": 1936,
+      "rss_mib": 67.648
+    },
+    {
+      "api_observed": 2037,
+      "backlog_records": 2,
+      "elapsed_seconds": 20.39,
+      "emitted": 2039,
+      "rss_mib": 67.844
+    },
+    {
+      "api_observed": 2139,
+      "backlog_records": 3,
+      "elapsed_seconds": 21.416,
+      "emitted": 2142,
+      "rss_mib": 68.098
+    },
+    {
+      "api_observed": 2240,
+      "backlog_records": 1,
+      "elapsed_seconds": 22.422,
+      "emitted": 2241,
+      "rss_mib": 68.492
+    },
+    {
+      "api_observed": 2343,
+      "backlog_records": 1,
+      "elapsed_seconds": 23.449,
+      "emitted": 2344,
+      "rss_mib": 68.977
+    },
+    {
+      "api_observed": 2444,
+      "backlog_records": 2,
+      "elapsed_seconds": 24.459,
+      "emitted": 2446,
+      "rss_mib": 69.625
+    },
+    {
+      "api_observed": 2546,
+      "backlog_records": 1,
+      "elapsed_seconds": 25.48,
+      "emitted": 2547,
+      "rss_mib": 70.07
+    },
+    {
+      "api_observed": 2647,
+      "backlog_records": 2,
+      "elapsed_seconds": 26.496,
+      "emitted": 2649,
+      "rss_mib": 71.027
+    },
+    {
+      "api_observed": 2749,
+      "backlog_records": 2,
+      "elapsed_seconds": 27.506,
+      "emitted": 2751,
+      "rss_mib": 71.871
+    },
+    {
+      "api_observed": 2851,
+      "backlog_records": 1,
+      "elapsed_seconds": 28.531,
+      "emitted": 2852,
+      "rss_mib": 72.543
+    },
+    {
+      "api_observed": 2953,
+      "backlog_records": 1,
+      "elapsed_seconds": 29.548,
+      "emitted": 2954,
+      "rss_mib": 73.262
+    },
+    {
+      "api_observed": 3055,
+      "backlog_records": 2,
+      "elapsed_seconds": 30.577,
+      "emitted": 3057,
+      "rss_mib": 73.992
+    },
+    {
+      "api_observed": 3156,
+      "backlog_records": 1,
+      "elapsed_seconds": 31.577,
+      "emitted": 3157,
+      "rss_mib": 74.438
+    },
+    {
+      "api_observed": 3257,
+      "backlog_records": 2,
+      "elapsed_seconds": 32.596,
+      "emitted": 3259,
+      "rss_mib": 75.059
+    },
+    {
+      "api_observed": 3358,
+      "backlog_records": 2,
+      "elapsed_seconds": 33.609,
+      "emitted": 3360,
+      "rss_mib": 75.121
+    },
+    {
+      "api_observed": 3460,
+      "backlog_records": 2,
+      "elapsed_seconds": 34.619,
+      "emitted": 3462,
+      "rss_mib": 76.734
+    },
+    {
+      "api_observed": 3562,
+      "backlog_records": 2,
+      "elapsed_seconds": 35.635,
+      "emitted": 3564,
+      "rss_mib": 77.613
+    },
+    {
+      "api_observed": 3662,
+      "backlog_records": 1,
+      "elapsed_seconds": 36.642,
+      "emitted": 3663,
+      "rss_mib": 78.363
+    },
+    {
+      "api_observed": 3762,
+      "backlog_records": 1,
+      "elapsed_seconds": 37.646,
+      "emitted": 3763,
+      "rss_mib": 79.32
+    },
+    {
+      "api_observed": 3864,
+      "backlog_records": 3,
+      "elapsed_seconds": 38.665,
+      "emitted": 3867,
+      "rss_mib": 79.781
+    },
+    {
+      "api_observed": 3967,
+      "backlog_records": 2,
+      "elapsed_seconds": 39.69,
+      "emitted": 3969,
+      "rss_mib": 79.379
+    },
+    {
+      "api_observed": 4063,
+      "backlog_records": 7,
+      "elapsed_seconds": 40.711,
+      "emitted": 4070,
+      "rss_mib": 79.781
+    },
+    {
+      "api_observed": 4170,
+      "backlog_records": 1,
+      "elapsed_seconds": 41.715,
+      "emitted": 4171,
+      "rss_mib": 80.125
+    },
+    {
+      "api_observed": 4271,
+      "backlog_records": 1,
+      "elapsed_seconds": 42.728,
+      "emitted": 4272,
+      "rss_mib": 80.844
+    },
+    {
+      "api_observed": 4372,
+      "backlog_records": 1,
+      "elapsed_seconds": 43.737,
+      "emitted": 4373,
+      "rss_mib": 80.461
+    },
+    {
+      "api_observed": 4473,
+      "backlog_records": 1,
+      "elapsed_seconds": 44.751,
+      "emitted": 4474,
+      "rss_mib": 80.895
+    },
+    {
+      "api_observed": 4572,
+      "backlog_records": 3,
+      "elapsed_seconds": 45.753,
+      "emitted": 4575,
+      "rss_mib": 81.363
+    },
+    {
+      "api_observed": 4675,
+      "backlog_records": 1,
+      "elapsed_seconds": 46.768,
+      "emitted": 4676,
+      "rss_mib": 81.879
+    },
+    {
+      "api_observed": 4777,
+      "backlog_records": 1,
+      "elapsed_seconds": 47.787,
+      "emitted": 4778,
+      "rss_mib": 82.426
+    },
+    {
+      "api_observed": 4878,
+      "backlog_records": 3,
+      "elapsed_seconds": 48.813,
+      "emitted": 4881,
+      "rss_mib": 83.207
+    },
+    {
+      "api_observed": 4981,
+      "backlog_records": 3,
+      "elapsed_seconds": 49.838,
+      "emitted": 4984,
+      "rss_mib": 83.664
+    },
+    {
+      "api_observed": 5084,
+      "backlog_records": 1,
+      "elapsed_seconds": 50.852,
+      "emitted": 5085,
+      "rss_mib": 84.434
+    },
+    {
+      "api_observed": 5183,
+      "backlog_records": 10,
+      "elapsed_seconds": 51.936,
+      "emitted": 5193,
+      "rss_mib": 85.172
+    },
+    {
+      "api_observed": 5291,
+      "backlog_records": 2,
+      "elapsed_seconds": 52.942,
+      "emitted": 5293,
+      "rss_mib": 85.703
+    },
+    {
+      "api_observed": 5392,
+      "backlog_records": 2,
+      "elapsed_seconds": 53.947,
+      "emitted": 5394,
+      "rss_mib": 86.191
+    },
+    {
+      "api_observed": 5493,
+      "backlog_records": 4,
+      "elapsed_seconds": 54.963,
+      "emitted": 5497,
+      "rss_mib": 87.246
+    },
+    {
+      "api_observed": 5595,
+      "backlog_records": 2,
+      "elapsed_seconds": 55.966,
+      "emitted": 5597,
+      "rss_mib": 87.723
+    },
+    {
+      "api_observed": 5695,
+      "backlog_records": 1,
+      "elapsed_seconds": 56.97,
+      "emitted": 5696,
+      "rss_mib": 88.18
+    },
+    {
+      "api_observed": 5796,
+      "backlog_records": 1,
+      "elapsed_seconds": 57.981,
+      "emitted": 5797,
+      "rss_mib": 88.883
+    },
+    {
+      "api_observed": 5897,
+      "backlog_records": 1,
+      "elapsed_seconds": 58.986,
+      "emitted": 5898,
+      "rss_mib": 89.832
+    },
+    {
+      "api_observed": 5999,
+      "backlog_records": 1,
+      "elapsed_seconds": 60.01,
+      "emitted": 6000,
+      "rss_mib": 90.344
+    }
+  ],
+  "sustained_run": true,
+  "sustained_target_demonstrated": false,
+  "unobserved": 0,
+  "worker_poll_ms": {
+    "count": 2209,
+    "max": 111.31070000010368,
+    "p50": 20.72520000001532,
+    "p95": 23.25869999913266
+  },
+  "workload": {
+    "bytes": 1455590,
+    "name": "synthetic-conn-90pct-balanced-10pct-scan-v1",
+    "records": 6000,
+    "sha256": "f728d58146a91ec86d1aa29bf5e4cc9ce12d41770d5a1878a8a062517b39ea91"
+  },
+  "write_to_api_observation_ms": {
+    "count": 6000,
+    "max": 146.02070000000822,
+    "p50": 31.60060000118392,
+    "p95": 45.66969999905268
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "experiment": "offline-real-zeek-upload-v1",
+  "limitations": [
+    "Synthetic six-packet offline PCAP, not a live mirror or throughput test",
+    "Tests installed Zeek conn.log and recon only; DNS/TLS/QUIC sensor interoperability remains open",
+    "Actual in-process ASGI upload/readback, not browser or TLS transport validation"
+  ],
+  "passed": false,
+  "sensor": {
+    "attempts": [
+      {
+        "error": "Zeek executable not found",
+        "mode": "native"
+      },
+      {
+        "command": [
+          "C:\\Windows\\system32\\wsl.exe",
+          "--",
+          "/opt/zeek/bin/zeek",
+          "--version"
+        ],
+        "error": "Windows Subsystem for Linux has no installed distributions.\r\nYou can resolve this by installing a distribution with the instructions below:\r\n\r\nUse 'wsl.exe --list --online' to list available distributions\r\nand 'wsl.exe --install <Distro>' to install.",
+        "returncode": 4294967295
+      }
+    ],
+    "reason": "No runnable local Zeek installation",
+    "status": "blocked"
+  },
+  "status": "blocked"
+}

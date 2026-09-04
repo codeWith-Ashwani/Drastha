@@ -212,14 +212,16 @@ class ContinuousIngestionTests(unittest.TestCase):
         repository = IncidentRepository(self.root / "analyst.db")
         self.append(encode(connection(i) for i in range(8)))
         with self.worker(repository=repository) as worker:
-            with patch.object(repository, "save_analysis_run", side_effect=OSError("disk unavailable")):
+            with patch.object(repository, "_save_analysis_run", side_effect=OSError("disk unavailable")):
                 with self.assertRaises(OSError):
                     worker.poll()
-        before = repository.metrics()
+        # Atomic projection rolls back incident/alert upserts together with the
+        # failed report write; the committed journal remains the recovery source.
+        self.assertEqual(repository.list_incidents(), [])
         with self.worker(repository=repository) as worker:
             report = worker.poll()
             self.assertEqual(worker.recovered_records, 8)
-            self.assertEqual(repository.metrics(), before)
+            self.assertEqual(len(repository.list_incidents()), len(report["incidents"]))
             self.assertEqual(repository.get_analysis_run(report["run_id"])["stream"]["committed_lines"], 8)
 
     def test_source_paths_and_hardlinks_cannot_be_written(self):
@@ -292,7 +294,7 @@ worker.poll()
         with self.worker(repository=repository) as worker:
             worker.poll()
             self.append(encode([connection(1)]))
-            with patch.object(repository, "import_records", side_effect=OSError("unavailable")):
+            with patch.object(repository, "project_analysis_run", side_effect=OSError("unavailable")):
                 with self.assertRaises(OSError):
                     worker.poll()
         with self.worker(repository=repository) as worker:

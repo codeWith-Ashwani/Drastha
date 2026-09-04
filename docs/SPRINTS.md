@@ -27,6 +27,9 @@ Production follow-on sequence (the original sprint plan below is historical):
   backup/restore and operations runbook slice delivered (see `SPRINT_15.md`).
   Remote deployment/service supervision, coordinated stream recovery and host
   security controls remain open; production readiness is not claimed.
+- Sprint 16: atomic continuous analyst projection, shared per-record validation
+  and measured integrity-preserving optimization slice delivered (see `SPRINT_16.md`).
+  Checkpoint migration/compaction and general production capacity remain open.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

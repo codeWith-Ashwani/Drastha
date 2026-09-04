@@ -109,6 +109,11 @@ class IncidentRepository:
         alerts: Iterable[dict[str, Any]],
         feedback: Iterable[dict[str, Any]] = (),
     ) -> dict[str, int]:
+        with self._connect() as connection:
+            return self._import_records(connection, incidents, alerts, feedback)
+
+    def _import_records(self, connection, incidents, alerts, feedback=()):
+        """Connection-scoped upserts, shared by imports and atomic projection."""
         incident_records = list(incidents)
         alert_records = list(alerts)
         feedback_records = list(feedback)
@@ -117,9 +122,8 @@ class IncidentRepository:
             for incident in incident_records
             for alert_id in incident.get("alert_ids", ())
         }
-        with self._connect() as connection:
-            for incident in incident_records:
-                connection.execute(
+        for incident in incident_records:
+            connection.execute(
                     """INSERT INTO incidents(
                         incident_id, src_ip, first_seen, last_seen, risk_score,
                         severity, confidence, status, payload, updated_at
@@ -136,8 +140,8 @@ class IncidentRepository:
                         json.dumps(incident, sort_keys=True), incident["last_seen"],
                     ),
                 )
-            for alert in alert_records:
-                connection.execute(
+        for alert in alert_records:
+            connection.execute(
                     """INSERT INTO alerts(
                         alert_id, incident_id, threat_type, severity, window_start, payload
                     ) VALUES (?, ?, ?, ?, ?, ?)
@@ -149,8 +153,8 @@ class IncidentRepository:
                         json.dumps(alert, sort_keys=True),
                     ),
                 )
-            for item in feedback_records:
-                self._insert_feedback(connection, item)
+        for item in feedback_records:
+            self._insert_feedback(connection, item)
         return {
             "incidents": len(incident_records),
             "alerts": len(alert_records),
@@ -207,11 +211,25 @@ class IncidentRepository:
     def save_analysis_run(self, run_id: str, report: dict[str, Any]) -> None:
         """Persist scoped provisional/final results without polluting incident tables."""
         with self._connect() as connection:
-            connection.execute(
+            self._save_analysis_run(connection, run_id, report)
+
+    def _save_analysis_run(self, connection, run_id, report):
+        connection.execute(
                 "INSERT INTO analysis_runs(run_id, payload) VALUES (?, ?) "
                 "ON CONFLICT(run_id) DO UPDATE SET payload=excluded.payload",
                 (run_id, json.dumps(report, sort_keys=True)),
             )
+
+    def project_analysis_run(self, report: dict[str, Any]) -> None:
+        """Atomically publish incident/alert evidence and its matching run snapshot.
+
+        Signed stores verify the full ledger/state at transaction entry and sign
+        the complete change set at commit. No integrity cache or bypass. Replays
+        retain analyst status/feedback using the same conflict policy as import.
+        """
+        with self._connect() as connection:
+            self._import_records(connection, report["incidents"], report["alerts"])
+            self._save_analysis_run(connection, report["run_id"], report)
 
     def get_analysis_run(self, run_id: str) -> dict[str, Any] | None:
         with self._connect() as connection:

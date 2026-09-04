@@ -47,6 +47,23 @@ def prepare_replay(content: str, source_name: str = "replay", *, maximum_records
     raw_records = list(parsed_replay.records)
     if maximum_records is not None and len(raw_records) > maximum_records:
         raise ValueError(f"Replay contains more than {maximum_records:,} records.")
+    return _prepare_records(raw_records, source_name, source_kind, parsed_replay.input_format)
+
+
+def prepare_stream_record(record: dict, source_name: str) -> PreparedReplay:
+    """Validate an already decoded JSONL object using the SAME event normalizers.
+
+    The follower owns original line numbers and cross-record quality/state. Avoid
+    reparsing a JSON container and building an unused upload schema for every line.
+    Retain strict finite-JSON validation, including unconsumed metadata fields.
+    """
+    if not isinstance(record, dict) or "records" in record:
+        raise ValueError("Expected one traffic record, not a container/manifest")
+    json.dumps(record, allow_nan=False)
+    return _prepare_records([(1, record)], source_name, None, None)
+
+
+def _prepare_records(raw_records, source_name, source_kind, input_format):
 
     quality = TelemetryQuality(stream="passive:replay", source=source_name)
     events = []
@@ -140,16 +157,17 @@ def prepare_replay(content: str, source_name: str = "replay", *, maximum_records
         encrypted_events.extend(record_encrypted_events)
         accepted_records.append(canonical)
 
-        uid = str(canonical.get("uid", ""))
-        signature = json.dumps(canonical, sort_keys=True, separators=(",", ":"), default=str)
-        if uid in seen_uids:
-            quality.duplicate_uid_count += 1
-            if seen_uids[uid] == signature:
-                quality.exact_duplicate_count += 1
+        if len(raw_records) > 1:
+            uid = str(canonical.get("uid", ""))
+            signature = json.dumps(canonical, sort_keys=True, separators=(",", ":"), default=str)
+            if uid in seen_uids:
+                quality.duplicate_uid_count += 1
+                if seen_uids[uid] == signature:
+                    quality.exact_duplicate_count += 1
+                else:
+                    quality.conflicting_duplicate_uid_count += 1
             else:
-                quality.conflicting_duplicate_uid_count += 1
-        else:
-            seen_uids[uid] = signature
+                seen_uids[uid] = signature
 
         record_timestamp = min(record_timestamps)
         if latest_timestamp is not None and record_timestamp < latest_timestamp:
@@ -181,4 +199,4 @@ def prepare_replay(content: str, source_name: str = "replay", *, maximum_records
         raise ReplayQualityError(f"Replay could not be analysed (data quality: unusable): {reason}", quality)
 
     return PreparedReplay(events, dns_events, encrypted_events, accepted_records, quality,
-                          schema_summary(parsed_replay.input_format, raw_records, alias_usage, schema_counts))
+                          schema_summary(input_format, raw_records, alias_usage, schema_counts) if input_format else {})

@@ -4,6 +4,18 @@ Last updated: 4 September 2026
 
 ## Production roadmap update
 
+Sprint 16's integrity-preserving optimization slice is delivered with **334
+Python tests passing** (20 new). Continuous incident/alert/report publication is
+atomic; redundant normalization and state scans are removed without bypassing
+verification. The finite signed profiler run is about 23% faster. Signed 100
+records/sec for 60 seconds passes (6,000 records, P95 107.15 ms); default-64 and
+explicit batch-256 1,000 records/sec runs both fail at least one unchanged gate.
+Mixed upload/API/restart parity remains 452 accepted, 8 TP, 0 FP/FN, 86 TN, healthy;
+real loopback HTTPS backup/restore passes. See `docs/SPRINT_16.md` for raw reports
+and boundaries. Default batch, detector thresholds and quality checks are
+unchanged. Checkpoint migration, compaction and general production capacity
+remain open. Existing engine-mismatched journals still fail closed.
+
 Sprint 15's protected local operations/recovery slice is delivered with **314
 Python tests passing**. Read-only preflight, create-only signed SQLite backup and
 restore, selected-head verification, and a loopback HTTPS launcher are implemented.

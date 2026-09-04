@@ -11,6 +11,12 @@ The repository contains a complete offline SIH demonstration and the foundation
 of a production system. The SIH demo is complete; production hardening is still
 in progress.
 
+Sprint 16 adds [atomic continuous-ingest publication and measured optimization](docs/SPRINT_16.md)
+while retaining full source and signed-evidence verification. The finite profiler
+run is about 23% faster; both 1,000 records/sec experiments still fail at least one
+strict load gate. Defaults and detectors are unchanged, and old checkpoints still
+refuse an engine mismatch. This is not a production-capacity claim.
+
 Sprint 15 adds [protected local startup and verified SQLite recovery](docs/SPRINT_15.md).
 Use the [operator runbook](docs/OPERATIONS_RUNBOOK.md) for preflight, create-only
 backup/restore and manual cutover. This is a loopback-only staged deployment path,

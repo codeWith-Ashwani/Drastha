@@ -1,0 +1,112 @@
+{
+  "experiment": "finite-signed-hotspot-profile-v1",
+  "records": 10000,
+  "engine_sha256": "2230ca5bf81ecd900bc556e3806950fc5331f8874aa75ca49a8daf58fc86adc6",
+  "elapsed_with_profiler_seconds": 9.419867400003568,
+  "quality": {
+    "stream": "drastha-continuous-v1",
+    "source": "sensor.jsonl",
+    "status": "healthy",
+    "records_seen": 10000,
+    "records_accepted": 10000,
+    "records_rejected": 0,
+    "records_quarantined": 0,
+    "out_of_order_records": 0,
+    "duplicate_uid_count": 0,
+    "exact_duplicate_count": 0,
+    "conflicting_duplicate_uid_count": 0,
+    "invalid_timestamp_count": 0,
+    "unsupported_record_count": 0,
+    "maximum_backward_skew_seconds": 0.0,
+    "errors": [],
+    "quarantined_records": [],
+    "degraded_reasons": [],
+    "records_received": 10000,
+    "rejection_ratio": 0.0
+  },
+  "findings": 1,
+  "functions": [
+    {
+      "file": "continuous_ingestion.py",
+      "function": "poll",
+      "calls": 157,
+      "self_seconds": 0.06760440000000001,
+      "cumulative_seconds": 8.6751512
+    },
+    {
+      "file": "continuous_ingestion.py",
+      "function": "_consume",
+      "calls": 10000,
+      "self_seconds": 0.08388720000000001,
+      "cumulative_seconds": 5.282353400000001
+    },
+    {
+      "file": "continuous_ingestion.py",
+      "function": "_publish",
+      "calls": 315,
+      "self_seconds": 0.0040461,
+      "cumulative_seconds": 2.3016334
+    },
+    {
+      "file": "api_store.py",
+      "function": "project_analysis_run",
+      "calls": 313,
+      "self_seconds": 0.0039693,
+      "cumulative_seconds": 2.2213792000000003
+    },
+    {
+      "file": "audited_store.py",
+      "function": "__exit__",
+      "calls": 470,
+      "self_seconds": 0.0061745,
+      "cumulative_seconds": 0.9927618
+    },
+    {
+      "file": "audited_store.py",
+      "function": "__enter__",
+      "calls": 470,
+      "self_seconds": 0.0022990000000000003,
+      "cumulative_seconds": 0.9620699
+    },
+    {
+      "file": "audited_store.py",
+      "function": "verify_connection",
+      "calls": 470,
+      "self_seconds": 0.1009744,
+      "cumulative_seconds": 0.7035608000000001
+    },
+    {
+      "file": "audited_store.py",
+      "function": "snapshot",
+      "calls": 1097,
+      "self_seconds": 0.0341255,
+      "cumulative_seconds": 0.3343938
+    },
+    {
+      "file": "continuous_ingestion.py",
+      "function": "_verify_source",
+      "calls": 157,
+      "self_seconds": 0.0144185,
+      "cumulative_seconds": 0.2626603
+    },
+    {
+      "file": "continuous_ingestion.py",
+      "function": "__exit__",
+      "calls": 1,
+      "self_seconds": 4.800000000000001e-06,
+      "cumulative_seconds": 0.0009075000000000001
+    },
+    {
+      "file": "continuous_ingestion.py",
+      "function": "__enter__",
+      "calls": 1,
+      "self_seconds": 2.0000000000000002e-07,
+      "cumulative_seconds": 2.0000000000000002e-07
+    }
+  ],
+  "limitations": [
+    "cProfile changes timings; cumulative values overlap and must not be added",
+    "Preloaded finite conn workload and direct repository readback, not paced load/API/TLS",
+    "Full integrity/source checks enabled; no result is a capacity certification"
+  ]
+}

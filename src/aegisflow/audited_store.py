@@ -70,13 +70,18 @@ class _AuditedConnection(_SQLiteConnection):
         try:
             if exc_type is None:
                 after = snapshot(self)
+                retention_changed = False
                 # Retention age follows trusted local storage time, never traffic ts.
                 for (table, identity), digest in after.items():
                     if table == "analysis_runs" and self.before.get((table, identity)) != digest:
                         self.execute("INSERT INTO evidence_retention(run_id, stored_at) VALUES (?, ?) "
                                      "ON CONFLICT(run_id) DO UPDATE SET stored_at=excluded.stored_at",
                                      (identity, time.time()))
-                after = snapshot(self)
+                        retention_changed = True
+                # The existing full snapshot already represents the transaction
+                # unless trusted retention bookkeeping added another change.
+                if retention_changed:
+                    after = snapshot(self)
                 if after != self.before or self.event is not None:
                     changes = [{"table": key[0], "id": key[1], "before": self.before.get(key),
                                 "after": after.get(key)} for key in sorted(self.before.keys() | after.keys())

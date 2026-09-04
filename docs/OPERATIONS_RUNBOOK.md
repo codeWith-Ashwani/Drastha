@@ -175,8 +175,8 @@ There is **no automatic live replacement or cutover**. With owner approval:
    Keep the old installation intact as the rollback candidate.
 
 This is analyst-store recovery, **not an atomic backup of sensor + journal +
-analyst DB**. Coordinated worker recovery, rotation, source identity and duplicate
-projection semantics require separate review. The existing continuous checkpoint
+analyst DB**. For bounded coordinated journal/analyst recovery, use section 8;
+source disaster recovery and rotation remain unsupported. The continuous checkpoint
 pins the complete engine digest: a source-code upgrade changes that contract.
 Never edit the digest, delete a checkpoint or reset detector state to force resume.
 Use the previous exact release/source/model/policy/limits for an approved rollback,
@@ -200,3 +200,97 @@ firewall, running deployment, browser or monitored network. Temporary synthetic
 data and test secrets are removed when the drill ends; only the non-secret result
 report is retained. Measured milliseconds are a tiny-fixture observation, not a
 production RTO or SLA.
+
+## 8. Coordinated stream recovery (Sprint 17)
+
+This is a separate operator workflow for **one existing continuous journal and
+its signed analyst store, using the identical engine/model/profile/policy**.
+It is not a cross-version migration or a replacement for the online analyst-only
+backup above. Do not run a new engine against an old nonempty checkpoint merely
+to create its backup: use the exact original release. Never rewrite engine hashes.
+
+Prerequisites: approve the recovery point, protect the output and anchor storage,
+stop the continuous worker and pause analyst writes. All workers sharing the
+analyst store should be stopped. Preserve the original sensor file at its original
+path and filesystem identity, including its complete committed prefix. The local
+producer may append a tail, but must not rewrite, truncate, relocate or rotate the
+file. No command here contacts the protected network or writes to the input.
+
+The new recovery tool must already be present in the release that created the
+checkpoint. Adding this module changes the engine digest: existing Sprint 16
+checkpoints are not automatically compatible with Sprint 17. Retain the prior
+release for rollback; migrating those checkpoints is still separate work.
+
+Example paths are placeholders; parents and independently controlled anchor
+storage must already exist. Use the profile, root, model override (if any), and
+environment configuration that originally created the stream. `upload-demo`
+below reproduces the synthetic drill; operational streams generally use the
+default `deployment-baseline`, not demo thresholds.
+
+```powershell
+$RecoveryArgs = @(
+  '--source', 'D:\DrasthaOps\sensor\conn.jsonl',
+  '--audit-key', 'D:\DrasthaOps\security\audit.key',
+  '--root', 'F:\Drastha\Drastha',
+  '--profile', 'upload-demo'
+)
+.venv\Scripts\python.exe scripts/operate.py stream-backup @RecoveryArgs --journal D:\DrasthaOps\stream\journal.db --database D:\DrasthaOps\store-v1\analyst.db --destination D:\DrasthaOps\cut-001
+```
+
+Backup acquires the existing worker lock and both SQLite writer locks, snapshots
+committed WAL content, verifies the full signed analyst store, and reconstructs
+the journal on a disposable copy without advancing input or publishing findings.
+It requires exact report/evidence agreement between the journal and analyst store.
+A stale projection must first be reconciled using the original worker/release;
+the tool refuses rather than silently repairing or re-signing it.
+
+The new bundle contains `journal.db`, `analyst.db`, `anchor.json` and an
+HMAC-authenticated `manifest.json` written last. **The journal includes raw traffic;
+the bundle is not encrypted.** Protect it as sensitive evidence and never commit
+it. Keys, credentials, code, models and the source file are excluded. Retain the
+exact release/dependencies/models and signing key through separate approved
+custody procedures. A bundle alone cannot recover a lost source file or key.
+
+Copy `anchor.json` to independently controlled storage through your approved
+procedure and record the chosen recovery point. Passing a copy from inside the
+bundle satisfies the CLI argument but does not provide independent rollback
+protection; the tool cannot certify your storage custody.
+
+```powershell
+.venv\Scripts\python.exe scripts/operate.py stream-check @RecoveryArgs --bundle D:\DrasthaOps\cut-001 --expected-anchor E:\EvidenceAnchors\cut-001-anchor.json
+.venv\Scripts\python.exe scripts/operate.py stream-restore @RecoveryArgs --bundle D:\DrasthaOps\cut-001 --expected-anchor E:\EvidenceAnchors\cut-001-anchor.json --destination D:\DrasthaOps\recovered-stream-001
+```
+
+`stream-check` rehearses restoration on temporary copies and reports compatibility,
+not production readiness. `stream-restore` requires a new separate directory,
+validates the manifest/independent anchor, byte hashes, signed head, source prefix,
+engine/provenance and reconstructed results. It leaves a completion receipt only
+after verification. The receipt is informational, not a signed migration receipt.
+Failures retain incomplete restore output; never start it or overwrite it to retry.
+Choose a new destination after investigating the failure. Check exit code 0 and
+successful verification, not just the presence of database files.
+
+The selected cut preserves status, feedback and retention holds, but excludes
+later analyst changes. With operator approval, inspect the restored API/report,
+reconcile the recovery-point data-loss window, and manually configure **both**
+the restored journal and restored analyst DB together using the original source
+and exact engine. Stop old writers before cutover. Never run old and restored
+workers simultaneously: they have distinct lock files. No launcher/configuration
+is changed by these tools. Keep originals intact for rollback.
+
+Limits: 20,000 committed lines and 64 MiB raw committed source bytes; 1 GiB per
+database snapshot with a 30-second SQLite snapshot-copy budget. Full verification
+and reconstruction have no hard end-to-end time guarantee. No state compaction,
+live rotation, cross-version transformation, source rebinding, cross-database
+exactly-once delivery, offsite durability or power-loss guarantee is introduced.
+
+Disposable acceptance commands (use a new report filename):
+
+```powershell
+.venv\Scripts\python.exe scripts/check_stream_recovery.py --report-output output/stream-recovery-drill-new.json
+.venv\Scripts\python.exe -m unittest tests.test_stream_recovery_sprint17 tests.test_mixed_evaluation_replay -v
+```
+
+The drill uses isolated synthetic files and authenticated in-process ASGI upload
+and readback. It does not exercise browser/TCP/TLS transport or modify a running
+service. See [Sprint 17](SPRINT_17.md) for measured results and remaining limits.

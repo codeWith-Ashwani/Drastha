@@ -30,6 +30,10 @@ Production follow-on sequence (the original sprint plan below is historical):
 - Sprint 16: atomic continuous analyst projection, shared per-record validation
   and measured integrity-preserving optimization slice delivered (see `SPRINT_16.md`).
   Checkpoint migration/compaction and general production capacity remain open.
+- Sprint 17: coordinated signed journal/analyst cut, create-only same-engine
+  recovery and disposable compatibility rehearsal delivered (see `SPRINT_17.md`).
+  Original source identity is required. Cross-version migration, source disaster
+  recovery, automatic cutover and unattended deployment remain open.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

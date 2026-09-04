@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { HeroTopology } from "./HeroTopology";
 import {
   Activity, ArrowRight, Check, ChevronRight, CircleAlert, Download, Eye,
   FileJson, FileUp, Filter, Network, Radio, RefreshCw, Search, Shield, X,
@@ -229,8 +230,9 @@ function App() {
     </header>
 
     <main id="top">
-      <section className="workbench">
-        <div className="intro"><p className="eyebrow">Passive near-real-time intelligence</p><h1>Watch threats emerge from a one-way IP stream.</h1><p>Drastha passively receives simulated network records, detects and classifies suspicious behaviour, scores the risk and publishes explainable alerts as the stream arrives.</p><div className="intro-actions"><button className="primary" disabled={stream?.status === "running" || running || uploading} onClick={startLiveStream}><Radio size={16} />{stream?.status === "running" ? "Stream running…" : "Start live IP simulation"}</button><button className="text-button" disabled={running || stream?.status === "running"} onClick={runDemo}><Activity size={14} />Run instant replay</button></div></div>
+      <section className="workbench" aria-labelledby="hero-heading">
+        <HeroTopology />
+        <div className="intro"><p className="eyebrow">Passive near-real-time intelligence</p><h1 id="hero-heading">Watch threats emerge from a one-way IP stream.</h1><p>Drastha passively receives simulated network records, detects and classifies suspicious behaviour, scores the risk and publishes explainable alerts as the stream arrives.</p><div className="intro-actions"><button className="primary" disabled={stream?.status === "running" || running || uploading} onClick={startLiveStream}><Radio size={16} />{stream?.status === "running" ? "Stream running…" : "Start live IP simulation"}<ArrowRight size={17} aria-hidden="true" /></button><button className="text-button" disabled={running || stream?.status === "running"} onClick={runDemo}><Activity size={14} />Run instant replay</button></div></div>
         <div className="upload-card">
           <div className="upload-title"><FileUp size={19} /><div><b>Analyse your own replay</b><span>Zeek connection, DNS and TLS metadata · JSONL or JSON · up to 5 MB</span></div></div>
           <button className={`dropzone ${dragging ? "dragging" : ""}`} disabled={uploading || running} onClick={() => fileInput.current?.click()} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); void analyseFile(event.dataTransfer.files[0]); }}>

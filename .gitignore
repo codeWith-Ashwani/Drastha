@@ -37,6 +37,7 @@ output/backups/
 output/restore/
 output/operations/
 output/stream-recovery/
+output/exports/
 .env
 .env.local
 *.key

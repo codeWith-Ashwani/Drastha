@@ -5,11 +5,11 @@ import os
 import time
 from hashlib import sha256
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
+from fastapi.responses import FileResponse, StreamingResponse, JSONResponse, Response
 from pydantic import BaseModel, Field
 
 from aegisflow.api_store import IncidentRepository, read_jsonl, repository_from_url
@@ -19,6 +19,7 @@ from aegisflow.streaming_demo import stream_simulated_ip_traffic
 from aegisflow.analysis_session import configured_profile, UPLOAD_DEMO, STREAM_DEMO
 from aegisflow.security import AccessSettings, AccessMiddleware
 from aegisflow.audited_store import AuditedIncidentRepository, EvidenceIntegrityError
+from aegisflow.siem_export import build_siem_export, render_siem_export, ExportValidationError
 
 
 class StatusUpdate(BaseModel):
@@ -140,6 +141,26 @@ def create_app(repository: IncidentRepository | None = None, *, access: AccessSe
         if report is None:
             raise HTTPException(status_code=404, detail="analysis run not found")
         return report
+
+    @app.get("/api/analysis-runs/{run_id}/export")
+    def export_analysis_run(run_id: str, format: Literal["json", "ndjson"] = "json") -> Response:
+        report = store.get_analysis_run(run_id)
+        if report is None:
+            raise HTTPException(status_code=404, detail="analysis run not found")
+        if report.get("run_id") != run_id:
+            raise HTTPException(status_code=409, detail="Stored analysis run identity mismatch")
+        try:
+            payload = build_siem_export(report)
+        except ExportValidationError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        integrity = store.sign_export(payload) if isinstance(store, AuditedIncidentRepository) else None
+        content = render_siem_export(payload, integrity, format)
+        # The filename uses a digest instead of untrusted source/run names.
+        suffix = sha256(run_id.encode()).hexdigest()[:16]
+        return Response(content, media_type="application/x-ndjson" if format == "ndjson" else "application/json",
+                        headers={"Content-Disposition": f'attachment; filename="drastha-siem-{suffix}.{format}"',
+                                 "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
+                                 "X-Drastha-Export-Schema": "drastha-siem-export-v1"})
 
     @app.get("/api/incidents")
     def incidents(

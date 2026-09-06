@@ -48,6 +48,9 @@ deferred because they are production requirements, not demo blockers.
 ## Integrations and governance
 
 - Add controlled SIEM/SOAR export on the monitoring side of the diode.
+- Sprint 18 delivers completed-run JSON/NDJSON download with stable identities
+  and signed evidence receipts. Vendor-specific mappings, an operational SIEM
+  importer, continuous delivery queues, acknowledgements and retries remain open.
 - Define environment-specific allowlists, escalation policies and ownership.
 - Review privacy, evidence-handling and sector-specific compliance requirements.
 - Establish model/detector version approval and rollback procedures.

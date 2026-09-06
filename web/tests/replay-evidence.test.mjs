@@ -66,6 +66,7 @@ test("full evidence renders every incident, not only the highest-risk exfiltrati
   assert.match(html, /Passive metadata cannot prove actual intent/);
   assert.match(html, /Supporting measurements/);
   assert.match(html, /Overall replay risk/);
+  assert.match(html, /Download SIEM NDJSON/);
   assert.match(html, /82/);
   assert.match(html, /not an attack probability/);
 });

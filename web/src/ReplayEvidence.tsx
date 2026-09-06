@@ -3,6 +3,7 @@ import { Download, X } from "lucide-react";
 import type { UploadResult } from "./App";
 import { IncidentConclusion } from "./IncidentConclusion";
 import { OverallRisk } from "./OverallRisk";
+import { SiemExport } from "./SiemExport";
 
 // Join only within this completed run. Never hydrate historical evidence from
 // the mutable global incident queue, whose deterministic IDs can be reused.
@@ -48,7 +49,8 @@ export function ReplayEvidence({ run, initialIncidentId, onClose, label }: {
         {incidents.map((item) => <option key={item.incident_id} value={item.incident_id}>
           {item.threat_types.map(label).join(" + ")} · {item.src_ip} · {item.incident_id}
         </option>)}
-      </select></label><button onClick={exportRun}><Download size={14} />Export replay evidence</button></div>
+      </select></label><button onClick={exportRun}><Download size={14} />Export replay evidence</button>
+      <SiemExport runId={run.run_id} /></div>
     {visible.length === 0 && <p>No configured threat finding in this replay. Review quality and feature coverage; this is not a guarantee of safety.</p>}
     {visible.map((incident) => <section className="detail-section" key={incident.incident_id} data-incident-id={incident.incident_id}>
       <h3>{incident.threat_types.map(label).join(" + ")}</h3>

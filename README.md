@@ -7,9 +7,14 @@ network. It detects suspicious behaviour, gives every finding a clear label and
 confidence score, connects related findings into incidents, calculates an
 investigation priority, and shows the supporting evidence on a dashboard.
 
-The repository contains a complete offline SIH demonstration and the foundation
-of a production system. The SIH demo is complete; production hardening is still
-in progress.
+The repository contains a working offline SIH demonstration and a production
+hardening track. Controlled replay results are reproducible; real-traffic
+generalization, continuous-service scale and operational deployment remain open.
+
+Latest verified baseline (5 September 2026): **376 Python tests**, **18 frontend
+tests**, and a successful dashboard production build. The corrected accuracy
+replay produces **8 findings, 8 incidents, 0 false-positive behaviours and healthy
+input quality**. These are controlled synthetic results, not production accuracy.
 
 The corrected 8-threat/false-positive evaluation fixture is the native replay
 [`examples/drastha_accuracy_fp_test_v2.jsonl`](examples/drastha_accuracy_fp_test_v2.jsonl),
@@ -106,9 +111,11 @@ return connection to the monitored network.
 | Horizontal host scan | Behavioural fan-out analysis | Unique hosts, destination service and time window |
 | SYN flood | Traffic-rate analysis | Attempt count, incomplete ratio and source diversity |
 | UDP flood | Traffic-rate analysis | Packet volume, bytes and source diversity |
+| UDP reflection/amplification | Response-volume and service-pattern analysis | Direction, packet volume and response pattern |
 | DGA-like domain | Character 3-gram Naive Bayes ML model | Uncalibrated model score, domain and entropy context |
 | DNS tunnelling | Volume and entropy analysis | Query count, unique labels, length and entropy |
 | C2-style callback | Statistical timing analysis | Interval consistency, size consistency and connection count |
+| Encrypted-session metadata anomaly | Passive fingerprint and sequence baselines | JA3/JA4 prevalence, measured packet-size and timing anomalies |
 | Possible data exfiltration | Adaptive baseline analysis | Outbound bytes, direction ratio and baseline comparison |
 
 Drastha deliberately uses a hybrid approach. ML is used where learning character
@@ -149,6 +156,13 @@ highest-priority incident combines a repeated callback with abnormal outbound
 transfer and receives a risk score of 100.
 
 Risk 100 means “investigate first.” It does **not** mean 100% certainty.
+
+Uploaded replays also receive an **overall replay risk** across their incidents:
+highest incident risk + capped incident-breadth bonus + capped threat-diversity
+bonus, limited to 100. The corrected accuracy fixture scores **88/100 (critical)**:
+58 + 15 + 15. This policy score is an investigation priority; it does not establish
+that separate incidents belong to one coordinated attack. The full calculation
+is documented in [Models and features](docs/MODELS_AND_FEATURES.md#overall-replay-risk).
 
 ## System requirements
 
@@ -367,6 +381,42 @@ The uploaded content is:
 
 The original uploaded file is not retained by the local application.
 
+Completed analysis snapshots, findings, incidents and supporting evidence are
+stored in the configured analyst database (`output/drastha.db` by default for
+SQLite). **Review full evidence** and **Review this incident** use the selected
+replay snapshot, so evidence from another upload is not substituted. Exports
+include the recorded conclusion, likely objective and uncertainty.
+
+### Reproduce the eight-threat accuracy test
+
+Upload **`examples/drastha_accuracy_fp_test_v2.jsonl`**. This is different from the
+original `drastha_accuracy_fp_test.jsonl` draft, whose invalid timestamps and
+incomplete DNS/TLS evidence can produce only five incidents. The corrected fixture
+preserves 53 scenario records and adds 100 passive TLS baseline observations.
+
+```powershell
+.\.venv\Scripts\python.exe scripts/check_accuracy_fixture.py --fixture examples/drastha_accuracy_fp_test_v2.jsonl --report-output output/accuracy-check-new.json
+```
+
+Choose a new report filename each time. This check calls the actual upload API in
+a temporary database and verifies saved-run readback.
+
+| Measurement | Corrected fixture |
+|---|---:|
+| Received / accepted / rejected | 153 / 153 / 0 |
+| Findings / incidents | 8 / 8 |
+| Behaviour-level TP / FP / FN / TN | 8 / 0 / 0 / 107 |
+| Precision / recall / F1 | 100% / 100% / 100% |
+| Timestamp regressions / duplicate UIDs | 0 / 0 |
+| Data quality | healthy |
+| Overall investigation priority | 88/100, critical |
+
+Health checks, approved backups and authorized scanners remain benign under the
+operator-owned context policy. The 100 baseline encrypted sessions have
+insufficient evidence while warming up; four suspicious sessions receive measured
+features. The dashboard displays detected, context-suppressed, insufficient and
+rejected outcomes separately.
+
 Raw PCAP files are not accepted directly by the browser. Convert them through
 Zeek using the command-line path below.
 
@@ -457,10 +507,19 @@ source .venv/bin/activate
 python -m unittest discover -s tests -v
 ```
 
-The current repository contains 115 automated tests covering ingestion,
+The verified baseline contains 376 Python tests covering ingestion,
 detectors, ML training, correlation, persistence, API workflows, replay upload,
 near-real-time streaming, telemetry quality, PCAP integration and restart
 behaviour.
+
+Frontend regression tests and build:
+
+```powershell
+cd web
+node --test tests/*.test.mjs
+pnpm run build
+cd ..
+```
 
 The canonical mixed evaluation replay is
 `examples/drastha_mixed_evaluation_v3.jsonl`. Its 452 labelled records are in
@@ -568,18 +627,21 @@ dashboard catch-all is not taking precedence in a custom development setup.
 
 ### Still required for production
 
-- continuous live Zeek log following instead of the simulated dashboard stream;
-- licensed and versioned external datasets;
-- deployment-specific threshold and confidence calibration;
-- measured false-positive and false-negative rates;
-- queue backpressure, checkpoints and multi-sensor ordering;
-- sustained throughput, latency and resource testing;
-- authentication and role-based access control;
-- encryption, secret management and tamper-evident audit logs;
-- high availability, backups and upgrade testing;
+- real-sensor validation and seamless log rotation beyond the bounded file follower;
+- representative licensed datasets and environment-specific calibration;
+- independently measured false-positive and false-negative rates per threat family;
+- state compaction, multi-sensor ordering and cross-version checkpoint migration;
+- passing sustained 1,000-records/sec gates and longer all-protocol load tests;
+- SSO/MFA and credential lifecycle beyond existing opt-in role-based access;
+- encrypted/offsite storage, key rotation and external audit-head custody;
+- service supervision, high availability and upgrades beyond same-engine recovery;
 - SIEM/SOAR integration and operational governance.
 
-The current production-readiness estimate is approximately 40%. See
+Signed 100-records/sec runs passed. Recent 1,000-records/sec, batch-256 runs
+processed 60,000 records with healthy quality but still failed the unchanged
+100 ms producer-scheduling gate. The higher target remains unproven.
+
+See
 [`docs/PRODUCTION_LIMITATIONS.md`](docs/PRODUCTION_LIMITATIONS.md) for the full
 backlog and [`docs/STATUS.md`](docs/STATUS.md) for verified progress.
 

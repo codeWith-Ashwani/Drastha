@@ -11,7 +11,7 @@ The repository contains a working offline SIH demonstration and a production
 hardening track. Controlled replay results are reproducible; real-traffic
 generalization, continuous-service scale and operational deployment remain open.
 
-Latest verified baseline (5 September 2026): **376 Python tests**, **18 frontend
+Latest verified baseline (6 September 2026): **388 Python tests**, **18 frontend
 tests**, and a successful dashboard production build. The corrected accuracy
 replay produces **8 findings, 8 incidents, 0 false-positive behaviours and healthy
 input quality**. These are controlled synthetic results, not production accuracy.
@@ -29,6 +29,12 @@ The operator tools validate a signed recovery point, reconstruct detection state
 on disposable copies, and preserve the selected analyst reviews and holds.
 Original source identity is required; cross-version migration and automatic
 cutover remain unsupported. Follow the [recovery runbook](docs/OPERATIONS_RUNBOOK.md#8-coordinated-stream-recovery-sprint-17).
+
+Sprint 18 adds [completed-replay SIEM export](docs/SPRINT_18.md): JSON/NDJSON
+downloads with stable import identities, saved-run evidence, telemetry quality,
+overall risk and signed-store receipts. In **Review full evidence**, select
+**Download SIEM NDJSON**. See the documented import contract before configuring
+an external importer; automated delivery and vendor-specific mappings remain open.
 
 Sprint 16 adds [atomic continuous-ingest publication and measured optimization](docs/SPRINT_16.md)
 while retaining full source and signed-evidence verification. The finite profiler
@@ -507,7 +513,7 @@ source .venv/bin/activate
 python -m unittest discover -s tests -v
 ```
 
-The verified baseline contains 376 Python tests covering ingestion,
+The verified baseline contains 388 Python tests covering ingestion,
 detectors, ML training, correlation, persistence, API workflows, replay upload,
 near-real-time streaming, telemetry quality, PCAP integration and restart
 behaviour.
@@ -593,6 +599,8 @@ The FastAPI service exposes endpoints under `/api`, including:
 - `/api/incidents` — prioritized incident queue;
 - `/api/incidents/{id}` — complete evidence and timeline;
 - `/api/replays/analyse` — analyse a browser-uploaded replay;
+- `/api/analysis-runs/{run_id}` — saved replay report;
+- `/api/analysis-runs/{run_id}/export?format=ndjson` — completed-run SIEM export (JSON also supported);
 - `/api/stream/simulated` — monitoring-side near-real-time demonstration feed;
 - `/api/metrics` — incident summary metrics.
 
@@ -700,6 +708,8 @@ See [`docs/FINAL_JUDGE_DEMO_GUIDE.md`](docs/FINAL_JUDGE_DEMO_GUIDE.md).
 
 ## Documentation
 
+- [SIEM export contract and validation (Sprint 18)](docs/SPRINT_18.md)
+- [Coordinated same-engine recovery (Sprint 17)](docs/SPRINT_17.md)
 - [Protected access, signed evidence and retention (Sprint 13)](docs/SPRINT_13.md)
 - [Continuous ingestion and recovery (Sprint 12)](docs/SPRINT_12.md)
 - [Architecture](docs/ARCHITECTURE.md)

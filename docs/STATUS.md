@@ -1,8 +1,23 @@
 # Drastha build status
 
-Last updated: 4 September 2026
+Last updated: 6 September 2026
 
 ## Production roadmap update
+
+Sprint 18 delivers completed-replay SIEM JSON/NDJSON export. The actual protected
+upload/export drill preserves all eight incident behaviors for both corrected
+fixtures (153 and 452 accepted, zero rejected, zero FP/FN, healthy). Stable event
+IDs support repeated-import deduplication; signed-store receipts verify the full
+export. No external delivery or vendor mapping is claimed. See `SPRINT_18.md`.
+Current verification: **388 Python tests**, **18 frontend tests**, dashboard
+production build and all 28 fixture/export acceptance gates passed.
+
+Sprint 17's same-engine coordinated recovery slice is delivered (362 tests at
+that release). Subsequent accuracy/evidence/dashboard work raised the baseline
+to 376 tests and added recorded incident conclusions, exact run-scoped evidence,
+measured TLS fixture coverage, operational context and an overall replay risk.
+The corrected eight-incident fixture scores 88/100 under the documented priority
+policy. Historical test counts below describe their releases, not today's suite.
 
 Sprint 16's integrity-preserving optimization slice is delivered with **334
 Python tests passing** (20 new). Continuous incident/alert/report publication is

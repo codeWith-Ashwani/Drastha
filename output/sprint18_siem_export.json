@@ -1,0 +1,301 @@
+{
+  "format": "drastha-siem-export-v1",
+  "limitations": [
+    "Synthetic fixtures; ASGI API/authentication checked without real SIEM, TCP or browser.",
+    "Export timings are small-fixture observations, not sustained-throughput measurements.",
+    "No external delivery, CEF/ECS compatibility or automatic blocking is claimed."
+  ],
+  "passed": true,
+  "results": [
+    {
+      "evaluation": {
+        "classification_mismatches": [],
+        "f1_score": 1.0,
+        "false_negative": 0,
+        "false_positive": 0,
+        "false_positive_rate": 0.0,
+        "ground_truth_isolation": "evaluation fields used only after detector inference",
+        "identity_overlap": {
+          "detector_state_reset_from_ground_truth": false,
+          "note": "Ground-truth fields never control detector state. Use distinct identities or explicit externally defined scenario boundaries for isolated evaluation.",
+          "sources_present_in_attack_and_benign_units": []
+        },
+        "per_class": {
+          "botnet_c2_beaconing": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          },
+          "data_exfiltration": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          },
+          "dga_domain": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          },
+          "dns_tunnelling": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          },
+          "encrypted_session_malware": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          },
+          "reconnaissance_port_scan": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          },
+          "udp_reflection_amplification": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          },
+          "volumetric_ddos_syn_flood": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          }
+        },
+        "precision": 1.0,
+        "recall": 1.0,
+        "scope": "scenario_endpoint_units",
+        "true_negative": 107,
+        "true_positive": 8,
+        "units": 115,
+        "unmatched_alerts": []
+      },
+      "events": 8,
+      "export_elapsed_ms": 23.291,
+      "fixture": "drastha_accuracy_fp_test_v2.jsonl",
+      "fixture_sha256": "3fb2f1740929f74a9ba9e4b16ca3b98687b049626004228b81c78d3c3954f17b",
+      "gates": {
+        "accepted_expected_records": true,
+        "all_evidence_preserved": true,
+        "changed_export_rejected": true,
+        "eight_incidents_exported": true,
+        "expected_behavior_metrics": true,
+        "healthy_without_rejections": true,
+        "json_ndjson_equivalent": true,
+        "json_receipt_verified": true,
+        "ndjson_receipt_verified": true,
+        "overall_risk_preserved": true,
+        "requires_authentication": true,
+        "saved_snapshot_preserved": true,
+        "source_preserved": true,
+        "stable_event_ids": true
+      },
+      "json_bytes": 80606,
+      "ndjson_bytes": 80900,
+      "ndjson_lines": 9,
+      "overall_risk": {
+        "affected_sources": 8,
+        "assessment": "8 incidents across 8 sources and 6 threat categories produce a critical overall investigation priority. Incident b478a16c70d3b64b7a54 is the dominant risk driver.",
+        "distinct_threat_types": 6,
+        "dominant_incident_id": "b478a16c70d3b64b7a54",
+        "dominant_threat_types": [
+          "data_exfiltration"
+        ],
+        "incident_count": 8,
+        "score": 88,
+        "scoring_factors": [
+          {
+            "comparison": "base component",
+            "explanation": "The highest incident score anchors replay-wide priority and is never averaged down.",
+            "name": "dominant_incident_risk",
+            "observed": 58
+          },
+          {
+            "comparison": "capped at 15",
+            "explanation": "Additional incidents increase operational investigation scope.",
+            "name": "incident_breadth_bonus",
+            "observed": 15
+          },
+          {
+            "comparison": "capped at 15",
+            "explanation": "Distinct threat categories indicate broader security exposure.",
+            "name": "threat_diversity_bonus",
+            "observed": 15
+          }
+        ],
+        "severity": "critical",
+        "uncertainty": "This score aggregates investigation priority from passive metadata. It is not an attack probability, and it does not prove that separate incidents are coordinated."
+      },
+      "passed": true,
+      "quality": {
+        "conflicting_duplicate_uid_count": 0,
+        "degraded_reasons": [],
+        "duplicate_uid_count": 0,
+        "errors": [],
+        "exact_duplicate_count": 0,
+        "invalid_timestamp_count": 0,
+        "maximum_backward_skew_seconds": 0.0,
+        "out_of_order_records": 0,
+        "quarantined_records": [],
+        "records_accepted": 153,
+        "records_quarantined": 0,
+        "records_received": 153,
+        "records_rejected": 0,
+        "records_seen": 153,
+        "rejection_ratio": 0.0,
+        "source": "drastha_accuracy_fp_test_v2.jsonl",
+        "status": "healthy",
+        "stream": "passive:replay",
+        "unsupported_record_count": 0
+      },
+      "records": 153
+    },
+    {
+      "evaluation": {
+        "classification_mismatches": [],
+        "f1_score": 1.0,
+        "false_negative": 0,
+        "false_positive": 0,
+        "false_positive_rate": 0.0,
+        "ground_truth_isolation": "evaluation fields used only after detector inference",
+        "identity_overlap": {
+          "detector_state_reset_from_ground_truth": false,
+          "note": "Ground-truth fields never control detector state. Use distinct identities or explicit externally defined scenario boundaries for isolated evaluation.",
+          "sources_present_in_attack_and_benign_units": [
+            "192.168.20.50",
+            "192.168.20.60"
+          ]
+        },
+        "per_class": {
+          "botnet_c2_beaconing": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          },
+          "data_exfiltration": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          },
+          "dga_domain": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          },
+          "dns_tunnelling": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          },
+          "encrypted_session_malware": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          },
+          "reconnaissance_port_scan": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          },
+          "udp_reflection_amplification": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          },
+          "volumetric_ddos_syn_flood": {
+            "detected_units": 1,
+            "expected_units": 1,
+            "missed_units": 0
+          }
+        },
+        "precision": 1.0,
+        "recall": 1.0,
+        "scope": "scenario_endpoint_units",
+        "true_negative": 86,
+        "true_positive": 8,
+        "units": 94,
+        "unmatched_alerts": []
+      },
+      "events": 8,
+      "export_elapsed_ms": 27.244,
+      "fixture": "drastha_mixed_evaluation_v3.jsonl",
+      "fixture_sha256": "5848e73370f34e26583dd3678339e93b63b877c9ae3ed3a26b05d15952d844fd",
+      "gates": {
+        "accepted_expected_records": true,
+        "all_evidence_preserved": true,
+        "changed_export_rejected": true,
+        "eight_incidents_exported": true,
+        "expected_behavior_metrics": true,
+        "healthy_without_rejections": true,
+        "json_ndjson_equivalent": true,
+        "json_receipt_verified": true,
+        "ndjson_receipt_verified": true,
+        "overall_risk_preserved": true,
+        "requires_authentication": true,
+        "saved_snapshot_preserved": true,
+        "source_preserved": true,
+        "stable_event_ids": true
+      },
+      "json_bytes": 79478,
+      "ndjson_bytes": 79772,
+      "ndjson_lines": 9,
+      "overall_risk": {
+        "affected_sources": 8,
+        "assessment": "8 incidents across 8 sources and 6 threat categories produce a critical overall investigation priority. Incident 64a0e8450985df701f75 is the dominant risk driver.",
+        "distinct_threat_types": 6,
+        "dominant_incident_id": "64a0e8450985df701f75",
+        "dominant_threat_types": [
+          "data_exfiltration"
+        ],
+        "incident_count": 8,
+        "score": 88,
+        "scoring_factors": [
+          {
+            "comparison": "base component",
+            "explanation": "The highest incident score anchors replay-wide priority and is never averaged down.",
+            "name": "dominant_incident_risk",
+            "observed": 58
+          },
+          {
+            "comparison": "capped at 15",
+            "explanation": "Additional incidents increase operational investigation scope.",
+            "name": "incident_breadth_bonus",
+            "observed": 15
+          },
+          {
+            "comparison": "capped at 15",
+            "explanation": "Distinct threat categories indicate broader security exposure.",
+            "name": "threat_diversity_bonus",
+            "observed": 15
+          }
+        ],
+        "severity": "critical",
+        "uncertainty": "This score aggregates investigation priority from passive metadata. It is not an attack probability, and it does not prove that separate incidents are coordinated."
+      },
+      "passed": true,
+      "quality": {
+        "conflicting_duplicate_uid_count": 0,
+        "degraded_reasons": [],
+        "duplicate_uid_count": 0,
+        "errors": [],
+        "exact_duplicate_count": 0,
+        "invalid_timestamp_count": 0,
+        "maximum_backward_skew_seconds": 0.0,
+        "out_of_order_records": 0,
+        "quarantined_records": [],
+        "records_accepted": 452,
+        "records_quarantined": 0,
+        "records_received": 452,
+        "records_rejected": 0,
+        "records_seen": 452,
+        "rejection_ratio": 0.0,
+        "source": "drastha_mixed_evaluation_v3.jsonl",
+        "status": "healthy",
+        "stream": "passive:replay",
+        "unsupported_record_count": 0
+      },
+      "records": 452
+    }
+  ],
+  "sprint": 18
+}

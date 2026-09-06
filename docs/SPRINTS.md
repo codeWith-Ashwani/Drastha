@@ -34,6 +34,13 @@ Production follow-on sequence (the original sprint plan below is historical):
   recovery and disposable compatibility rehearsal delivered (see `SPRINT_17.md`).
   Original source identity is required. Cross-version migration, source disaster
   recovery, automatic cutover and unattended deployment remain open.
+- Sprint 18: completed replay SIEM JSON/NDJSON export, stable import identities,
+  exact saved-run evidence and signed-store receipts delivered (see `SPRINT_18.md`).
+  Vendor mappings and external delivery/acknowledgements remain open.
+- Sprint 19 (planned): profile and address the sustained-ingestion capacity gate
+  with the existing quality, integrity, scheduling and latency standards.
+- Sprint 20 (planned): bounded source rotation, continuity verification and
+  restart handling; cross-version migration remains a separate concern.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

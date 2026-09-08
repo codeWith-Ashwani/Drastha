@@ -7,7 +7,12 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from aegisflow.ingestion.zeek_runner import WSLZeekRunner, ZeekRunner, ZeekUnavailableError
+from aegisflow.ingestion.zeek_runner import (
+    WSLZeekRunner,
+    ZeekExecutionError,
+    ZeekRunner,
+    ZeekUnavailableError,
+)
 
 
 class ZeekRunnerTests(unittest.TestCase):
@@ -34,6 +39,23 @@ class ZeekRunnerTests(unittest.TestCase):
             with patch("aegisflow.ingestion.zeek_runner.subprocess.run", side_effect=fake_run):
                 result = ZeekRunner(str(executable)).process_pcap(pcap, output)
             self.assertEqual(result.conn_log, output.resolve() / "conn.log")
+            self.assertEqual(result.log_files, (output.resolve() / "conn.log",))
+            self.assertEqual(result.command[-2:], (str(pcap.resolve()), "LogAscii::use_json=T"))
+
+    def test_existing_output_evidence_is_never_overwritten(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            executable = root / "zeek.exe"
+            executable.write_bytes(b"placeholder")
+            pcap = root / "capture.pcap"
+            pcap.write_bytes(b"pcap-placeholder")
+            output = root / "zeek-output"
+            output.mkdir()
+            evidence = output / "conn.log"
+            evidence.write_text("old-evidence", encoding="utf-8")
+            with self.assertRaisesRegex(ZeekExecutionError, "must be empty"):
+                ZeekRunner(str(executable)).process_pcap(pcap, output)
+            self.assertEqual(evidence.read_text(encoding="utf-8"), "old-evidence")
 
     def test_wsl_availability_uses_linux_zeek_path(self):
         completed = subprocess.CompletedProcess([], 0, "zeek version 8.0.10", "")

@@ -37,10 +37,19 @@ Production follow-on sequence (the original sprint plan below is historical):
 - Sprint 18: completed replay SIEM JSON/NDJSON export, stable import identities,
   exact saved-run evidence and signed-store receipts delivered (see `SPRINT_18.md`).
   Vendor mappings and external delivery/acknowledgements remain open.
-- Sprint 19 (planned): profile and address the sustained-ingestion capacity gate
-  with the existing quality, integrity, scheduling and latency standards.
-- Sprint 20 (planned): bounded source rotation, continuity verification and
-  restart handling; cross-version migration remains a separate concern.
+- Sprint 19: real offline Zeek connection/DNS/TLS interoperability and
+  passive-boundary evidence delivered (see `SPRINT_19.md`). Live mirror, QUIC,
+  browser transport and accuracy calibration are not claimed.
+- Sprint 20 (planned): reproducible SIH-guided lab corpus with attack and benign
+  controls, immutable manifests and actual Zeek-derived telemetry.
+- Sprint 21 (planned): DGA research iteration with family-separated development,
+  validation and a fresh untouched final holdout.
+- Sprint 22 (planned): threat validation and false-positive hardening on unseen
+  benign and attack scenarios.
+- Sprint 23 (planned): deployment profile, network boundaries and confidence
+  calibration.
+- Sprint 24 (planned): sustained mixed-protocol performance and reliability.
+- Sprint 25 (planned): final reproducible SIH release validation.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

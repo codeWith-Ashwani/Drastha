@@ -4,6 +4,14 @@ Last updated: 9 September 2026
 
 ## Production roadmap update
 
+Sprint 21's DGA research iteration is delivered but not production-approved.
+The family-separated validation candidate reached 71.35% recall and 0.91% point
+FPR, while its 95% FPR upper bound remained 1.19%. On the first frozen final
+holdout it achieved 42.60% recall and 1.13% FPR, with exact upload-path parity
+and healthy quality. The failed candidate cannot be loaded by normal runtime.
+Verification passes with 396 Python tests, 18 frontend tests and the production
+dashboard build. See `docs/SPRINT_21.md`.
+
 Sprint 20 is complete. The SIH-guided offline lab corpus contains 13 isolated
 captures and 392 healthy chronological records with checksum-pinned sidecar
 truth. The shared analysis path detects eight supported attacks while preserving

@@ -44,8 +44,10 @@ Production follow-on sequence (the original sprint plan below is historical):
   isolated checksum-pinned scenarios, separate labels, real Zeek sensor anchor,
   and an honest 8 TP / 3 FP / 1 FN / 2 TN baseline are documented in
   `SPRINT_20.md`.
-- Sprint 21 (planned): DGA research iteration with family-separated development,
-  validation and a fresh untouched final holdout.
+- Sprint 21: DGA research iteration with family-separated development,
+  validation and a fresh final holdout — complete but **not approved**. The
+  broader candidate improved validation recall but failed FPR uncertainty and
+  unseen-family generalization gates; see `SPRINT_21.md`.
 - Sprint 22 (planned): threat validation and false-positive hardening on unseen
   benign and attack scenarios.
 - Sprint 23 (planned): deployment profile, network boundaries and confidence

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass
+from ipaddress import ip_address
 from pathlib import Path
 from typing import Any
 
@@ -47,9 +48,11 @@ def _rules(value: Any, name: str) -> tuple[EndpointRule, ...]:
         if not isinstance(item, dict):
             raise ValueError(f"context policy {name}[{index}] must be an object")
         try:
+            src_ip = str(ip_address(str(item["src_ip"])))
+            dst_ip = str(ip_address(str(item["dst_ip"])))
             output.append(EndpointRule(
-                src_ip=str(item["src_ip"]),
-                dst_ip=str(item["dst_ip"]),
+                src_ip=src_ip,
+                dst_ip=dst_ip,
                 dst_port=int(item["dst_port"]),
                 protocol=str(item.get("protocol", "") or "").lower(),
                 service=str(item.get("service", "") or "").lower(),
@@ -60,21 +63,17 @@ def _rules(value: Any, name: str) -> tuple[EndpointRule, ...]:
     return tuple(output)
 
 
-def load_context_policy(root: str | Path | None = None) -> ContextPolicy:
-    project_root = Path(root) if root is not None else Path(__file__).resolve().parents[2]
-    configured = os.getenv("DRASTHA_CONTEXT_POLICY")
-    path = Path(configured) if configured else project_root / "config" / "context_policy.json"
-    if not path.is_file():
-        return ContextPolicy(source="none")
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise ValueError(f"Could not load context policy {path}: {exc}") from exc
+def parse_context_policy(payload: Any, *, source: str = "memory") -> ContextPolicy:
+    """Validate trusted operator context; telemetry claims never call this path."""
     if not isinstance(payload, dict):
         raise ValueError("context policy root must be an object")
     scanners = payload.get("authorized_scanner_sources", [])
     if not isinstance(scanners, list) or any(not isinstance(item, str) or not item.strip() for item in scanners):
         raise ValueError("context policy authorized_scanner_sources must be an array of IP strings")
+    try:
+        normalized_scanners = tuple(str(ip_address(item.strip())) for item in scanners)
+    except ValueError as exc:
+        raise ValueError(f"invalid authorized scanner IP: {exc}") from exc
     return ContextPolicy(
         trusted_periodic_endpoints=_rules(
             payload.get("trusted_periodic_endpoints"), "trusted_periodic_endpoints"
@@ -83,6 +82,24 @@ def load_context_policy(root: str | Path | None = None) -> ContextPolicy:
             payload.get("approved_bulk_transfer_endpoints"),
             "approved_bulk_transfer_endpoints",
         ),
-        authorized_scanner_sources=tuple(item.strip() for item in scanners),
-        source=str(path),
+        authorized_scanner_sources=normalized_scanners,
+        source=source,
     )
+
+
+def load_context_policy_file(path: str | Path) -> ContextPolicy:
+    path = Path(path)
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"Could not load context policy {path}: {exc}") from exc
+    return parse_context_policy(payload, source=str(path))
+
+
+def load_context_policy(root: str | Path | None = None) -> ContextPolicy:
+    project_root = Path(root) if root is not None else Path(__file__).resolve().parents[2]
+    configured = os.getenv("DRASTHA_CONTEXT_POLICY")
+    path = Path(configured) if configured else project_root / "config" / "context_policy.json"
+    if not path.is_file():
+        return ContextPolicy(source="none")
+    return load_context_policy_file(path)

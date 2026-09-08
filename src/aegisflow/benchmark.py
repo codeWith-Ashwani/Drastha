@@ -151,7 +151,8 @@ def load_corpus(manifest_path, data_root):
     return manifest, sha256(raw).hexdigest(), loaded
 
 
-def run_benchmark(manifest_path, *, data_root, split="test", repository=None):
+def run_benchmark(manifest_path, *, data_root, split="test", repository=None,
+                  context_policy: ContextPolicy | None = None):
     if split not in SPLITS:
         raise ValueError("Invalid evaluation split")
     started = time.perf_counter()
@@ -182,7 +183,9 @@ def run_benchmark(manifest_path, *, data_root, split="test", repository=None):
     aggregate = Counter()
     per_class = defaultdict(Counter)
     for entry, prepared, units, details in selected:
-        session = AnalysisSession(profile, context_policy=ContextPolicy(), dns_model=model)
+        session = AnalysisSession(
+            profile, context_policy=context_policy or ContextPolicy(), dns_model=model
+        )
         analysed = analyse_prepared(prepared, repository, filename=entry["id"], session=session)
         scores = score_units(units, analysed["alerts"], {record["uid"] for record in prepared.accepted_records})
         for key in ("tp", "fp", "fn", "tn"):
@@ -192,6 +195,7 @@ def run_benchmark(manifest_path, *, data_root, split="test", repository=None):
         result = {"artifact_id": entry["id"], "capture_id": entry["capture_id"], "split": split,
                   "origin": entry["origin"], "source_sha256": entry["sha256"],
                   "adapter": details, "quality": analysed["quality"], "feature_coverage": analysed["feature_coverage"],
+                  "context_policy": analysed["context_policy"],
                   "findings": len(analysed["alerts"]), "incidents": len(analysed["incidents"]),
                   "observed_subtypes": dict(Counter(a["subtype"] for a in analysed["alerts"])),
                   "scores": scores, "analysis_provenance": analysed["analysis_provenance"],
@@ -206,6 +210,12 @@ def run_benchmark(manifest_path, *, data_root, split="test", repository=None):
             "split_audit": {"artifacts": len(loaded), "groups_checked": True,
                 "normalized_cross_split_duplicates": 0, "resets": "one session per capture artifact, never from labels",
                 "registered_splits": sorted({entry["split"] for entry, *_ in loaded})},
+            "context_policy": {
+                "source": (context_policy or ContextPolicy()).source,
+                "trusted_periodic_rules": len((context_policy or ContextPolicy()).trusted_periodic_endpoints),
+                "approved_bulk_transfer_rules": len((context_policy or ContextPolicy()).approved_bulk_transfer_endpoints),
+                "authorized_scanner_sources": len((context_policy or ContextPolicy()).authorized_scanner_sources),
+            },
             "runs": runs, "pooled_binary_alert_coverage": metrics(aggregate),
             "per_class": {name: metrics(values) for name, values in per_class.items()},
             "limitations": ["Frozen uncalibrated detector thresholds; not a production-accuracy claim.",

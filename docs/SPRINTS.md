@@ -48,8 +48,10 @@ Production follow-on sequence (the original sprint plan below is historical):
   validation and a fresh final holdout — complete but **not approved**. The
   broader candidate improved validation recall but failed FPR uncertainty and
   unseen-family generalization gates; see `SPRINT_21.md`.
-- Sprint 22 (planned): threat validation and false-positive hardening on unseen
-  benign and attack scenarios.
+- Sprint 22: contextual false-positive hardening and passive Slow HTTP coverage
+  delivered on the checksum-pinned SIH lab corpus (see `SPRINT_22.md`). Exact
+  operator policy removes the three known control FPs while all nine attacks
+  remain detected. Real unseen production validation remains an explicit limit.
 - Sprint 23 (planned): deployment profile, network boundaries and confidence
   calibration.
 - Sprint 24 (planned): sustained mixed-protocol performance and reliability.

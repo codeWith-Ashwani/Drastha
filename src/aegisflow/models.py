@@ -9,6 +9,7 @@ THREAT_CLASS_BY_SUBTYPE = {
     "udp_flood": "Volumetric DDoS - UDP Flood",
     "udp_reflection_amplification": "Volumetric DDoS - UDP Reflection/Amplification",
     "distributed_source_syn_flood": "Volumetric DDoS - Distributed-Source SYN Flood",
+    "slow_http_connection_exhaustion": "Protocol DDoS - Slow HTTP Connection Exhaustion",
     "encrypted_session_metadata_anomaly": "Encrypted-session metadata anomaly",
 }
 

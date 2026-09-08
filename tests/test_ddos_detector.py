@@ -18,6 +18,37 @@ def event(ts, uid, src, dst, protocol, state="S0", packets=1, bytes_sent=0):
 
 
 class DDoSDetectorTests(unittest.TestCase):
+    def test_slow_http_connection_exhaustion_uses_duration_state_and_low_volume(self):
+        detector = DDoSDetector(DDoSConfig(syn_attempt_threshold=100))
+        alerts = []
+        for index in range(20):
+            item = event(index * 0.4, f"L{index}", "10.0.0.5", "10.0.0.8", "tcp", state="S1")
+            item = __import__("dataclasses").replace(
+                item, dst_port=80, duration_seconds=240, outbound_bytes=120,
+                inbound_bytes=30, outbound_packets=3, inbound_packets=1,
+                raw={"service": "http"},
+            )
+            alerts.extend(detector.process(item))
+        self.assertEqual([item.subtype for item in alerts], ["slow_http_connection_exhaustion"])
+        self.assertEqual(alerts[0].to_dict()["threat_class"], "Protocol DDoS - Slow HTTP Connection Exhaustion")
+        self.assertTrue(any(item.name == "estimated_overlapping_connections" for item in alerts[0].evidence))
+        from aegisflow.incidents import build_incident_conclusion
+        conclusion = build_incident_conclusion(alerts)
+        self.assertIn("hold connection-handling resources", conclusion.likely_objective.lower())
+
+    def test_completed_or_high_volume_http_sessions_are_not_slow_http(self):
+        for state, sent in (("SF", 120), ("S1", 20_000)):
+            detector = DDoSDetector(DDoSConfig(syn_attempt_threshold=100))
+            alerts = []
+            for index in range(24):
+                item = event(index * 0.4, f"N{index}", "10.0.0.5", "10.0.0.8", "tcp", state=state)
+                item = __import__("dataclasses").replace(
+                    item, dst_port=80, duration_seconds=240, outbound_bytes=sent,
+                    inbound_bytes=30, outbound_packets=3, inbound_packets=1,
+                    raw={"service": "http"},
+                )
+                alerts.extend(detector.process(item))
+            self.assertEqual(alerts, [])
     def test_syn_flood(self):
         detector = DDoSDetector(DDoSConfig(
             window_seconds=5, syn_attempt_threshold=5,

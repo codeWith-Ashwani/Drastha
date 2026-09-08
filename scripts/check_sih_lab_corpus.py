@@ -15,7 +15,7 @@ from aegisflow.benchmark import load_corpus, run_benchmark  # noqa: E402
 from build_sih_lab_corpus import VERSION, REQUIRED, build, scenarios  # noqa: E402
 
 
-EXPECTED_BASELINE = {"tp": 8, "fp": 3, "fn": 1, "tn": 2}
+EXPECTED_BASELINE = {"tp": 9, "fp": 3, "fn": 0, "tn": 2}
 CONTEXT_TARGETS = {
     "benign-health-control": "periodic_beacon",
     "benign-backup-control": "outbound_volume_anomaly",
@@ -68,7 +68,11 @@ def audit(repo_root: Path) -> dict:
         and run_map[name]["scores"]["binary_alert_coverage"]["fp"] == 1
         for name, subtype in CONTEXT_TARGETS.items()
     )
-    known_gap_visible = (run_map["slow-http-exhaustion"]["scores"]["binary_alert_coverage"]["fn"] == 1)
+    slow_http_covered = (
+        run_map["slow-http-exhaustion"]["observed_subtypes"].get(
+            "slow_http_connection_exhaustion"
+        ) == 1
+    )
     quality_healthy = all(run["quality"]["status"] == "healthy" and
                           run["quality"]["records_rejected"] == 0 and
                           run["quality"]["out_of_order_records"] == 0
@@ -84,8 +88,8 @@ def audit(repo_root: Path) -> dict:
         "no_active_attack_execution": manifest["safety"]["active_network_transmission"] is False and manifest["safety"]["attack_tools_executed"] is False,
         "no_payload_decryption": manifest["safety"]["payload_decryption"] is False,
         "real_zeek_sensor_anchor_valid": anchor_valid,
-        "eight_supported_attacks_detected": baseline["tp"] == 8,
-        "known_slow_http_gap_exposed": known_gap_visible,
+        "nine_supported_attacks_detected": baseline["tp"] == 9,
+        "slow_http_gap_closed": slow_http_covered,
         "three_context_hardening_targets_exposed": contextual_targets_visible,
         "baseline_metrics_unchanged": baseline == EXPECTED_BASELINE,
     }
@@ -99,7 +103,7 @@ def audit(repo_root: Path) -> dict:
             "sensor_anchor": {"valid": anchor_valid, "experiment": sensor_report.get("experiment"),
                               "pcap_sha256": sensor_report.get("pcap_sha256")},
             "baseline": {"metrics": pooled, "expected_counts": EXPECTED_BASELINE,
-                         "interpretation": "Three policy-context controls are intentionally visible as FP targets; Slowloris is an explicit FN coverage target."},
+                         "interpretation": "Three policy-context controls remain visible without operator context; Sprint 22 closes the Slow HTTP metadata coverage gap."},
             "benchmark": benchmark}
 
 

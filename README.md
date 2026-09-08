@@ -23,12 +23,18 @@ Sprint 20 adds a [reproducible SIH-guided offline lab corpus](docs/SPRINT_20.md)
 ground-truth sidecars and an honest shared-pipeline baseline. No attack tool or
 live network transmission is used.
 
+Sprint 22 adds [contextual false-positive hardening and passive Slow HTTP
+coverage](docs/SPRINT_22.md). On the 392-record SIH lab corpus, the shared path
+produces 9 TP / 0 FP / 0 FN / 5 TN with checksum-pinned operator context while
+preserving a counterfactual empty-context run. This is a small synthetic lab
+result, not a production accuracy claim.
+
 Sprint 21 adds a [strictly separated DGA research iteration](docs/SPRINT_21.md)
 using 24 training, four validation and four previously unseen final-test families.
 The frozen candidate failed validation uncertainty and final-holdout
 generalization gates, so production loading remains blocked.
 
-Latest verified baseline (9 September 2026): **396 Python tests**, **18 frontend
+Latest verified baseline (9 September 2026): **402 Python tests**, **18 frontend
 tests**, and a successful dashboard production build. The corrected accuracy
 replay produces **8 findings, 8 incidents, 0 false-positive behaviours and healthy
 input quality**. These are controlled synthetic results, not production accuracy.

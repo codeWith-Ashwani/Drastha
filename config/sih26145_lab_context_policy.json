@@ -1,0 +1,25 @@
+{
+  "trusted_periodic_endpoints": [
+    {
+      "src_ip": "10.10.3.10",
+      "dst_ip": "10.10.3.20",
+      "dst_port": 443,
+      "protocol": "tcp",
+      "service": "https",
+      "purpose": "approved SIH lab monitoring health check"
+    }
+  ],
+  "approved_bulk_transfer_endpoints": [
+    {
+      "src_ip": "10.10.4.10",
+      "dst_ip": "198.51.100.50",
+      "dst_port": 443,
+      "protocol": "tcp",
+      "service": "ssl",
+      "purpose": "approved SIH lab backup destination"
+    }
+  ],
+  "authorized_scanner_sources": [
+    "10.10.5.10"
+  ]
+}

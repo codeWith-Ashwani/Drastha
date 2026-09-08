@@ -49,6 +49,12 @@ CONCLUSION_PROFILES = {
         "overwhelm the target with amplified third-party UDP responses",
         "bandwidth saturation, packet loss, or service unavailability",
     ),
+    "slow_http_connection_exhaustion": (
+        "availability disruption",
+        "many long-lived, partial and low-volume HTTP connections occupying one server",
+        "hold connection-handling resources open until legitimate clients are delayed or refused",
+        "worker or connection-pool exhaustion, elevated latency, or HTTP service unavailability",
+    ),
     "vertical_port_scan": (
         "discovery",
         "one source probing many ports on a destination",

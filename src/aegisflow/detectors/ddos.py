@@ -24,6 +24,11 @@ class DDoSConfig:
     distributed_source_minimum_sources: int = 3
     cooldown_seconds: float = 30.0
     require_reflection_service_context: bool = False
+    slow_http_window_seconds: float = 15.0
+    slow_http_connection_threshold: int = 20
+    slow_http_minimum_duration_seconds: float = 120.0
+    slow_http_maximum_bytes_per_connection: int = 2048
+    slow_http_maximum_packets_per_connection: int = 8
 
     def __post_init__(self) -> None:
         if self.window_seconds <= 0:
@@ -38,17 +43,26 @@ class DDoSConfig:
             raise ValueError("udp_reflection_flow_threshold must be at least 2")
         if self.cooldown_seconds < 0:
             raise ValueError("cooldown_seconds cannot be negative")
+        if self.slow_http_window_seconds <= 0 or self.slow_http_connection_threshold < 2:
+            raise ValueError("Slow HTTP window must be positive and connection threshold at least 2")
+        if self.slow_http_minimum_duration_seconds <= 0:
+            raise ValueError("Slow HTTP minimum duration must be positive")
+        if self.slow_http_maximum_bytes_per_connection <= 0 or self.slow_http_maximum_packets_per_connection <= 0:
+            raise ValueError("Slow HTTP volume ceilings must be positive")
 
 
 class DDoSDetector(Detector):
     detector_id = "ddos.behavioural"
-    detector_version = "0.2.0"
+    detector_version = "0.3.0"
     _incomplete_states = frozenset({"S0", "REJ"})
 
     def __init__(self, config: DDoSConfig | None = None) -> None:
         self.config = config or DDoSConfig()
         self._events = KeyedSlidingWindow[str, NetworkEvent](self.config.window_seconds)
         self._reflection_events = KeyedSlidingWindow[str, NetworkEvent](self.config.window_seconds)
+        self._slow_http_events = KeyedSlidingWindow[str, NetworkEvent](
+            self.config.slow_http_window_seconds
+        )
         self._last_alert: dict[tuple[str, str], float] = {}
 
     def process(self, event: NetworkEvent) -> list[Alert]:
@@ -60,6 +74,9 @@ class DDoSDetector(Detector):
             alert = self._detect_syn_flood(event, window)
             if alert:
                 alerts.append(alert)
+            slow_http = self._detect_slow_http(event)
+            if slow_http:
+                alerts.append(slow_http)
         if event.protocol == "udp":
             alert = self._detect_udp_flood(event, window)
             if alert:
@@ -70,6 +87,72 @@ class DDoSDetector(Detector):
             if reflection:
                 alerts.append(reflection)
         return alerts
+
+    def _detect_slow_http(self, event: NetworkEvent) -> Alert | None:
+        """Detect connection-exhaustion shape from passive flow metadata only.
+
+        Zeek emits a connection record after observation/termination, so this is
+        an overlap estimate from start time plus duration, not a live socket count.
+        Requiring HTTP service, long duration, partial state and tiny transfers
+        prevents ordinary completed web downloads from satisfying the rule.
+        """
+        service = str(event.raw.get("service", "") or "").lower()
+        if event.dst_port not in {80, 8080, 8000, 8888} or service not in {"http", "http-alt"}:
+            return None
+        window = self._slow_http_events.add(event.dst_ip, event.timestamp, event)
+        candidates = [
+            item.value for item in window
+            if item.value.protocol == "tcp"
+            and item.value.connection_state in {"S1", "OTH"}
+            and item.value.duration_seconds >= self.config.slow_http_minimum_duration_seconds
+            and item.value.outbound_bytes + item.value.inbound_bytes
+                <= self.config.slow_http_maximum_bytes_per_connection
+            and item.value.outbound_packets + item.value.inbound_packets
+                <= self.config.slow_http_maximum_packets_per_connection
+        ]
+        if len(candidates) < self.config.slow_http_connection_threshold:
+            return None
+        subtype = "slow_http_connection_exhaustion"
+        if self._cooling_down(event.dst_ip, subtype, event.timestamp):
+            return None
+        durations = [item.duration_seconds for item in candidates]
+        byte_totals = [item.outbound_bytes + item.inbound_bytes for item in candidates]
+        estimated_overlap = sum(
+            item.timestamp + item.duration_seconds >= event.timestamp for item in candidates
+        )
+        confidence = min(
+            0.96,
+            0.70 + 0.14 * min(len(candidates) / self.config.slow_http_connection_threshold - 1, 1)
+            + 0.08 * min(min(durations) / self.config.slow_http_minimum_duration_seconds - 1, 1),
+        )
+        return self._alert(
+            event=event,
+            subtype=subtype,
+            confidence=confidence,
+            severity="high",
+            relevant=candidates,
+            evidence=(
+                Evidence("long_lived_partial_http_connections", len(candidates),
+                         f">= {self.config.slow_http_connection_threshold}",
+                         "Many long-lived partial HTTP connections targeted one server."),
+                Evidence("estimated_overlapping_connections", estimated_overlap,
+                         "passive start-time plus duration estimate",
+                         "Observed start times and durations indicate concurrent resource occupancy."),
+                Evidence("minimum_connection_duration_seconds", round(min(durations), 3),
+                         f">= {self.config.slow_http_minimum_duration_seconds}",
+                         "Long duration distinguishes slow resource holding from a short request burst."),
+                Evidence("maximum_bytes_per_connection", max(byte_totals),
+                         f"<= {self.config.slow_http_maximum_bytes_per_connection}",
+                         "Very small transfers despite long duration support a slow-request hypothesis."),
+                Evidence("http_destination_port", event.dst_port, "HTTP service context",
+                         "The passive service label and destination port identify HTTP-shaped traffic."),
+            ),
+            limitations=(
+                "Passive flow metadata cannot prove a specific Slowloris tool or inspect HTTP headers.",
+                "Zeek connection records may arrive only after termination; overlap is estimated from timestamps and durations.",
+                "Legitimate long polling requires deployment-specific service policy and baseline validation.",
+            ),
+        )
 
     def _detect_syn_flood(
         self, event: NetworkEvent, window: tuple[TimedValue[NetworkEvent], ...]

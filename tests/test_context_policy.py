@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from aegisflow.context_policy import load_context_policy
+from aegisflow.context_policy import load_context_policy, parse_context_policy
 from aegisflow.models import NetworkEvent
 
 
@@ -45,6 +45,16 @@ class ContextPolicyTests(unittest.TestCase):
             }))
             policy = load_context_policy(root)
         self.assertEqual(policy.authorized_scanner_sources, ("192.0.2.50",))
+
+    def test_invalid_endpoint_or_scanner_addresses_are_rejected(self):
+        for payload in (
+            {"authorized_scanner_sources": ["not-an-ip"]},
+            {"trusted_periodic_endpoints": [{
+                "src_ip": "invalid", "dst_ip": "10.0.0.2", "dst_port": 443,
+            }]},
+        ):
+            with self.assertRaises(ValueError):
+                parse_context_policy(payload)
 
 
 if __name__ == "__main__":

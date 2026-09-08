@@ -4,6 +4,16 @@ Last updated: 9 September 2026
 
 ## Production roadmap update
 
+Sprint 22 is complete. A metadata-only Slow HTTP connection-exhaustion subtype
+closes the lab false negative, and checksum-pinned operator context removes the
+three known contextual false positives without suppressing any of the nine attack
+controls. The 392-record shared-path result moves from 9 TP / 3 FP / 0 FN / 2 TN
+with empty context to 9 TP / 0 FP / 0 FN / 5 TN with context; every capture is
+healthy. This small deterministic result is not a production accuracy claim.
+See `docs/SPRINT_22.md`.
+Current verification: **402 Python tests**, **18 frontend tests**, and the
+dashboard production build pass.
+
 Sprint 21's DGA research iteration is delivered but not production-approved.
 The family-separated validation candidate reached 71.35% recall and 0.91% point
 FPR, while its 95% FPR upper bound remained 1.19%. On the first frozen final
@@ -16,7 +26,7 @@ Sprint 20 is complete. The SIH-guided offline lab corpus contains 13 isolated
 captures and 392 healthy chronological records with checksum-pinned sidecar
 truth. The shared analysis path detects eight supported attacks while preserving
 three contextual false positives and one Slow HTTP false negative as explicit
-Sprint 22 hardening targets. Verification passes with 393 Python tests, 18
+historical Sprint 22 hardening targets. Verification passes with 393 Python tests, 18
 frontend tests and a production dashboard build. See `docs/SPRINT_20.md`.
 
 Sprint 19 closes the real offline sensor gate with Zeek 8.0.10 in Ubuntu 24.04

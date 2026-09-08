@@ -7,6 +7,13 @@ validation partition. The frozen candidate still fails its conservative FPR
 gate and unseen-family holdout, so it remains blocked from production loading.
 See [Sprint 21](SPRINT_21.md) for exact data boundaries and results.
 
+Sprint 22 adds a deterministic protocol-DDoS rule for Slow HTTP
+connection-exhaustion shape. It combines HTTP service/port, partial connection
+state, duration, low bytes/packets, fan-in and estimated overlap. No single
+feature or uploaded context claim is sufficient. Approved periodic, bulk and
+scanner activity is handled only by validated operator policy; see
+[Sprint 22](SPRINT_22.md).
+
 ## Detection strategy
 
 Sprint 11 adds public-domain DGA training and **validation-selected decision

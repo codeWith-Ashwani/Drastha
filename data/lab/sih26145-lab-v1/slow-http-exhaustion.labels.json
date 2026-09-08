@@ -1,0 +1,38 @@
+{
+  "schema_version": "drastha-label-units-v1",
+  "units": [
+    {
+      "expected_classes": [
+        "any_attack"
+      ],
+      "flow_ids": [
+        "SLOWHTTP000",
+        "SLOWHTTP001",
+        "SLOWHTTP002",
+        "SLOWHTTP003",
+        "SLOWHTTP004",
+        "SLOWHTTP005",
+        "SLOWHTTP006",
+        "SLOWHTTP007",
+        "SLOWHTTP008",
+        "SLOWHTTP009",
+        "SLOWHTTP010",
+        "SLOWHTTP011",
+        "SLOWHTTP012",
+        "SLOWHTTP013",
+        "SLOWHTTP014",
+        "SLOWHTTP015",
+        "SLOWHTTP016",
+        "SLOWHTTP017",
+        "SLOWHTTP018",
+        "SLOWHTTP019",
+        "SLOWHTTP020",
+        "SLOWHTTP021",
+        "SLOWHTTP022",
+        "SLOWHTTP023"
+      ],
+      "label": "attack",
+      "unit_id": "attack-slow-http"
+    }
+  ]
+}

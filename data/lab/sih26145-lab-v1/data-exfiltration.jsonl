@@ -1,0 +1,3 @@
+{"conn_state":"SF","duration":15,"id.orig_h":"10.20.8.10","id.orig_p":28000,"id.resp_h":"203.0.113.99","id.resp_p":443,"orig_bytes":12000000,"orig_pkts":8500,"proto":"tcp","resp_bytes":100000,"resp_pkts":300,"service":"ssl","ts":1788343200.0,"uid":"EXFIL000"}
+{"conn_state":"SF","duration":15,"id.orig_h":"10.20.8.10","id.orig_p":28001,"id.resp_h":"203.0.113.99","id.resp_p":443,"orig_bytes":12100000,"orig_pkts":8500,"proto":"tcp","resp_bytes":100000,"resp_pkts":300,"service":"ssl","ts":1788343220.0,"uid":"EXFIL001"}
+{"conn_state":"SF","duration":15,"id.orig_h":"10.20.8.10","id.orig_p":28002,"id.resp_h":"203.0.113.99","id.resp_p":443,"orig_bytes":12200000,"orig_pkts":8500,"proto":"tcp","resp_bytes":100000,"resp_pkts":300,"service":"ssl","ts":1788343240.0,"uid":"EXFIL002"}

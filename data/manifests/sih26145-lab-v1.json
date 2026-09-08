@@ -1,0 +1,361 @@
+{
+  "artifacts": [
+    {
+      "capture_id": "capture:sih26145-lab-v1:benign-load-control",
+      "expected_records": 60,
+      "format": "zeek-jsonl",
+      "group_ids": [
+        "scenario:benign-load-control",
+        "corpus:sih26145-lab-v1"
+      ],
+      "id": "benign-load-control",
+      "labels": {
+        "path": "lab/sih26145-lab-v1/benign-load-control.labels.json",
+        "sha256": "46ccb6cd1737f80205cc12c12b8282a82f3d80fa6b161d36044595dbc4fe8f4d"
+      },
+      "origin": {
+        "kind": "synthetic",
+        "method": "deterministic offline metadata semantic equivalent"
+      },
+      "path": "lab/sih26145-lab-v1/benign-load-control.jsonl",
+      "scenario": {
+        "coverage_status": "covered",
+        "problem_statement_guidance": "iperf3 / Ostinato / TRex benign load",
+        "purpose": "Varied, completed and balanced baseline traffic."
+      },
+      "sha256": "923d2c4282a55fb92ebfc17fa560403dce99cb3b146f454cb5247e5732c326a3",
+      "split": "test"
+    },
+    {
+      "capture_id": "capture:sih26145-lab-v1:benign-health-control",
+      "expected_records": 8,
+      "format": "zeek-jsonl",
+      "group_ids": [
+        "scenario:benign-health-control",
+        "corpus:sih26145-lab-v1"
+      ],
+      "id": "benign-health-control",
+      "labels": {
+        "path": "lab/sih26145-lab-v1/benign-health-control.labels.json",
+        "sha256": "bbb33957af58af9fb2ce23aefe83996bb6d1368bf6aeabff119581a4d057d2e1"
+      },
+      "origin": {
+        "kind": "synthetic",
+        "method": "deterministic offline metadata semantic equivalent"
+      },
+      "path": "lab/sih26145-lab-v1/benign-health-control.jsonl",
+      "scenario": {
+        "coverage_status": "covered",
+        "problem_statement_guidance": "legitimate periodic monitoring control",
+        "purpose": "Known health-check pattern for contextual false-positive testing."
+      },
+      "sha256": "6f5a83fcbe6267e28774f1f86cdd3f750f88df05f8598dba99e13afe719365f2",
+      "split": "test"
+    },
+    {
+      "capture_id": "capture:sih26145-lab-v1:benign-backup-control",
+      "expected_records": 3,
+      "format": "zeek-jsonl",
+      "group_ids": [
+        "scenario:benign-backup-control",
+        "corpus:sih26145-lab-v1"
+      ],
+      "id": "benign-backup-control",
+      "labels": {
+        "path": "lab/sih26145-lab-v1/benign-backup-control.labels.json",
+        "sha256": "f2dafa6aa87558a33c537b35e3b6806c3a1624c6107794c05c6da84020d50e8d"
+      },
+      "origin": {
+        "kind": "synthetic",
+        "method": "deterministic offline metadata semantic equivalent"
+      },
+      "path": "lab/sih26145-lab-v1/benign-backup-control.jsonl",
+      "scenario": {
+        "coverage_status": "covered",
+        "problem_statement_guidance": "approved backup / update control",
+        "purpose": "Approved high-ratio transfer for policy correlation testing."
+      },
+      "sha256": "861a4a0b5f6f3a5d45c28d9c44dcd0d7818dab489d6b94fa88f0efe55ba2363a",
+      "split": "test"
+    },
+    {
+      "capture_id": "capture:sih26145-lab-v1:authorized-scanner-control",
+      "expected_records": 22,
+      "format": "zeek-jsonl",
+      "group_ids": [
+        "scenario:authorized-scanner-control",
+        "corpus:sih26145-lab-v1"
+      ],
+      "id": "authorized-scanner-control",
+      "labels": {
+        "path": "lab/sih26145-lab-v1/authorized-scanner-control.labels.json",
+        "sha256": "969229d9f9eacee31ce7b8d0b419e10eefcda899b8eddbddd862beb21998da82"
+      },
+      "origin": {
+        "kind": "synthetic",
+        "method": "deterministic offline metadata semantic equivalent"
+      },
+      "path": "lab/sih26145-lab-v1/authorized-scanner-control.jsonl",
+      "scenario": {
+        "coverage_status": "covered",
+        "problem_statement_guidance": "authorized scanner control",
+        "purpose": "Authorized scan-shaped activity for policy correlation testing."
+      },
+      "sha256": "452c6da35b9c44f0f42ec10750dbbf9bcc2f9fbbb5f3099399b206b15b07c326",
+      "split": "test"
+    },
+    {
+      "capture_id": "capture:sih26145-lab-v1:syn-flood",
+      "expected_records": 110,
+      "format": "zeek-jsonl",
+      "group_ids": [
+        "scenario:syn-flood",
+        "corpus:sih26145-lab-v1"
+      ],
+      "id": "syn-flood",
+      "labels": {
+        "path": "lab/sih26145-lab-v1/syn-flood.labels.json",
+        "sha256": "cc6d13607aee0b5808cad2cc07cb6a9a6b3f92d12baa2634634247c248dc13b6"
+      },
+      "origin": {
+        "kind": "synthetic",
+        "method": "deterministic offline metadata semantic equivalent"
+      },
+      "path": "lab/sih26145-lab-v1/syn-flood.jsonl",
+      "scenario": {
+        "coverage_status": "covered",
+        "problem_statement_guidance": "hping3 SYN mode offline semantic equivalent",
+        "purpose": "Concentrated incomplete SYN attempts to one service."
+      },
+      "sha256": "2b6af758cfccab1ae2aa364e98cb310855add4c0b19f5dd4a84b45afc40c8c2d",
+      "split": "test"
+    },
+    {
+      "capture_id": "capture:sih26145-lab-v1:udp-reflection-amplification",
+      "expected_records": 5,
+      "format": "zeek-jsonl",
+      "group_ids": [
+        "scenario:udp-reflection-amplification",
+        "corpus:sih26145-lab-v1"
+      ],
+      "id": "udp-reflection-amplification",
+      "labels": {
+        "path": "lab/sih26145-lab-v1/udp-reflection-amplification.labels.json",
+        "sha256": "80eae27c98a7a1b2c4e525afd7eb195a4e615cb622d2716ad9ebeec932e99881"
+      },
+      "origin": {
+        "kind": "synthetic",
+        "method": "deterministic offline metadata semantic equivalent"
+      },
+      "path": "lab/sih26145-lab-v1/udp-reflection-amplification.jsonl",
+      "scenario": {
+        "coverage_status": "covered",
+        "problem_statement_guidance": "hping3 UDP/reflection offline semantic equivalent",
+        "purpose": "Small requests with much larger responses from DNS service endpoints."
+      },
+      "sha256": "96879fe5d8b1eebddb2884aa4e1decd0d0f4004deb9178fc417ff210c7b9bc7b",
+      "split": "test"
+    },
+    {
+      "capture_id": "capture:sih26145-lab-v1:slow-http-exhaustion",
+      "expected_records": 24,
+      "format": "zeek-jsonl",
+      "group_ids": [
+        "scenario:slow-http-exhaustion",
+        "corpus:sih26145-lab-v1"
+      ],
+      "id": "slow-http-exhaustion",
+      "labels": {
+        "path": "lab/sih26145-lab-v1/slow-http-exhaustion.labels.json",
+        "sha256": "3454ccff866a4899c8ae407d2f9d524d0b03f7914c6636ababa566946cbd385f"
+      },
+      "origin": {
+        "kind": "synthetic",
+        "method": "deterministic offline metadata semantic equivalent"
+      },
+      "path": "lab/sih26145-lab-v1/slow-http-exhaustion.jsonl",
+      "scenario": {
+        "coverage_status": "known-gap",
+        "problem_statement_guidance": "Slowloris offline semantic equivalent",
+        "purpose": "Long-lived partial HTTP sessions; retained as an explicit coverage probe."
+      },
+      "sha256": "d0265ffdf1863355d88d9dbf8027794b73e36c7496abf431fa6b7a6a35288fb3",
+      "split": "test"
+    },
+    {
+      "capture_id": "capture:sih26145-lab-v1:c2-beacon",
+      "expected_records": 8,
+      "format": "zeek-jsonl",
+      "group_ids": [
+        "scenario:c2-beacon",
+        "corpus:sih26145-lab-v1"
+      ],
+      "id": "c2-beacon",
+      "labels": {
+        "path": "lab/sih26145-lab-v1/c2-beacon.labels.json",
+        "sha256": "47c36851989297d645744c41af26d937d288ed1fb38c9d851d6d81730afecf17"
+      },
+      "origin": {
+        "kind": "synthetic",
+        "method": "deterministic offline metadata semantic equivalent"
+      },
+      "path": "lab/sih26145-lab-v1/c2-beacon.jsonl",
+      "scenario": {
+        "coverage_status": "covered",
+        "problem_statement_guidance": "sandboxed C2 emulator offline semantic equivalent",
+        "purpose": "Regular low-volume completed callbacks to one endpoint."
+      },
+      "sha256": "d06e608708c6a645efca3797be5da8620d6406d1b7771a4bd773c36454e4d4e3",
+      "split": "test"
+    },
+    {
+      "capture_id": "capture:sih26145-lab-v1:dga-domains",
+      "expected_records": 3,
+      "format": "zeek-jsonl",
+      "group_ids": [
+        "scenario:dga-domains",
+        "corpus:sih26145-lab-v1"
+      ],
+      "id": "dga-domains",
+      "labels": {
+        "path": "lab/sih26145-lab-v1/dga-domains.labels.json",
+        "sha256": "23644bc9e841a80176a98cb68b18d7b5c7e251eb67c58acce653ff2884af3035"
+      },
+      "origin": {
+        "kind": "synthetic",
+        "method": "deterministic offline metadata semantic equivalent"
+      },
+      "path": "lab/sih26145-lab-v1/dga-domains.jsonl",
+      "scenario": {
+        "coverage_status": "covered",
+        "problem_statement_guidance": "DGA algorithms / DGArchive-style offline semantic equivalent",
+        "purpose": "Multiple independent digit-heavy, high-entropy domain labels."
+      },
+      "sha256": "25e80ee3af9a8ef78282e6c1dd4b39571b35088ee8c98c8af5b13b336146f269",
+      "split": "test"
+    },
+    {
+      "capture_id": "capture:sih26145-lab-v1:dns-tunnel",
+      "expected_records": 20,
+      "format": "zeek-jsonl",
+      "group_ids": [
+        "scenario:dns-tunnel",
+        "corpus:sih26145-lab-v1"
+      ],
+      "id": "dns-tunnel",
+      "labels": {
+        "path": "lab/sih26145-lab-v1/dns-tunnel.labels.json",
+        "sha256": "0fb7dd9a41cf835c9d7940851874d7c49d2d53edb7b6e47228527936292d5880"
+      },
+      "origin": {
+        "kind": "synthetic",
+        "method": "deterministic offline metadata semantic equivalent"
+      },
+      "path": "lab/sih26145-lab-v1/dns-tunnel.jsonl",
+      "scenario": {
+        "coverage_status": "covered",
+        "problem_statement_guidance": "dnscat2 / iodine offline semantic equivalent",
+        "purpose": "Repeated long, unique, encoded-looking TXT subdomains."
+      },
+      "sha256": "e5f2c7030ba3cb1868bf7cf3371f23fdf6faef1628889377437b8c79c34187fa",
+      "split": "test"
+    },
+    {
+      "capture_id": "capture:sih26145-lab-v1:encrypted-session-anomaly",
+      "expected_records": 104,
+      "format": "zeek-jsonl",
+      "group_ids": [
+        "scenario:encrypted-session-anomaly",
+        "corpus:sih26145-lab-v1"
+      ],
+      "id": "encrypted-session-anomaly",
+      "labels": {
+        "path": "lab/sih26145-lab-v1/encrypted-session-anomaly.labels.json",
+        "sha256": "c2c81de3ae32d002c3c1eb81ef6b7ddf666185f60ffe9ae4a7d1e154c2ed9634"
+      },
+      "origin": {
+        "kind": "synthetic",
+        "method": "deterministic offline metadata semantic equivalent"
+      },
+      "path": "lab/sih26145-lab-v1/encrypted-session-anomaly.jsonl",
+      "scenario": {
+        "coverage_status": "covered",
+        "problem_statement_guidance": "TLS/QUIC metadata-only malware-anomaly scenario",
+        "purpose": "Causal prevalence and packet-size/timing features; no decryption."
+      },
+      "sha256": "d896256658453fdacf891d26f691bd9bcce18b5b9046f28a520b36211200c129",
+      "split": "test"
+    },
+    {
+      "capture_id": "capture:sih26145-lab-v1:reconnaissance",
+      "expected_records": 22,
+      "format": "zeek-jsonl",
+      "group_ids": [
+        "scenario:reconnaissance",
+        "corpus:sih26145-lab-v1"
+      ],
+      "id": "reconnaissance",
+      "labels": {
+        "path": "lab/sih26145-lab-v1/reconnaissance.labels.json",
+        "sha256": "f2ec143e4908afc7d570919d35265359593da859dd58db9bedc059ea56079bdb"
+      },
+      "origin": {
+        "kind": "synthetic",
+        "method": "deterministic offline metadata semantic equivalent"
+      },
+      "path": "lab/sih26145-lab-v1/reconnaissance.jsonl",
+      "scenario": {
+        "coverage_status": "covered",
+        "problem_statement_guidance": "network scanner offline semantic equivalent",
+        "purpose": "Single-source destination-port fan-out."
+      },
+      "sha256": "f0fbe265568c00840db2c95c34f4e915583a5fdccbc3949b9d09aee9bd7f8248",
+      "split": "test"
+    },
+    {
+      "capture_id": "capture:sih26145-lab-v1:data-exfiltration",
+      "expected_records": 3,
+      "format": "zeek-jsonl",
+      "group_ids": [
+        "scenario:data-exfiltration",
+        "corpus:sih26145-lab-v1"
+      ],
+      "id": "data-exfiltration",
+      "labels": {
+        "path": "lab/sih26145-lab-v1/data-exfiltration.labels.json",
+        "sha256": "31e1ba9c8cdffba7753a6c247dc6f6da9ac9a351cbb98ca02216b9b8d88fe2b3"
+      },
+      "origin": {
+        "kind": "synthetic",
+        "method": "deterministic offline metadata semantic equivalent"
+      },
+      "path": "lab/sih26145-lab-v1/data-exfiltration.jsonl",
+      "scenario": {
+        "coverage_status": "covered",
+        "problem_statement_guidance": "outbound bulk-transfer offline semantic equivalent",
+        "purpose": "Unapproved extreme outbound/inbound byte asymmetry."
+      },
+      "sha256": "112a098d36c29ab788aab83e1b0eb21c7d714fb4c4f90cb41b3120d80e7cfc42",
+      "split": "test"
+    }
+  ],
+  "corpus_id": "sih26145-lab-v1",
+  "description": "Safe offline SIH-26145 lab corpus with independent ground truth.",
+  "generated_at": "2026-09-02T08:00:00Z",
+  "internal_cidrs": [
+    "10.0.0.0/8"
+  ],
+  "provenance_tier": "offline_semantic_equivalent",
+  "safety": {
+    "active_network_transmission": false,
+    "attack_tools_executed": false,
+    "ground_truth_in_telemetry": false,
+    "payload_decryption": false
+  },
+  "schema_version": "drastha-corpus-v1",
+  "sensor_anchor": {
+    "claim": "Separate real Zeek 8.0.10 conn/DNS/TLS interoperability proof; not the source of every scenario.",
+    "path": "output/sprint19_sensor_integration.json",
+    "sha256": "3d221e5fadcebf0658c1ad3653669dc626b5af6d53937b781146f45dc52f0aa1"
+  }
+}

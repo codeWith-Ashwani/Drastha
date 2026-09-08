@@ -40,8 +40,10 @@ Production follow-on sequence (the original sprint plan below is historical):
 - Sprint 19: real offline Zeek connection/DNS/TLS interoperability and
   passive-boundary evidence delivered (see `SPRINT_19.md`). Live mirror, QUIC,
   browser transport and accuracy calibration are not claimed.
-- Sprint 20 (planned): reproducible SIH-guided lab corpus with attack and benign
-  controls, immutable manifests and actual Zeek-derived telemetry.
+- Sprint 20: reproducible SIH-guided offline lab corpus — complete. Thirteen
+  isolated checksum-pinned scenarios, separate labels, real Zeek sensor anchor,
+  and an honest 8 TP / 3 FP / 1 FN / 2 TN baseline are documented in
+  `SPRINT_20.md`.
 - Sprint 21 (planned): DGA research iteration with family-separated development,
   validation and a fresh untouched final holdout.
 - Sprint 22 (planned): threat validation and false-positive hardening on unseen

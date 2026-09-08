@@ -1,0 +1,17 @@
+{
+  "schema_version": "drastha-label-units-v1",
+  "units": [
+    {
+      "expected_classes": [
+        "data_exfiltration"
+      ],
+      "flow_ids": [
+        "EXFIL000",
+        "EXFIL001",
+        "EXFIL002"
+      ],
+      "label": "attack",
+      "unit_id": "attack-exfil"
+    }
+  ]
+}

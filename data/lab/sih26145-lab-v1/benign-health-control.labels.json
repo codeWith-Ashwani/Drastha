@@ -1,0 +1,20 @@
+{
+  "schema_version": "drastha-label-units-v1",
+  "units": [
+    {
+      "expected_classes": [],
+      "flow_ids": [
+        "HEALTH000",
+        "HEALTH001",
+        "HEALTH002",
+        "HEALTH003",
+        "HEALTH004",
+        "HEALTH005",
+        "HEALTH006",
+        "HEALTH007"
+      ],
+      "label": "benign",
+      "unit_id": "benign-health"
+    }
+  ]
+}

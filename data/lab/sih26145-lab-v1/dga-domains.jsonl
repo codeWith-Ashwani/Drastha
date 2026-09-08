@@ -1,0 +1,3 @@
+{"answers":["203.0.113.9"],"id.orig_h":"10.20.5.10","id.orig_p":53000,"id.resp_h":"10.0.0.53","id.resp_p":53,"proto":"udp","qtype_name":"A","query":"q7x9z2k4m8n1.invalid","rcode_name":"NOERROR","rejected":false,"ts":1788340800.0,"uid":"DGA000"}
+{"answers":["203.0.113.9"],"id.orig_h":"10.20.5.10","id.orig_p":53000,"id.resp_h":"10.0.0.53","id.resp_p":53,"proto":"udp","qtype_name":"A","query":"v3b8q0x6z9k2.invalid","rcode_name":"NOERROR","rejected":false,"ts":1788340801.0,"uid":"DGA001"}
+{"answers":["203.0.113.9"],"id.orig_h":"10.20.5.10","id.orig_p":53000,"id.resp_h":"10.0.0.53","id.resp_p":53,"proto":"udp","qtype_name":"A","query":"m9x2q7v4z8b1.invalid","rcode_name":"NOERROR","rejected":false,"ts":1788340802.0,"uid":"DGA002"}

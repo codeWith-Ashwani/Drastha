@@ -1,0 +1,36 @@
+{
+  "schema_version": "drastha-label-units-v1",
+  "units": [
+    {
+      "expected_classes": [
+        "reconnaissance_port_scan"
+      ],
+      "flow_ids": [
+        "RECON000",
+        "RECON001",
+        "RECON002",
+        "RECON003",
+        "RECON004",
+        "RECON005",
+        "RECON006",
+        "RECON007",
+        "RECON008",
+        "RECON009",
+        "RECON010",
+        "RECON011",
+        "RECON012",
+        "RECON013",
+        "RECON014",
+        "RECON015",
+        "RECON016",
+        "RECON017",
+        "RECON018",
+        "RECON019",
+        "RECON020",
+        "RECON021"
+      ],
+      "label": "attack",
+      "unit_id": "attack-recon"
+    }
+  ]
+}

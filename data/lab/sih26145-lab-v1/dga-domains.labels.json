@@ -1,0 +1,17 @@
+{
+  "schema_version": "drastha-label-units-v1",
+  "units": [
+    {
+      "expected_classes": [
+        "dga_domain"
+      ],
+      "flow_ids": [
+        "DGA000",
+        "DGA001",
+        "DGA002"
+      ],
+      "label": "attack",
+      "unit_id": "attack-dga"
+    }
+  ]
+}

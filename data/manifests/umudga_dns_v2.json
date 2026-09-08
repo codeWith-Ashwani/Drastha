@@ -1,0 +1,486 @@
+{
+  "citation": "Zago, Gil Perez and Martinez Perez (2020), UMUDGA, DOI 10.17632/y8ph45msv8.1",
+  "corpus_id": "umudga-v2-new-family-holdout-20260909",
+  "count_modes": [
+    "frequency",
+    "binary_presence"
+  ],
+  "derived_legitimate_source": {
+    "excluded_line_range": [
+      1,
+      10000
+    ],
+    "file_id": "42b8b2be-850f-4daf-b273-c37dcdb146c2",
+    "filename": "50000.txt",
+    "reason": "exclude every legitimate name present in the inspected Sprint 11 10000-name source",
+    "selected_line_range": [
+      10001,
+      40000
+    ],
+    "sha256": "db278f3023b6ced9c9afb84fe3c1885bad7a23c7d297834eaeae75e0e31530c0",
+    "size": 681472
+  },
+  "gates": {
+    "maximum_fpr": 0.01,
+    "minimum_family_recall": 0.5,
+    "minimum_negatives": 1000,
+    "minimum_positives": 1000,
+    "minimum_recall": 0.7
+  },
+  "label_caveat": "Publisher-generated DGA names and publisher legit list; not verified current operational traffic or infection labels.",
+  "license": "MIT",
+  "license_url": "https://data.mendeley.com/datasets/y8ph45msv8/1",
+  "ngram_sizes": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "prior_experiment_boundaries": {
+    "excluded_from_validation_and_test": [
+      "alureon",
+      "banjori",
+      "corebot",
+      "cryptolocker",
+      "dircrypt",
+      "gozi",
+      "locky",
+      "matsnu",
+      "necurs",
+      "padcrypt",
+      "ramnit",
+      "suppobox"
+    ],
+    "legitimate_prefix_lines_excluded": 10000,
+    "manifest": "data/manifests/umudga_dns_v1.json",
+    "reused_training_only_families": [
+      "alureon",
+      "banjori",
+      "corebot",
+      "dircrypt",
+      "matsnu",
+      "necurs",
+      "padcrypt",
+      "ramnit"
+    ]
+  },
+  "public_suffix_list": {
+    "commit": "0f1fa47ec45056a19c2fdcd32a08442de9715d12",
+    "license": "MPL-2.0",
+    "license_url": "https://mozilla.org/MPL/2.0/",
+    "path": "data/raw/UMUDGA/public_suffix_list.txt",
+    "sha256": "0e07be8daca66c85f12cf84827c6a9d09efd5950a89385621cf9df5c1c52e001",
+    "size": 333246,
+    "source_url": "https://publicsuffix.org/list/public_suffix_list.dat",
+    "version": "2026-09-02_06-03-53_UTC"
+  },
+  "schema_version": "drastha-dns-corpus-v1",
+  "selection_contract": {
+    "final_test_families": [
+      "rovnix",
+      "shiotob",
+      "simda",
+      "tinba"
+    ],
+    "selected_before_model_fit": true,
+    "test_labels_not_used_for_threshold_selection": true,
+    "reused_sprint11_train_families": [
+      "alureon",
+      "banjori",
+      "corebot",
+      "dircrypt",
+      "matsnu",
+      "necurs",
+      "padcrypt",
+      "ramnit"
+    ],
+    "train_families": [
+      "bedep",
+      "ccleaner",
+      "chinad",
+      "dyre",
+      "fobber_v1",
+      "fobber_v2",
+      "kraken_v1",
+      "kraken_v2",
+      "murofet_v1",
+      "murofet_v2",
+      "murofet_v3",
+      "nymaim",
+      "pizd",
+      "pushdo",
+      "pykspa",
+      "qakbot"
+    ],
+    "validation_families": [
+      "proslikefan",
+      "qadars",
+      "ramdo",
+      "ranbyus_v1"
+    ]
+  },
+  "score_modes": [
+    "multinomial",
+    "mean_log_likelihood"
+  ],
+  "source_url": "https://data.mendeley.com/datasets/y8ph45msv8/1",
+  "sources": [
+    {
+      "family": "bedep",
+      "file_id": "a99d9593-ba40-4ab1-b227-6c466ba67888",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/bedep.txt",
+      "records": 1000,
+      "sha256": "7aff78344bf8390f448782b4f6ab4c46b08980e20ff345b3f03834fb30f33074",
+      "size": 19995,
+      "split": "train"
+    },
+    {
+      "family": "ccleaner",
+      "file_id": "9108b0c9-29e7-4b18-8926-15c9bcbb9bd0",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/ccleaner.txt",
+      "records": 1000,
+      "sha256": "c31ff166482abc75b9bc919276e5f08b63b7a214e081dcdff2a985599c1d0aa6",
+      "size": 17891,
+      "split": "train"
+    },
+    {
+      "family": "chinad",
+      "file_id": "8e22d63e-f889-4ab7-90e0-1148afae2922",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/chinad.txt",
+      "records": 1000,
+      "sha256": "4fa28e0aef1ad85b0d86f58f0c5ac32164d5667620f15cf1d7c2b856462f6324",
+      "size": 20884,
+      "split": "train"
+    },
+    {
+      "family": "dyre",
+      "file_id": "506bd43f-11ed-46d6-82ca-c80238231671",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/dyre.txt",
+      "records": 1000,
+      "sha256": "43d771ce6741ff0f5bca06fa2583535efed4270f129ee15bb121dabe842df7cf",
+      "size": 38000,
+      "split": "train"
+    },
+    {
+      "family": "fobber_v1",
+      "file_id": "e53b1c47-384b-46dd-9869-0835d49318d6",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/fobber_v1.txt",
+      "records": 1000,
+      "sha256": "e7ac99ea4ccd31028b4f11442ea16cead232f25f731b8c554c644e5a1ce4b645",
+      "size": 22000,
+      "split": "train"
+    },
+    {
+      "family": "fobber_v2",
+      "file_id": "d824e810-a868-4911-8258-0117eac27b15",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/fobber_v2.txt",
+      "records": 1000,
+      "sha256": "ac7998928c0f06848395088154a982cd839630163e466b93733c2f112bf5f24d",
+      "size": 15000,
+      "split": "train"
+    },
+    {
+      "family": "kraken_v1",
+      "file_id": "dcfe397f-f1bd-4178-b534-02b83b381dce",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/kraken_v1.txt",
+      "records": 1000,
+      "sha256": "28eb5c668b72d727a7d52edcda3291c4d9e266e3c84e57f43d0cf84e39af18ce",
+      "size": 19257,
+      "split": "train"
+    },
+    {
+      "family": "kraken_v2",
+      "file_id": "4e3f25b0-d274-4483-911d-a76ef5a66b20",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/kraken_v2.txt",
+      "records": 1000,
+      "sha256": "a6f67e118833fbd09025dcf39b69ad7b40dc91dfdb3e81f69b1cec013079bc38",
+      "size": 16201,
+      "split": "train"
+    },
+    {
+      "family": "murofet_v1",
+      "file_id": "595dd21e-4b59-4cff-bd50-67a653f9fbb8",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/murofet_v1.txt",
+      "records": 1000,
+      "sha256": "59496ff6e367a6561d133b467617143491c0ac20962700acbea115264b216bc8",
+      "size": 29348,
+      "split": "train"
+    },
+    {
+      "family": "murofet_v2",
+      "file_id": "9874ef9c-3e09-47d1-9525-f785a6b59b14",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/murofet_v2.txt",
+      "records": 1000,
+      "sha256": "58c6efd145a3890c5fe64ef2e19ac4677ed161e8eebf2584c56cadfbe6a375a5",
+      "size": 20075,
+      "split": "train"
+    },
+    {
+      "family": "murofet_v3",
+      "file_id": "f8ffbd1a-5923-454d-9a6d-085034a7354a",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/murofet_v3.txt",
+      "records": 1000,
+      "sha256": "3f82901a773805c34cd0d928055a61447379cab3d86daf2f607386be6902d577",
+      "size": 41878,
+      "split": "train"
+    },
+    {
+      "family": "nymaim",
+      "file_id": "1be2fcb3-30e1-4559-905c-a69badd8162d",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/nymaim.txt",
+      "records": 1000,
+      "sha256": "21c9867140304b24e71ee7bddabf5832f564b6a6ad0ee992a6d5f3ba90008068",
+      "size": 18686,
+      "split": "train"
+    },
+    {
+      "family": "pizd",
+      "file_id": "0451cc3b-015b-4b05-a130-53ebc82abcf8",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/pizd.txt",
+      "records": 956,
+      "sha256": "d913a817bf74abc7839c5f7cc49e9f45272b799c2616da20055243354accddc0",
+      "size": 16934,
+      "split": "train"
+    },
+    {
+      "family": "pushdo",
+      "file_id": "5c618490-e624-4669-b532-805895420e56",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/pushdo.txt",
+      "records": 1000,
+      "sha256": "b9df197568a76d20e34f4aba403fe5e56779db653e72140808455d5a4ffb029b",
+      "size": 16287,
+      "split": "train"
+    },
+    {
+      "family": "pykspa",
+      "file_id": "70c1fd91-6dfd-44f8-82ba-3bc481460ce5",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/pykspa.txt",
+      "records": 1000,
+      "sha256": "399e577ac0e384b1af75635df68bace0af7d4cc38ff5523a53ae44d28a453838",
+      "size": 14443,
+      "split": "train"
+    },
+    {
+      "family": "qakbot",
+      "file_id": "60ddced9-e6f5-4589-9977-e732bca41ad1",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/qakbot.txt",
+      "records": 1000,
+      "sha256": "3256b4d8b99c7211328ec6694b268b48010746c0861d5e1e7cd7466e07594113",
+      "size": 21501,
+      "split": "train"
+    },
+    {
+      "family": "proslikefan",
+      "file_id": "0595b554-17e3-4146-93a1-209fc40fc2fe",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/proslikefan.txt",
+      "records": 1000,
+      "sha256": "f55f0c78f260ab589978d208cc1a33b7a47e6fa8ac7f03bc32ab7c794dd5e8f2",
+      "size": 12827,
+      "split": "validation"
+    },
+    {
+      "family": "qadars",
+      "file_id": "1151fced-fc4b-47da-8aa8-7204cd7ed495",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/qadars.txt",
+      "records": 1000,
+      "sha256": "47df25de9970052e1f67679e71c2a2824d2a930f8559546bd0dd2e24ba4e0c51",
+      "size": 17000,
+      "split": "validation"
+    },
+    {
+      "family": "ramdo",
+      "file_id": "15cb13b3-5041-4589-8f9f-6ce779ece7e3",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/ramdo.txt",
+      "records": 1000,
+      "sha256": "dad40e61854138eacf9714c9f52ee2cb3dbbbc576a6b73c2daa94b4799b38100",
+      "size": 21000,
+      "split": "validation"
+    },
+    {
+      "family": "ranbyus_v1",
+      "file_id": "ef238646-e154-4c7c-9924-baee5f7da6ed",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/ranbyus_v1.txt",
+      "records": 1000,
+      "sha256": "cc74b3dcb45c3863b431984aef77bed7a9d053059275b510e06bf926d8c602d6",
+      "size": 18280,
+      "split": "validation"
+    },
+    {
+      "family": "rovnix",
+      "file_id": "f4c6757e-b3a4-4482-add7-adf23b6d69d0",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/rovnix.txt",
+      "records": 1000,
+      "sha256": "e023929d59e6a583dac3dcd460764095ec13154a6611626880301a14ce0e46d8",
+      "size": 27416,
+      "split": "test"
+    },
+    {
+      "family": "shiotob",
+      "file_id": "6b96aa54-90ab-4cf3-8481-d30bda3fc392",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/shiotob.txt",
+      "records": 1000,
+      "sha256": "dd193da0550cc3bfd71e916e6711837abe888716ae9f9cd8ba2db94616c428f7",
+      "size": 17446,
+      "split": "test"
+    },
+    {
+      "family": "simda",
+      "file_id": "43822d64-8cbd-4d2d-9bf8-c7b60c6bc5aa",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/simda.txt",
+      "records": 1000,
+      "sha256": "db5d264ff328c80a12ce840d2a33b73baab8729a504c7d51bb427ca96f773868",
+      "size": 12467,
+      "split": "test"
+    },
+    {
+      "family": "tinba",
+      "file_id": "7970d1e2-a1bc-4e0e-9360-0800cb573c0c",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/tinba.txt",
+      "records": 1000,
+      "sha256": "f8fa37b3bdedd98027a85e3b053f209b8a37a905b036211b9d029bab4553ecbf",
+      "size": 16822,
+      "split": "test"
+    },
+    {
+      "family": "publisher-legit-fresh-tail",
+      "file_id": "derived-from-pinned-legit-50000-lines-10001-40000",
+      "label": 0,
+      "path": "data/raw/UMUDGA-v2/legit-fresh-tail.txt",
+      "records": 30000,
+      "sha256": "e8d1bf69578eb50ca9c5b625cee14712362498edc5d1108d0815b1028f1a5bd8",
+      "size": 410188,
+      "split": "group-hash-60-20-20"
+    },
+    {
+      "family": "alureon",
+      "file_id": "0a556836-5e33-446f-824b-d593983f0f1f",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/legacy-alureon.txt",
+      "records": 1000,
+      "reused_from_sprint11": "train",
+      "sha256": "4ee6922bf8859b85faa42ad3590c2d890fbe151db79865b8b570c9d274a4e654",
+      "size": 15000,
+      "split": "train"
+    },
+    {
+      "family": "banjori",
+      "file_id": "3ac2a3d8-ee3c-47ee-8031-8005a234d548",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/legacy-banjori.txt",
+      "records": 1000,
+      "reused_from_sprint11": "train",
+      "sha256": "552770009ba5640d37b5a7eee310434a1d8ff641c5c69702e75f3d6c035bcabb",
+      "size": 24000,
+      "split": "train"
+    },
+    {
+      "family": "corebot",
+      "file_id": "d473f06f-0692-4ac5-ad48-657519ce539f",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/legacy-corebot.txt",
+      "records": 1000,
+      "reused_from_sprint11": "train",
+      "sha256": "26e2535ead55fbfecef8a0e0e3214914ce62f0c03062c9bbaa744d8f2430d6f2",
+      "size": 27623,
+      "split": "train"
+    },
+    {
+      "family": "dircrypt",
+      "file_id": "40ac4804-aaf0-4122-b315-fce0740431ed",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/legacy-dircrypt.txt",
+      "records": 1000,
+      "reused_from_sprint11": "train",
+      "sha256": "97938e517ba99dc9781cd437982cf304cb3c658246cd4267801b81b148832470",
+      "size": 19056,
+      "split": "train"
+    },
+    {
+      "family": "matsnu",
+      "file_id": "ce44a56c-394e-42b0-8eb1-2c4fbf128eb2",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/legacy-matsnu.txt",
+      "records": 996,
+      "reused_from_sprint11": "train",
+      "sha256": "32fbd0fb5844172b92ff45f34c23c6be4867a3be19db988a6866a0abee2fb2d6",
+      "size": 20377,
+      "split": "train"
+    },
+    {
+      "family": "necurs",
+      "file_id": "4b87ed44-a77a-4f9f-8d10-4af6e1d97f37",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/legacy-necurs.txt",
+      "records": 1000,
+      "reused_from_sprint11": "train",
+      "sha256": "8c9bf2684cc57717606b0ce1e7a6f3d91d9e83ca9be957ad844a4e3e6596b147",
+      "size": 17919,
+      "split": "train"
+    },
+    {
+      "family": "padcrypt",
+      "file_id": "6b559ca1-4a41-418f-94b7-a13c23045c37",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/legacy-padcrypt.txt",
+      "records": 1000,
+      "reused_from_sprint11": "train",
+      "sha256": "418e8ea071e74bba4db1d1060f85270a932ac7a8990426318ebd374f9c4806aa",
+      "size": 21456,
+      "split": "train"
+    },
+    {
+      "family": "ramnit",
+      "file_id": "214ed392-19a2-40e8-a5e2-fc179ba0bb4d",
+      "label": 1,
+      "path": "data/raw/UMUDGA-v2/legacy-ramnit.txt",
+      "records": 1000,
+      "reused_from_sprint11": "train",
+      "sha256": "21f274e8f5888354c5d1611a44b5a09cdc42af89c80b02b6e7274bdc85286cc4",
+      "size": 18113,
+      "split": "train"
+    }
+  ],
+  "split_seed": "drastha-sprint21-v2",
+  "threshold_grid": [
+    0.05,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.7,
+    0.8,
+    0.9,
+    0.95,
+    0.99,
+    0.995,
+    0.999,
+    0.9995,
+    0.9999,
+    0.99999
+  ]
+}

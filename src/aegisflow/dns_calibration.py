@@ -68,23 +68,47 @@ def gate_failures(result, gates):
 def fit_candidate(manifest_path, data_root):
     manifest, parts, audit = load_dns_corpus(manifest_path, data_root)
     # Test is audited for identity/leakage, but never scored or passed to fit.
-    model = DNSNgramModel.train(parts["train"])
-    scores = [model.predict_probability(row.domain) for row in parts["validation"]]
-    candidates = [scored_metrics(parts["validation"], scores, value) for value in manifest["threshold_grid"]]
+    models = []
+    candidates = []
+    for ngram_size in manifest.get("ngram_sizes", [3]):
+        for count_mode in manifest.get("count_modes", ["frequency"]):
+            for score_mode in manifest.get("score_modes", ["multinomial"]):
+                candidate_model = DNSNgramModel.train(parts["train"], ngram_size=ngram_size,
+                                                       count_mode=count_mode)
+                candidate_model.payload["score_mode"] = score_mode
+                scores = [candidate_model.predict_probability(row.domain) for row in parts["validation"]]
+                models.append(candidate_model)
+                for threshold in manifest["threshold_grid"]:
+                    result = scored_metrics(parts["validation"], scores, threshold)
+                    result.update(ngram_size=ngram_size, score_mode=score_mode, count_mode=count_mode)
+                    candidates.append(result)
     eligible = [value for value in candidates if not gate_failures(value, manifest["gates"])]
     if eligible:
-        selected = min(eligible, key=lambda value: (-value["recall"], value["fpr"], value["threshold"]))
+        selected = min(eligible, key=lambda value: (-value["recall"], value["fpr"],
+                                                     value["ngram_size"], value["count_mode"],
+                                                     value["score_mode"], value["threshold"]))
     else:
         # Retain the unsuccessful experiment, not a manufactured pass or an
         # alert-disabled threshold of 1. No production defaults are changed.
-        selected = min(candidates, key=lambda value: (value["fpr"], -value["recall"], value["threshold"]))
+        fallback = (lambda value: (value["fpr"], -value["recall"], value["threshold"])) if len(models) == 1 else (
+            lambda value: (len(gate_failures(value, manifest["gates"])), value["fpr"],
+                           -value["recall"], value["ngram_size"], value["count_mode"],
+                           value["score_mode"], value["threshold"]))
+        selected = min(candidates, key=fallback)
+    model = next(value for value in models if value.payload["ngram_size"] == selected["ngram_size"]
+                 and value.payload["count_mode"] == selected["count_mode"]
+                 and value.payload["score_mode"] == selected["score_mode"])
     model.payload.update({"input_mode": "full-query-v1", "research_status": "not_approved",
                           "operating_threshold": selected["threshold"]})
     result = {
         "schema_version": "drastha-dns-candidate-v1", "corpus_id": manifest["corpus_id"],
         "model": model.payload, "audit": audit, "gates": manifest["gates"],
-        "threshold_grid": manifest["threshold_grid"], "validation": selected,
-        "validation_candidates": [{key: value[key] for key in ("threshold", "tp", "fp", "fn", "tn", "recall", "fpr")}
+        "threshold_grid": manifest["threshold_grid"], "ngram_sizes": manifest.get("ngram_sizes", [3]),
+        "score_modes": manifest.get("score_modes", ["multinomial"]),
+        "count_modes": manifest.get("count_modes", ["frequency"]),
+        "model_selection_scope": "predeclared n-gram size and threshold selected on validation only",
+        "validation": selected,
+        "validation_candidates": [{key: value[key] for key in ("ngram_size", "count_mode", "score_mode", "threshold", "tp", "fp", "fn", "tn", "recall", "fpr")}
                                   for value in candidates],
         "validation_gate_failures": gate_failures(selected, manifest["gates"]),
         "test_used_for_selection": False, "production_approved": False,

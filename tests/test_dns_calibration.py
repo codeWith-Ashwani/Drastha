@@ -227,6 +227,13 @@ class DNSCalibrationTests(unittest.TestCase):
         self.save()
         with self.assertRaises(ValueError):
             read_manifest(self.path)
+        for key, value in (("ngram_sizes", [1]), ("ngram_sizes", [2, 2]),
+                           ("count_modes", ["unknown"]), ("score_modes", [])):
+            self.manifest = deepcopy(original)
+            self.manifest[key] = value
+            self.save()
+            with self.assertRaises(ValueError):
+                read_manifest(self.path)
 
     def test_cli_create_only_outputs_preserve_inputs_and_existing_experiments(self):
         before = self.path.read_bytes()
@@ -250,6 +257,44 @@ class DNSCalibrationTests(unittest.TestCase):
         self.assertEqual(len(by_split["train"]), 8)
         self.assertEqual(by_split["test"], {"gozi", "locky"})
         self.assertFalse(by_split["train"] & by_split["validation"] | by_split["train"] & by_split["test"])
+
+    def test_predeclared_model_variants_are_selected_without_holdout_scoring(self):
+        self.manifest["ngram_sizes"] = [2, 3]
+        self.manifest["count_modes"] = ["frequency", "binary_presence"]
+        self.manifest["score_modes"] = ["multinomial"]
+        self.save()
+        with patch("aegisflow.dns_calibration.scored_metrics", wraps=scored_metrics) as score:
+            candidate = fit_candidate(self.path, self.root)
+        self.assertEqual(12, len(candidate["validation_candidates"]))
+        self.assertEqual({"frequency", "binary_presence"}, {x["count_mode"] for x in candidate["validation_candidates"]})
+        self.assertTrue(all({row.split for row in call.args[0]} == {"validation"} for call in score.call_args_list))
+        self.assertNotIn("test", candidate)
+
+    def test_binary_presence_model_counts_a_gram_once_per_document(self):
+        rows = [DNSLabelledDomain("aaaaaaaaaa.test", 1, "attack", "train"),
+                DNSLabelledDomain("bbbbbbbbbb.test", 0, "benign", "train")]
+        frequency = DNSNgramModel.train(rows, ngram_size=2)
+        binary = DNSNgramModel.train(rows, ngram_size=2, count_mode="binary_presence")
+        self.assertGreater(frequency.payload["counts"]["1"]["aa"], binary.payload["counts"]["1"]["aa"])
+        self.assertEqual(1, binary.payload["counts"]["1"]["aa"])
+        self.assertGreaterEqual(binary.predict_probability("aaaa.test"), 0)
+        self.assertLessEqual(binary.predict_probability("aaaa.test"), 1)
+
+    def test_sprint21_manifest_and_inspected_holdout_are_pinned_and_honest(self):
+        manifest_path = ROOT / "data/manifests/umudga_dns_v2.json"
+        manifest, manifest_hash = read_manifest(manifest_path)
+        contract = manifest["selection_contract"]
+        self.assertEqual({"rovnix", "shiotob", "simda", "tinba"}, set(contract["final_test_families"]))
+        self.assertFalse(set(contract["final_test_families"]) & set(contract["train_families"]))
+        self.assertEqual(10000, manifest["prior_experiment_boundaries"]["legitimate_prefix_lines_excluded"])
+        report = json.loads((ROOT / "output/umudga_dns_holdout_v2_final.json").read_text())
+        self.assertEqual(manifest_hash, report["audit"]["manifest_sha256"])
+        self.assertEqual({"tp": 1704, "fp": 67, "fn": 2296, "tn": 5880},
+                         {key: report["test"][key] for key in ("tp", "fp", "fn", "tn")})
+        self.assertTrue(report["upload_prediction_parity"])
+        self.assertEqual("healthy", report["upload_analysis"]["quality"]["status"])
+        self.assertEqual(9947, report["upload_analysis"]["quality"]["records_accepted"])
+        self.assertFalse(report["production_approved"])
 
     def test_suffix_grouping_handles_country_private_wildcard_and_exception_rules(self):
         psl = PublicSuffixList("com\nco.uk\n*.ck\n!www.ck\nblogspot.com\n公司.cn\n")

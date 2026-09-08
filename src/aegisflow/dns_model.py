@@ -28,18 +28,23 @@ class DNSNgramModel:
         self.payload = payload
 
     @classmethod
-    def train(cls, rows: Iterable[DNSLabelledDomain], ngram_size: int = 3) -> "DNSNgramModel":
+    def train(cls, rows: Iterable[DNSLabelledDomain], ngram_size: int = 3,
+              count_mode: str = "frequency") -> "DNSNgramModel":
         rows = list(rows)
         validate_leakage_safe_split(rows)
         training = [row for row in rows if row.split == "train"]
         if not training or {row.label for row in training} != {0, 1}:
             raise ValueError("training split must contain both benign and malicious domains")
+        if count_mode not in {"frequency", "binary_presence"}:
+            raise ValueError("Unsupported DNS n-gram count mode")
         counts = {0: Counter(), 1: Counter()}
         totals = {0: 0, 1: 0}
         documents = Counter(row.label for row in training)
         vocabulary: set[str] = set()
         for row in training:
             grams = character_ngrams(row.domain, ngram_size)
+            if count_mode == "binary_presence":
+                grams = sorted(set(grams))
             counts[row.label].update(grams)
             totals[row.label] += len(grams)
             vocabulary.update(grams)
@@ -47,6 +52,7 @@ class DNSNgramModel:
             "model_type": "character_ngram_multinomial_naive_bayes",
             "version": cls.version,
             "ngram_size": ngram_size,
+            "count_mode": count_mode,
             "alpha": 1.0,
             "documents": {str(key): value for key, value in documents.items()},
             "totals": {str(key): value for key, value in totals.items()},
@@ -63,14 +69,24 @@ class DNSNgramModel:
         vocabulary_size = max(int(self.payload["vocabulary_size"]), 1)
         alpha = float(self.payload.get("alpha", 1.0))
         scores: dict[int, float] = {}
+        grams = character_ngrams(normalized_domain(domain), int(self.payload["ngram_size"]))
+        count_mode = self.payload.get("count_mode", "frequency")
+        if count_mode == "binary_presence":
+            grams = sorted(set(grams))
+        elif count_mode != "frequency":
+            raise ValueError("Unsupported DNS model count mode")
+        score_mode = self.payload.get("score_mode", "multinomial")
+        if score_mode not in {"multinomial", "mean_log_likelihood"}:
+            raise ValueError("Unsupported DNS model score mode")
         for label in (0, 1):
             label_key = str(label)
             prior = (documents[label_key] + alpha) / (total_documents + 2 * alpha)
             denominator = self.payload["totals"][label_key] + alpha * vocabulary_size
             score = math.log(prior)
             label_counts = self.payload["counts"][label_key]
-            for gram in character_ngrams(normalized_domain(domain), int(self.payload["ngram_size"])):
-                score += math.log((label_counts.get(gram, 0) + alpha) / denominator)
+            likelihood = sum(math.log((label_counts.get(gram, 0) + alpha) / denominator)
+                             for gram in grams)
+            score += likelihood / max(len(grams), 1) if score_mode == "mean_log_likelihood" else likelihood
             scores[label] = score
         maximum = max(scores.values())
         benign = math.exp(scores[0] - maximum)

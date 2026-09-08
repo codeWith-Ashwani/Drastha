@@ -1,5 +1,12 @@
 # Models, engineered features, and validation approach
 
+Sprint 21 adds a guarded DGA research iteration over previously unused UMUDGA
+families. Character n-gram sizes 2–5, frequency/binary-presence counts and
+multinomial/mean-log-likelihood scoring are predeclared and compared only on the
+validation partition. The frozen candidate still fails its conservative FPR
+gate and unseen-family holdout, so it remains blocked from production loading.
+See [Sprint 21](SPRINT_21.md) for exact data boundaries and results.
+
 ## Detection strategy
 
 Sprint 11 adds public-domain DGA training and **validation-selected decision

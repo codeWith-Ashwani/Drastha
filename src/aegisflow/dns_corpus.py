@@ -32,6 +32,21 @@ def read_manifest(path):
         type(x) not in (int, float) or not math.isfinite(x) or not 0 < x < 1 for x in grid
     ) or sorted(set(grid)) != grid:
         raise ValueError("Threshold grid must contain unique ascending finite values between 0 and 1")
+    ngram_sizes = manifest.get("ngram_sizes", [3])
+    if (not isinstance(ngram_sizes, list) or not ngram_sizes
+            or any(type(value) is not int or not 2 <= value <= 5 for value in ngram_sizes)
+            or sorted(set(ngram_sizes)) != ngram_sizes):
+        raise ValueError("ngram_sizes must contain unique ascending integers from 2 through 5")
+    score_modes = manifest.get("score_modes", ["multinomial"])
+    if (not isinstance(score_modes, list) or not score_modes
+            or any(value not in {"multinomial", "mean_log_likelihood"} for value in score_modes)
+            or len(set(score_modes)) != len(score_modes)):
+        raise ValueError("score_modes must contain unique supported DNS score modes")
+    count_modes = manifest.get("count_modes", ["frequency"])
+    if (not isinstance(count_modes, list) or not count_modes
+            or any(value not in {"frequency", "binary_presence"} for value in count_modes)
+            or len(set(count_modes)) != len(count_modes)):
+        raise ValueError("count_modes must contain unique supported DNS n-gram count modes")
     gates = manifest.get("gates", {})
     for key in ("maximum_fpr", "minimum_recall", "minimum_family_recall"):
         value = gates.get(key)

@@ -1,0 +1,22 @@
+{
+  "schema_version": "drastha-label-units-v1",
+  "units": [
+    {
+      "expected_classes": [
+        "botnet_c2_beaconing"
+      ],
+      "flow_ids": [
+        "C2000",
+        "C2001",
+        "C2002",
+        "C2003",
+        "C2004",
+        "C2005",
+        "C2006",
+        "C2007"
+      ],
+      "label": "attack",
+      "unit_id": "attack-c2"
+    }
+  ]
+}

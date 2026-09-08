@@ -18,7 +18,12 @@ rejections, no detector network connection attempts, and no payload decryption.
 See [the exact result and limitations](docs/SPRINT_19.md). This does not claim a
 live mirror, QUIC interoperability, real-traffic accuracy or sustained capacity.
 
-Latest verified baseline (9 September 2026): **390 Python tests**, **18 frontend
+Sprint 20 adds a [reproducible SIH-guided offline lab corpus](docs/SPRINT_20.md):
+13 isolated checksum-pinned scenarios, 392 chronological records, independent
+ground-truth sidecars and an honest shared-pipeline baseline. No attack tool or
+live network transmission is used.
+
+Latest verified baseline (9 September 2026): **393 Python tests**, **18 frontend
 tests**, and a successful dashboard production build. The corrected accuracy
 replay produces **8 findings, 8 incidents, 0 false-positive behaviours and healthy
 input quality**. These are controlled synthetic results, not production accuracy.

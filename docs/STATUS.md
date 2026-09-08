@@ -4,6 +4,13 @@ Last updated: 9 September 2026
 
 ## Production roadmap update
 
+Sprint 20 is complete. The SIH-guided offline lab corpus contains 13 isolated
+captures and 392 healthy chronological records with checksum-pinned sidecar
+truth. The shared analysis path detects eight supported attacks while preserving
+three contextual false positives and one Slow HTTP false negative as explicit
+Sprint 22 hardening targets. Verification passes with 393 Python tests, 18
+frontend tests and a production dashboard build. See `docs/SPRINT_20.md`.
+
 Sprint 19 closes the real offline sensor gate with Zeek 8.0.10 in Ubuntu 24.04
 WSL. A deterministic mixed SYN/DNS/TLS PCAP produces actual `conn.log`,
 `dns.log`, and `ssl.log`; 10 records are accepted, zero rejected, quality is

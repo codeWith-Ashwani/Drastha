@@ -1,0 +1,34 @@
+{
+  "schema_version": "drastha-label-units-v1",
+  "units": [
+    {
+      "expected_classes": [],
+      "flow_ids": [
+        "AUTHSCAN000",
+        "AUTHSCAN001",
+        "AUTHSCAN002",
+        "AUTHSCAN003",
+        "AUTHSCAN004",
+        "AUTHSCAN005",
+        "AUTHSCAN006",
+        "AUTHSCAN007",
+        "AUTHSCAN008",
+        "AUTHSCAN009",
+        "AUTHSCAN010",
+        "AUTHSCAN011",
+        "AUTHSCAN012",
+        "AUTHSCAN013",
+        "AUTHSCAN014",
+        "AUTHSCAN015",
+        "AUTHSCAN016",
+        "AUTHSCAN017",
+        "AUTHSCAN018",
+        "AUTHSCAN019",
+        "AUTHSCAN020",
+        "AUTHSCAN021"
+      ],
+      "label": "benign",
+      "unit_id": "authorized-scanner"
+    }
+  ]
+}

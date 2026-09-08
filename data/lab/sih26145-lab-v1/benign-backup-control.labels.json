@@ -1,0 +1,15 @@
+{
+  "schema_version": "drastha-label-units-v1",
+  "units": [
+    {
+      "expected_classes": [],
+      "flow_ids": [
+        "BACKUP000",
+        "BACKUP001",
+        "BACKUP002"
+      ],
+      "label": "benign",
+      "unit_id": "benign-backup"
+    }
+  ]
+}

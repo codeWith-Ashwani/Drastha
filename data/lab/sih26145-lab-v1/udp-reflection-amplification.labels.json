@@ -1,0 +1,19 @@
+{
+  "schema_version": "drastha-label-units-v1",
+  "units": [
+    {
+      "expected_classes": [
+        "udp_reflection_amplification"
+      ],
+      "flow_ids": [
+        "UDPAMP000",
+        "UDPAMP001",
+        "UDPAMP002",
+        "UDPAMP003",
+        "UDPAMP004"
+      ],
+      "label": "attack",
+      "unit_id": "attack-udp-amplification"
+    }
+  ]
+}

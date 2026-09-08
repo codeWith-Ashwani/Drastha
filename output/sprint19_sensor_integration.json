@@ -1,0 +1,276 @@
+{
+  "detector_network_attempts": [],
+  "experiment": "offline-real-zeek-upload-v2",
+  "feature_coverage": {
+    "active_cohorts": 1,
+    "configuration": {
+      "anomaly_scale": 6,
+      "history_seconds": 3600,
+      "learning_ceiling": 0.75,
+      "maximum_cohorts": 128,
+      "maximum_history": 5000,
+      "minimum_baseline_sessions": 20,
+      "minimum_packets": 4,
+      "minimum_prevalence_sessions": 100,
+      "sequence_length": 8,
+      "size_scale_floor": 32,
+      "timing_scale_floor": 0.001
+    },
+    "counts": {
+      "insufficient_evidence": 1,
+      "observations": 1,
+      "prevalence_warmup": 1,
+      "sequence_baseline_warmup": 1
+    },
+    "exfiltration_direction": "legacy-originator-view",
+    "extractor_version": "packet-sequence-robust-v1",
+    "mode": "compatibility",
+    "network_direction_counts": {
+      "unknown": 8
+    },
+    "network_direction_status": "unconfigured"
+  },
+  "findings": 1,
+  "gates": {
+    "api_readback": true,
+    "application_payload_not_retained": true,
+    "capture_fingerprint_observed": true,
+    "capture_packets_joined": true,
+    "capture_sequence_observed": true,
+    "connections_present": true,
+    "dns_metadata_present": true,
+    "no_detector_network_connections": true,
+    "none_rejected_healthy": true,
+    "payload_not_decrypted": true,
+    "pcap_unchanged": true,
+    "recon_detected": true,
+    "tls_metadata_present": true,
+    "zeek_dns_log_observed": true,
+    "zeek_output_unchanged": true,
+    "zeek_tls_log_observed": true
+  },
+  "incidents": 1,
+  "input_schema": {
+    "format": "zeek_directory",
+    "packet_capture": {
+      "application_payload_retained": false,
+      "capture_sha256": "0f72c2dc027d53022d2f10e4347fb05156f89fc03d09065204ffed41532e0634",
+      "counters": {
+        "incomplete_or_unsupported_hello": 1,
+        "matched_packets": 15,
+        "packets_seen": 15
+      },
+      "extractor_version": "pcap-header-ja3-v1",
+      "ja3_scope": "complete cleartext ClientHello in one TCP segment; no TCP reassembly",
+      "join": {
+        "joined_sessions": 1
+      },
+      "payload_decrypted": false,
+      "unsupported": [
+        "PCAPNG",
+        "non-Ethernet",
+        "IP fragmentation/IPv6 extension chains",
+        "QUIC fingerprint extraction"
+      ]
+    },
+    "schema": "mixed",
+    "sources": [
+      {
+        "aliases_used": [],
+        "detected_fields": [
+          "conn_state",
+          "duration",
+          "history",
+          "id.orig_h",
+          "id.orig_p",
+          "id.resp_h",
+          "id.resp_p",
+          "ip_proto",
+          "local_orig",
+          "local_resp",
+          "missed_bytes",
+          "orig_bytes",
+          "orig_ip_bytes",
+          "orig_pkts",
+          "proto",
+          "resp_bytes",
+          "resp_ip_bytes",
+          "resp_pkts",
+          "service",
+          "ts",
+          "uid"
+        ],
+        "format": "jsonl",
+        "record_types": {
+          "connection": 8
+        },
+        "records": 8,
+        "resolved_fields": {
+          "id.orig_h": "id.orig_h",
+          "id.orig_p": "id.orig_p",
+          "id.resp_h": "id.resp_h",
+          "id.resp_p": "id.resp_p",
+          "proto": "proto",
+          "ts": "ts",
+          "uid": "uid"
+        },
+        "schema": "connection"
+      },
+      {
+        "aliases_used": [],
+        "detected_fields": [
+          "AA",
+          "RA",
+          "RD",
+          "TC",
+          "TTLs",
+          "Z",
+          "answers",
+          "id.orig_h",
+          "id.orig_p",
+          "id.resp_h",
+          "id.resp_p",
+          "proto",
+          "qclass",
+          "qclass_name",
+          "qtype",
+          "qtype_name",
+          "query",
+          "rcode",
+          "rcode_name",
+          "rejected",
+          "rtt",
+          "trans_id",
+          "ts",
+          "uid"
+        ],
+        "format": "single_json_object",
+        "record_types": {
+          "dns": 1
+        },
+        "records": 1,
+        "resolved_fields": {
+          "id.orig_h": "id.orig_h",
+          "id.orig_p": "id.orig_p",
+          "id.resp_h": "id.resp_h",
+          "id.resp_p": "id.resp_p",
+          "proto": "proto",
+          "ts": "ts",
+          "uid": "uid"
+        },
+        "schema": "dns"
+      },
+      {
+        "aliases_used": [],
+        "detected_fields": [
+          "cipher",
+          "established",
+          "id.orig_h",
+          "id.orig_p",
+          "id.resp_h",
+          "id.resp_p",
+          "resumed",
+          "server_name",
+          "ssl_history",
+          "ts",
+          "uid",
+          "version"
+        ],
+        "format": "single_json_object",
+        "record_types": {
+          "tls": 1
+        },
+        "records": 1,
+        "resolved_fields": {
+          "id.orig_h": "id.orig_h",
+          "id.orig_p": "id.orig_p",
+          "id.resp_h": "id.resp_h",
+          "id.resp_p": "id.resp_p",
+          "proto": null,
+          "ts": "ts",
+          "uid": "uid"
+        },
+        "schema": "tls"
+      }
+    ]
+  },
+  "limitations": [
+    "Synthetic offline SYN/DNS/TLS PCAP, not a live mirror or throughput test",
+    "Validates Zeek connection, DNS and TLS metadata; QUIC sensor interoperability remains open",
+    "A single TLS session validates measured feature availability, not anomaly classification or baseline calibration",
+    "Actual in-process ASGI upload/readback, not browser or TLS transport validation"
+  ],
+  "passed": true,
+  "pcap_sha256": "0f72c2dc027d53022d2f10e4347fb05156f89fc03d09065204ffed41532e0634",
+  "quality": {
+    "conflicting_duplicate_uid_count": 0,
+    "degraded_reasons": [],
+    "duplicate_uid_count": 0,
+    "errors": [],
+    "exact_duplicate_count": 0,
+    "invalid_timestamp_count": 0,
+    "maximum_backward_skew_seconds": 0.0,
+    "out_of_order_records": 0,
+    "quarantined_records": [],
+    "records_accepted": 10,
+    "records_quarantined": 0,
+    "records_received": 10,
+    "records_rejected": 0,
+    "records_seen": 10,
+    "rejection_ratio": 0.0,
+    "source": "C:\\Users\\Lenovo\\AppData\\Local\\Temp\\drastha-sensor-08j37q3q\\zeek",
+    "status": "healthy",
+    "stream": "passive:zeek-directory",
+    "unsupported_record_count": 0
+  },
+  "sensor": {
+    "attempts": [],
+    "command": [
+      "C:\\Windows\\system32\\wsl.exe",
+      "--distribution",
+      "Ubuntu-24.04",
+      "--",
+      "/opt/zeek/bin/zeek",
+      "--version"
+    ],
+    "status": "available",
+    "version": "/opt/zeek/bin/zeek version 8.0.10"
+  },
+  "status": "passed",
+  "telemetry": {
+    "connection_records": 8,
+    "dns_records": 1,
+    "encrypted_session_records": 1,
+    "supplied_labels_ignored": true
+  },
+  "zeek_command": [
+    "C:\\Windows\\system32\\wsl.exe",
+    "--distribution",
+    "Ubuntu-24.04",
+    "--cd",
+    "/mnt/c/Users/Lenovo/AppData/Local/Temp/drastha-sensor-08j37q3q/zeek",
+    "--",
+    "/opt/zeek/bin/zeek",
+    "-C",
+    "-r",
+    "/mnt/c/Users/Lenovo/AppData/Local/Temp/drastha-sensor-08j37q3q/sensor-mixed.pcap",
+    "LogAscii::use_json=T"
+  ],
+  "zeek_logs": {
+    "conn.log": {
+      "bytes": 2660,
+      "records": 8,
+      "sha256": "50f33c101ede755c708c40bfbc5bf2fef8fb4722a5339184039f1552214dc55f"
+    },
+    "dns.log": {
+      "bytes": 423,
+      "records": 1,
+      "sha256": "115df6f4de00e184e716dd2463463e23a12654ecabfe7205f9f6fe5099e0d45a"
+    },
+    "ssl.log": {
+      "bytes": 280,
+      "records": 1,
+      "sha256": "c3a23bc9905b20fd72f48578f3688550724b96594dbe6f3a277ab46651d87a60"
+    }
+  }
+}

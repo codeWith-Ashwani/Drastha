@@ -13,7 +13,18 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "src"))
 
 from check_sustained_ingestion import LoadConfig, assess, distribution, isolated_api, resident_bytes, run, workload
-from check_sensor_integration import check, checksum, main as sensor_main, probe, scan_pcap
+from check_sensor_integration import (
+    SENSOR_BASE_TS,
+    TLS_DESTINATION,
+    TLS_SOURCE,
+    TLS_SOURCE_PORT,
+    check,
+    checksum,
+    main as sensor_main,
+    probe,
+    scan_pcap,
+    sensor_pcap,
+)
 
 
 class Sprint14ValidationTests(unittest.TestCase):
@@ -119,17 +130,35 @@ class Sprint14ValidationTests(unittest.TestCase):
             def process_pcap(self, pcap, directory):
                 from types import SimpleNamespace
                 directory.mkdir()
-                records = [{"ts": 1000 + i / 10, "uid": f"Z{i}", "proto": "tcp", "conn_state": "S0",
+                records = [{"ts": SENSOR_BASE_TS + i / 10, "uid": f"Z{i}", "proto": "tcp", "conn_state": "S0",
                             "id.orig_h": "192.0.2.10", "id.resp_h": "198.51.100.20",
                             "id.orig_p": 40000 + i, "id.resp_p": 1000 + i} for i in range(6)]
+                records.extend([
+                    {"ts": SENSOR_BASE_TS + 1, "uid": "DNSSTUB", "proto": "udp", "conn_state": "SF",
+                     "id.orig_h": "192.0.2.20", "id.resp_h": "198.51.100.53",
+                     "id.orig_p": 42000, "id.resp_p": 53, "duration": .05},
+                    {"ts": SENSOR_BASE_TS + 2, "uid": "TLSSTUB", "proto": "tcp", "conn_state": "SF",
+                     "id.orig_h": TLS_SOURCE, "id.resp_h": TLS_DESTINATION,
+                     "id.orig_p": TLS_SOURCE_PORT, "id.resp_p": 443, "duration": .11},
+                ])
                 path = directory / "conn.log"
                 path.write_text("".join(json.dumps(r) + "\n" for r in records), encoding="utf-8")
-                return SimpleNamespace(conn_log=path)
+                (directory / "dns.log").write_text(json.dumps({
+                    "ts": SENSOR_BASE_TS + 1, "uid": "DNSSTUB", "id.orig_h": "192.0.2.20",
+                    "id.resp_h": "198.51.100.53", "query": "sensor-check.example", "qtype": 1,
+                    "rcode": 0, "answers": ["203.0.113.5"]}) + "\n", encoding="utf-8")
+                (directory / "ssl.log").write_text(json.dumps({
+                    "ts": SENSOR_BASE_TS + 2.03, "uid": "TLSSTUB", "id.orig_h": TLS_SOURCE,
+                    "id.resp_h": TLS_DESTINATION, "id.orig_p": TLS_SOURCE_PORT, "id.resp_p": 443,
+                    "version": "TLSv13", "cipher": "TLS_AES_128_GCM_SHA256", "established": True,
+                    "server_name": "sensor-check.example"}) + "\n", encoding="utf-8")
+                return SimpleNamespace(conn_log=path, output_directory=directory, command=("stub-zeek", "-r"))
 
         with patch("check_sensor_integration.probe", return_value=(StubRunner(), {"status": "test-stub"})):
             report = check()
         self.assertTrue(report["passed"], report)
-        self.assertEqual(report["quality"]["records_accepted"], 6)
+        self.assertEqual(report["quality"]["records_accepted"], 10)
+        self.assertEqual(report["detector_network_attempts"], [])
 
     def test_sensor_execution_failure_is_not_downgraded_to_skip(self):
         from unittest.mock import Mock
@@ -165,6 +194,23 @@ class Sprint14ValidationTests(unittest.TestCase):
             ports.append(struct.unpack_from("!H", tcp, 2)[0])
             offset += 16 + captured
         self.assertEqual(ports, list(range(1000, 1006)))
+
+    def test_mixed_sensor_capture_is_deterministic_and_chronological(self):
+        raw = sensor_pcap()
+        self.assertEqual(raw, sensor_pcap())
+        offset, timestamps, protocols = 24, [], []
+        while offset < len(raw):
+            seconds, micros, captured, original = struct.unpack_from("<IIII", raw, offset)
+            self.assertEqual(captured, original)
+            packet = raw[offset + 16:offset + 16 + captured]
+            self.assertEqual(checksum(packet[14:34]), 0)
+            timestamps.append(seconds + micros / 1_000_000)
+            protocols.append(packet[23])
+            offset += 16 + captured
+        self.assertEqual(len(timestamps), 15)
+        self.assertEqual(timestamps, sorted(timestamps))
+        self.assertEqual(protocols.count(17), 2)
+        self.assertEqual(protocols.count(6), 13)
 
 
 if __name__ == "__main__":

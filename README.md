@@ -11,7 +11,14 @@ The repository contains a working offline SIH demonstration and a production
 hardening track. Controlled replay results are reproducible; real-traffic
 generalization, continuous-service scale and operational deployment remain open.
 
-Latest verified baseline (6 September 2026): **388 Python tests**, **18 frontend
+Sprint 19 adds a real offline Zeek 8.0.10 sensor proof: a deterministic mixed
+SYN/DNS/TLS PCAP produces native `conn.log`, `dns.log`, and `ssl.log`, then passes
+through shared analysis and dashboard API readback with healthy quality, no
+rejections, no detector network connection attempts, and no payload decryption.
+See [the exact result and limitations](docs/SPRINT_19.md). This does not claim a
+live mirror, QUIC interoperability, real-traffic accuracy or sustained capacity.
+
+Latest verified baseline (9 September 2026): **390 Python tests**, **18 frontend
 tests**, and a successful dashboard production build. The corrected accuracy
 replay produces **8 findings, 8 incidents, 0 false-positive behaviours and healthy
 input quality**. These are controlled synthetic results, not production accuracy.
@@ -442,6 +449,16 @@ drastha check-zeek
 Install WSL2, Ubuntu and Zeek inside the Linux environment. Drastha's automatic
 mode will use the WSL Zeek executable when it is available.
 
+The verified Sprint 19 setup uses Ubuntu 24.04 WSL and Zeek 8.0.10 at
+`/opt/zeek/bin/zeek`. Before analysing an operator capture, reproduce the
+create-only offline sensor check with a new report filename:
+
+```powershell
+.venv\Scripts\python.exe scripts\check_sensor_integration.py `
+  --mode wsl --distribution Ubuntu-24.04 `
+  --report-output output\sensor-check.json
+```
+
 ```powershell
 $env:PYTHONPATH = "src"
 drastha pcap `
@@ -466,6 +483,8 @@ drastha pcap \
 
 Only process captures that you are authorized to inspect. Raw `.pcap` and
 `.pcapng` files are ignored by Git so they are not accidentally committed.
+The Zeek output directory must be new or empty; Drastha refuses to overwrite or
+mix existing evidence.
 
 ## Train the demonstration ML model
 
@@ -513,7 +532,7 @@ source .venv/bin/activate
 python -m unittest discover -s tests -v
 ```
 
-The verified baseline contains 388 Python tests covering ingestion,
+The verified baseline contains 390 Python tests covering ingestion,
 detectors, ML training, correlation, persistence, API workflows, replay upload,
 near-real-time streaming, telemetry quality, PCAP integration and restart
 behaviour.

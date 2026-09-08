@@ -1,8 +1,20 @@
 # Drastha build status
 
-Last updated: 6 September 2026
+Last updated: 9 September 2026
 
 ## Production roadmap update
+
+Sprint 19 closes the real offline sensor gate with Zeek 8.0.10 in Ubuntu 24.04
+WSL. A deterministic mixed SYN/DNS/TLS PCAP produces actual `conn.log`,
+`dns.log`, and `ssl.log`; 10 records are accepted, zero rejected, quality is
+healthy, measured JA3/packet sequences are joined, and the completed run is read
+back through the dashboard API. All 16 sensor/passivity/evidence gates pass and
+detector network attempts remain zero. Existing Zeek output is now create-only:
+non-empty evidence directories are refused. This is an offline interoperability
+proof, not live-mirror, QUIC, accuracy or throughput validation. See
+`docs/SPRINT_19.md` and `output/sprint19_sensor_integration.json`. Current
+verification: **390 Python tests**, **18 frontend tests**, and the dashboard
+production build pass.
 
 Sprint 18 delivers completed-replay SIEM JSON/NDJSON export. The actual protected
 upload/export drill preserves all eight incident behaviors for both corrected
@@ -48,9 +60,9 @@ healthy with zero rejections and P95 visibility 137.11 ms. The 1,000 records/sec
 signed stress run **failed** (5,484 of 60,000 inputs remained unobserved at the
 drain deadline); its failure report is retained. No detector/quality/security
 checks were weakened. See `docs/SPRINT_14.md` for exact boundaries and results.
-Real Zeek validation is blocked by the missing native/WSL installation; browser
-approval, real TLS transport, all-protocol/long-duration capacity and scaling
-remain open. This is not a fully completed production-validation milestone.
+That release's real Zeek validation was blocked by the missing native/WSL
+installation; Sprint 19 later closes the offline connection/DNS/TLS sensor gate.
+Browser transport, live mirror, QUIC and long-duration mixed capacity remain open.
 
 Sprint 13's protected-access/signed-evidence slice is delivered with 267 Python
 tests passing. Opt-in HTTPS-only role-based credentials, authenticated review

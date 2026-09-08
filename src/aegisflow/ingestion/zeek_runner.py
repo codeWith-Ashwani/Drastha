@@ -21,6 +21,37 @@ class ZeekRunResult:
     output_directory: Path
     stdout: str
     stderr: str
+    log_files: tuple[Path, ...] = ()
+    command: tuple[str, ...] = ()
+
+
+SUPPORTED_LOGS = ("conn.log", "dns.log", "ssl.log", "quic.log")
+
+
+def _prepare_output_directory(output_directory: str | Path) -> Path:
+    """Create a clean evidence directory without deleting or overwriting files."""
+    output = Path(output_directory).resolve()
+    if output.exists():
+        if not output.is_dir():
+            raise ZeekExecutionError(f"Zeek output path is not a directory: {output}")
+        existing = next(output.iterdir(), None)
+        if existing is not None:
+            raise ZeekExecutionError(
+                f"Zeek output directory must be empty; refusing stale evidence: {output}"
+            )
+    else:
+        output.mkdir(parents=True)
+    return output
+
+
+def _result(output: Path, command: list[str], completed: subprocess.CompletedProcess[str]) -> ZeekRunResult:
+    conn_log = output / "conn.log"
+    if not conn_log.is_file():
+        raise ZeekExecutionError("Zeek completed but did not produce conn.log")
+    logs = tuple(output / name for name in SUPPORTED_LOGS if (output / name).is_file())
+    return ZeekRunResult(
+        conn_log, output, completed.stdout, completed.stderr, logs, tuple(command)
+    )
 
 
 class ZeekRunner:
@@ -47,8 +78,7 @@ class ZeekRunner:
         capture = Path(pcap).resolve()
         if not capture.is_file():
             raise FileNotFoundError(f"PCAP file not found: {capture}")
-        output = Path(output_directory).resolve()
-        output.mkdir(parents=True, exist_ok=True)
+        output = _prepare_output_directory(output_directory)
         command = [executable, "-C", "-r", str(capture), "LogAscii::use_json=T"]
         result = subprocess.run(
             command,
@@ -61,10 +91,7 @@ class ZeekRunner:
             raise ZeekExecutionError(
                 f"Zeek exited with code {result.returncode}: {result.stderr.strip()}"
             )
-        conn_log = output / "conn.log"
-        if not conn_log.is_file():
-            raise ZeekExecutionError("Zeek completed but did not produce conn.log")
-        return ZeekRunResult(conn_log, output, result.stdout, result.stderr)
+        return _result(output, command, result)
 
 
 class WSLZeekRunner:
@@ -140,8 +167,7 @@ class WSLZeekRunner:
         capture = Path(pcap).resolve()
         if not capture.is_file():
             raise FileNotFoundError(f"PCAP file not found: {capture}")
-        output = Path(output_directory).resolve()
-        output.mkdir(parents=True, exist_ok=True)
+        output = _prepare_output_directory(output_directory)
 
         capture_linux = self._wsl_path(capture)
         output_linux = self._wsl_path(output)
@@ -165,7 +191,4 @@ class WSLZeekRunner:
             raise ZeekExecutionError(
                 f"Zeek exited with code {result.returncode}: {result.stderr.strip()}"
             )
-        conn_log = output / "conn.log"
-        if not conn_log.is_file():
-            raise ZeekExecutionError("Zeek completed but did not produce conn.log")
-        return ZeekRunResult(conn_log, output, result.stdout, result.stderr)
+        return _result(output, command, result)

@@ -5,6 +5,7 @@ import json
 import math
 from collections import Counter
 from dataclasses import dataclass
+from hashlib import blake2b
 from pathlib import Path
 from typing import Iterable
 
@@ -144,7 +145,111 @@ class DNSNgramModel:
         payload = json.loads(Path(path).read_text(encoding="utf-8"))
         if payload.get("schema_version") == "drastha-dns-candidate-v1" or payload.get("research_status"):
             raise ValueError("Research DNS candidate is not approved for deployment; use evaluate-dns-candidate")
+        if payload.get("model_type") == "hashed_character_logistic_regression":
+            return DNSHashedLogisticModel(payload)
         return cls(payload)
+
+
+class DNSHashedLogisticModel(DNSNgramModel):
+    """Deterministic sparse logistic DGA model with bounded feature hashing."""
+
+    version = "1.0"
+    FEATURE_NAMES = tuple(sorted(lexical_features("example.test")))
+
+    @staticmethod
+    def _token_coordinate(token: str, dimensions: int) -> tuple[int, float]:
+        value = blake2b(token.encode("utf-8"), digest_size=8,
+                        person=b"drastha").digest()
+        return int.from_bytes(value[:4], "big") % dimensions, 1.0 if value[4] & 1 else -1.0
+
+    @classmethod
+    def _vector(cls, domain: str, payload: dict) -> dict[int, float]:
+        dimensions = int(payload["hash_dimensions"])
+        counts: Counter[int] = Counter()
+        for size in payload["ngram_sizes"]:
+            for token in character_ngrams(domain, int(size)):
+                index, sign = cls._token_coordinate(f"{size}:{token}", dimensions)
+                counts[index] += sign
+        norm = math.sqrt(sum(value * value for value in counts.values())) or 1.0
+        vector = {index: value / norm for index, value in counts.items() if value}
+        features = lexical_features(domain)
+        for offset, name in enumerate(cls.FEATURE_NAMES):
+            descriptor = payload["lexical_scaler"][name]
+            value = (features[name] - descriptor["mean"]) / descriptor["scale"]
+            vector[dimensions + offset] = max(-5.0, min(5.0, value)) / 5.0
+        return vector
+
+    @staticmethod
+    def _sigmoid(value: float) -> float:
+        value = max(-40.0, min(40.0, value))
+        return 1.0 / (1.0 + math.exp(-value))
+
+    @classmethod
+    def train(cls, rows: Iterable[DNSLabelledDomain], *, hash_dimensions: int = 4096,
+              ngram_sizes: tuple[int, ...] = (2, 3, 4), epochs: int = 4,
+              learning_rate: float = 0.08, l2: float = 0.0001) -> "DNSHashedLogisticModel":
+        training = [row for row in rows if row.split == "train"]
+        if not training or {row.label for row in training} != {0, 1}:
+            raise ValueError("training split must contain both benign and malicious domains")
+        if (type(hash_dimensions) is not int or not 256 <= hash_dimensions <= 65536
+                or not ngram_sizes or any(type(size) is not int or not 2 <= size <= 5 for size in ngram_sizes)
+                or tuple(sorted(set(ngram_sizes))) != tuple(ngram_sizes)
+                or type(epochs) is not int or not 1 <= epochs <= 20
+                or not 0 < learning_rate <= 1 or not 0 <= l2 <= 0.1):
+            raise ValueError("Invalid hashed logistic DNS model configuration")
+        observed = {name: [] for name in cls.FEATURE_NAMES}
+        for row in training:
+            values = lexical_features(row.domain)
+            for name in cls.FEATURE_NAMES:
+                observed[name].append(values[name])
+        scaler = {}
+        for name, values in observed.items():
+            mean = sum(values) / len(values)
+            variance = sum((value - mean) ** 2 for value in values) / len(values)
+            scaler[name] = {"mean": mean, "scale": max(math.sqrt(variance), 1e-6)}
+        payload = {
+            "model_type": "hashed_character_logistic_regression", "version": cls.version,
+            "hash_algorithm": "blake2b-64-signed-v1", "hash_dimensions": hash_dimensions,
+            "ngram_sizes": list(ngram_sizes), "epochs": epochs,
+            "learning_rate": learning_rate, "l2": l2, "lexical_scaler": scaler,
+            "research_status": "not_approved",
+        }
+        family_counts = Counter((row.label, row.family) for row in training)
+        family_totals = Counter({label: len({family for item_label, family in family_counts
+                                             if item_label == label}) for label in (0, 1)})
+        row_count = len(training)
+        weights = [0.0] * (hash_dimensions + len(cls.FEATURE_NAMES))
+        bias = 0.0
+        vectors = {normalized_domain(row.domain): cls._vector(row.domain, payload)
+                   for row in training}
+        for epoch in range(epochs):
+            ordered = sorted(training, key=lambda row: blake2b(
+                f"{epoch}|{normalized_domain(row.domain)}".encode(), digest_size=8,
+                person=b"dns-order").digest())
+            rate = learning_rate / math.sqrt(epoch + 1)
+            for row in ordered:
+                vector = vectors[normalized_domain(row.domain)]
+                probability = cls._sigmoid(bias + sum(weights[index] * value
+                                                       for index, value in vector.items()))
+                balance = row_count / (2 * family_totals[row.label]
+                                       * family_counts[(row.label, row.family)])
+                error = max(-10.0, min(10.0, (probability - row.label) * balance))
+                bias -= rate * error
+                for index, value in vector.items():
+                    weights[index] -= rate * (error * value + l2 * weights[index])
+        payload.update(weights=weights, bias=bias,
+                       balancing="equal-class-and-equal-family-contribution-v1",
+                       training_records=row_count,
+                       training_families={str(label): family_totals[label] for label in (0, 1)})
+        return cls(payload)
+
+    def predict_probability(self, domain: str) -> float:
+        vector = self._vector(domain, self.payload)
+        weights = self.payload["weights"]
+        if len(weights) != int(self.payload["hash_dimensions"]) + len(self.FEATURE_NAMES):
+            raise ValueError("Hashed logistic DNS model weight dimensions are invalid")
+        return self._sigmoid(float(self.payload["bias"]) + sum(
+            float(weights[index]) * value for index, value in vector.items()))
 
 
 def read_dns_dataset(path: str | Path) -> list[DNSLabelledDomain]:

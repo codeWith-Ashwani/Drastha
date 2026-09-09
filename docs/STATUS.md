@@ -4,6 +4,14 @@ Last updated: 9 September 2026
 
 ## Production roadmap update
 
+Sprint 29 is complete. A deterministic, bounded hashed character/lexical logistic
+classifier was evaluated with three family-blocked folds across all 87,829 UMUDGA
+v3 domains. It reaches 80.77% development recall at threshold 0.50 but 6.96% FPR;
+at threshold 0.90 FPR falls to 0.52% while recall falls to 52.47%. No operating
+point passes all unchanged gates. Because every UMUDGA family has now been
+inspected, the report is explicitly non-promotable and the runtime model remains
+unchanged. See `docs/SPRINT_29.md`.
+
 Sprint 28 is complete. A new official UMUDGA family-separated experiment uses
 87,829 unique domains and predeclared hybrid n-gram/lexical variants. The frozen
 candidate passed validation (88.75% recall, 0.625% FPR) but failed its untouched

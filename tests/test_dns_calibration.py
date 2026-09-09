@@ -366,6 +366,23 @@ class DNSCalibrationTests(unittest.TestCase):
         self.assertFalse(report["dataset_gates_passed"])
         self.assertFalse(report["production_approved"])
 
+    def test_sprint29_family_blocked_development_report_is_not_promotable(self):
+        report = json.loads((ROOT / "output/sprint29_dns_logistic_development.json").read_text())
+        self.assertEqual("drastha-dns-development-v1", report["schema_version"])
+        self.assertEqual(87829, report["assignment_audit"]["records"])
+        self.assertEqual(87829, report["assignment_audit"]["unique_domains"])
+        self.assertEqual(3, report["fold_count"])
+        for fold in report["folds"]:
+            self.assertFalse(set(fold["training_malware_families"])
+                             & set(fold["validation_malware_families"]))
+        self.assertEqual(report["report_sha256"],
+                         digest({key: value for key, value in report.items()
+                                 if key != "report_sha256"}))
+        self.assertFalse(report["promotion_eligible"])
+        self.assertFalse(report["production_approved"])
+        self.assertIn("fpr_wilson_upper_bound_exceeds_budget",
+                      report["selected_gate_failures"])
+
     def test_suffix_grouping_handles_country_private_wildcard_and_exception_rules(self):
         psl = PublicSuffixList("com\nco.uk\n*.ck\n!www.ck\nblogspot.com\n公司.cn\n")
         for domain, expected in {

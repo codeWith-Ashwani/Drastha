@@ -76,6 +76,10 @@ Production follow-on sequence (the original sprint plan below is historical):
   (see `SPRINT_28.md`). The predeclared hybrid candidate passed validation but
   failed untouched final-holdout recall, especially on Vawtrak; checksum-bound
   promotion correctly refuses it and the deployed demo model remains unchanged.
+- Sprint 29: family-blocked hashed logistic DGA development delivered (see
+  `SPRINT_29.md`). All UMUDGA families are now inspected, so the three-fold result
+  is explicitly non-promotable. The new linear model improves pooled development
+  recall but still cannot satisfy FPR, pooled-recall and per-family gates together.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

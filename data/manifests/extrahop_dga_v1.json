@@ -1,0 +1,39 @@
+{
+  "schema_version": "drastha-external-dga-v1",
+  "corpus_id": "extrahop-dga-independent-core-holdout-v1",
+  "source": {
+    "repository": "https://github.com/ExtraHop/DGA-Detection-Training-Dataset",
+    "commit": "aa208020259c6a4e7b9aa838ebd7b48ad6f4a3a3",
+    "path": "dga-training-data-encoded.json.gz",
+    "download_url": "https://media.githubusercontent.com/media/ExtraHop/DGA-Detection-Training-Dataset/aa208020259c6a4e7b9aa838ebd7b48ad6f4a3a3/dga-training-data-encoded.json.gz",
+    "size": 170860023,
+    "sha256": "536c3292c95f405219ee6851fc89d4cb6c36406fe2c0bb89a950bce22aa5d8ab"
+  },
+  "license": {
+    "name": "MIT",
+    "url": "https://github.com/ExtraHop/DGA-Detection-Training-Dataset/blob/aa208020259c6a4e7b9aa838ebd7b48ad6f4a3a3/LICENSE",
+    "sha256": "9aba412c379c3715cbb16242583f845ae46b306894395e6f2c507ab277290b52"
+  },
+  "citation": "ExtraHop Networks, DGA Detection Training Dataset, 2023",
+  "publisher_description": "Approximately balanced benign/DGA core domain strings, passively harvested or synthesized from known DGA algorithms; TLD and country-code data are absent.",
+  "sample_contract": {
+    "seed": "drastha-sprint30-extrahop-independent-v1",
+    "hash_algorithm": "sha256",
+    "records_per_label": 20000,
+    "oversample_hash_fraction": 0.01,
+    "selection": "smallest unique seeded hashes per label after UMUDGA core-overlap exclusion",
+    "adapter": "publisher core string unchanged; no synthetic TLD appended",
+    "labels_not_used_for_model_or_threshold_selection": true
+  },
+  "gates": {
+    "maximum_fpr": 0.01,
+    "minimum_recall": 0.70,
+    "minimum_positives": 1000,
+    "minimum_negatives": 1000
+  },
+  "promotion_blockers": [
+    "publisher_family_labels_unavailable",
+    "publisher_tld_unavailable_for_full_query_compatibility",
+    "not_deployment_time_or_environment_telemetry"
+  ]
+}

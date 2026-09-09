@@ -80,6 +80,10 @@ Production follow-on sequence (the original sprint plan below is historical):
   `SPRINT_29.md`). All UMUDGA families are now inspected, so the three-fold result
   is explicitly non-promotable. The new linear model improves pooled development
   recall but still cannot satisfy FPR, pooled-recall and per-family gates together.
+- Sprint 30: independent ExtraHop DGA evaluation delivered (see `SPRINT_30.md`).
+  A deterministic 40,000-domain sample is checksum-pinned after full-source and
+  UMUDGA-overlap audit. Frozen inference and bounded upload chunks match exactly,
+  but recall and FPR gates fail; absent TLD/family metadata blocks promotion.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

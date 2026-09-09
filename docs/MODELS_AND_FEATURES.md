@@ -7,6 +7,14 @@ validation partition. The frozen candidate still fails its conservative FPR
 gate and unseen-family holdout, so it remains blocked from production loading.
 See [Sprint 21](SPRINT_21.md) for exact data boundaries and results.
 
+Sprints 28–30 add a weighted n-gram/lexical candidate, a bounded hashed-logistic
+alternative, and an independent ExtraHop evaluation. Neither research model passes
+the frozen generalization gates. The ExtraHop check reaches 63.36% recall and 6.80%
+FPR with exact bounded-upload parity, while missing TLD and family labels prevent
+full-query/per-family certification. No research artifact replaces the demonstration
+model; see [Sprint 28](SPRINT_28.md), [Sprint 29](SPRINT_29.md) and
+[Sprint 30](SPRINT_30.md).
+
 Sprint 22 adds a deterministic protocol-DDoS rule for Slow HTTP
 connection-exhaustion shape. It combines HTTP service/port, partial connection
 state, duration, low bytes/packets, fan-in and estimated overlap. No single
@@ -44,8 +52,10 @@ single opaque traffic-to-attack model and keeps every finding explainable.
 
 ## DGA model
 
-The implemented supervised model is a multinomial Naive Bayes
-classifier over normalized domain character 3-grams.
+The deployed demonstration model is a multinomial Naive Bayes classifier over
+normalized domain character 3-grams. Research-only implementations additionally
+support weighted Gaussian lexical evidence and bounded signed-hash logistic
+regression, but their failed evaluation status prevents normal runtime loading.
 
 ### Input and features
 
@@ -54,7 +64,10 @@ classifier over normalized domain character 3-grams.
 - contextual lexical values: length, entropy, digit ratio, vowel ratio, label
   count, maximum label length, hyphen ratio, and unique-character ratio.
 
-The n-gram probabilities create the ML score. Lexical values are shown as evidence.
+The demonstration artifact's n-gram likelihood creates its ML score. Sprint 28's
+rejected research candidate combines n-gram and lexical class log-odds; Sprint 29's
+rejected model learns sparse logistic weights over hashed n-grams and standardized
+lexical values. None of these scores is a calibrated infection probability.
 A guarded fallback requires several distinct digit-heavy, high-entropy, low-vowel
 domains from one source inside a window; one random-looking domain is insufficient.
 

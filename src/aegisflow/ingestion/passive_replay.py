@@ -8,6 +8,7 @@ from aegisflow.ingestion.replay_input import parse_replay_content, record_schema
 from aegisflow.ingestion.zeek_jsonl import ZeekRecordError, normalize_conn_record, normalize_field_aliases
 from aegisflow.ingestion.zeek_dns import normalize_dns_record
 from aegisflow.ingestion.zeek_encrypted import normalize_encrypted_record
+from aegisflow.ingestion.flow_exports import FLOW_FORMATS, normalize_exported_flow_record
 from aegisflow.models import DNSEvent, EncryptedSessionMetadata
 from aegisflow.telemetry_quality import TelemetryQuality
 
@@ -41,7 +42,7 @@ class PreparedReplay:
 
 def prepare_replay(content: str, source_name: str = "replay", *, maximum_records: int | None = 20_000,
                    source_kind: str | None = None) -> PreparedReplay:
-    if source_kind not in {None, "connection", "dns", "tls", "quic"}:
+    if source_kind not in {None, "connection", "dns", "tls", "quic", *FLOW_FORMATS}:
         raise ValueError("Unknown passive source kind")
     parsed_replay = parse_replay_content(content, source_name)
     raw_records = list(parsed_replay.records)
@@ -99,7 +100,13 @@ def _prepare_records(raw_records, source_name, source_kind, input_format):
             continue
 
         try:
-            canonical, aliases = normalize_field_aliases(raw, line_number)
+            detected_kind = source_kind or record_schema(raw)
+            if detected_kind in FLOW_FORMATS:
+                canonical, aliases = normalize_exported_flow_record(
+                    raw, line_number, detected_kind
+                )
+            else:
+                canonical, aliases = normalize_field_aliases(raw, line_number)
         except ZeekRecordError as exc:
             quality.records_rejected += 1
             quality.records_quarantined += 1
@@ -109,7 +116,7 @@ def _prepare_records(raw_records, source_name, source_kind, input_format):
             continue
         for target, source in aliases.items():
             alias_usage[(target, source)] += 1
-        kind = source_kind or record_schema(canonical)
+        kind = detected_kind
         schema_counts[kind] += 1
 
         record_timestamps: list[float] = []
@@ -118,7 +125,7 @@ def _prepare_records(raw_records, source_name, source_kind, input_format):
         record_encrypted_events = []
         record_error: ZeekRecordError | None = None
         try:
-            if kind == "connection" or (source_kind is None and kind in {"tls", "quic"} and canonical.get("proto")):
+            if kind in {"connection", *FLOW_FORMATS} or (source_kind is None and kind in {"tls", "quic"} and canonical.get("proto")):
                 event = normalize_conn_record(canonical, line_number)
                 record_events.append(event)
                 record_timestamps.append(event.timestamp)

@@ -45,6 +45,9 @@ class UniversalIngestionTests(unittest.TestCase):
             "zeek_array.json": ("json_array", 1),
             "zeek_wrapped.json": ("wrapped_json", 1),
             "flow_aliases.jsonl": ("jsonl", 1),
+            "netflow_v5.jsonl": ("jsonl", 2),
+            "ipfix.jsonl": ("jsonl", 2),
+            "sflow.jsonl": ("jsonl", 2),
         }
         for name, (input_format, count) in cases.items():
             with self.subTest(name=name):

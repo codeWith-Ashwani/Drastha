@@ -1,0 +1,145 @@
+{
+  "artifacts": {
+    "examples/sih26145_tool_capture_zeek_v1.jsonl": {
+      "evaluation": null,
+      "findings": 1,
+      "incidents": 1,
+      "quality": "healthy",
+      "record_types": {
+        "connection": 45
+      },
+      "records": 45,
+      "rejected": 0,
+      "schema": "connection",
+      "sha256": "fb5a3ef6e4a3f8ee4049c573d4d0e0c942a988ad607a881c71a16778ee314c57"
+    },
+    "tests/fixtures/ipfix.jsonl": {
+      "evaluation": null,
+      "findings": 0,
+      "incidents": 0,
+      "quality": "healthy",
+      "record_types": {
+        "ipfix": 2
+      },
+      "records": 2,
+      "rejected": 0,
+      "schema": "ipfix",
+      "sha256": "21cff05b5741d760bfe8d5caf014e9c36ac097f645c4fd2f4245e6cf1f95fb20"
+    },
+    "tests/fixtures/netflow_v5.jsonl": {
+      "evaluation": null,
+      "findings": 0,
+      "incidents": 0,
+      "quality": "healthy",
+      "record_types": {
+        "netflow": 2
+      },
+      "records": 2,
+      "rejected": 0,
+      "schema": "netflow",
+      "sha256": "91401e44687ca0e41518192f41fa4d3fa623bfbeef773c718a8b549e1465e883"
+    },
+    "tests/fixtures/sflow.jsonl": {
+      "evaluation": null,
+      "findings": 0,
+      "incidents": 0,
+      "quality": "healthy",
+      "record_types": {
+        "sflow": 2
+      },
+      "records": 2,
+      "rejected": 0,
+      "schema": "sflow",
+      "sha256": "b4af2a9295533a6ba3951df3b04081d4efbb846f6f9df8165afb1d2aaab37400"
+    }
+  },
+  "claims": {
+    "actual_local_iperf3_hping3_pcap_to_zeek": true,
+    "collector_decoded_netflow_ipfix_sflow": true,
+    "external_exporter_interoperability": false,
+    "production_accuracy": false,
+    "raw_binary_flow_wire_decoding": false
+  },
+  "manifest": "data/manifests/sih26145-input-compliance-v1.json",
+  "manifest_sha256": "75958a7e47327c44a3715f01c39f4dd7482ecb2b05a6a86e1f089b546afa185b",
+  "mixed_evaluation_regression": {
+    "evaluation": {
+      "classification_mismatches": [],
+      "f1_score": 1.0,
+      "false_negative": 0,
+      "false_positive": 0,
+      "false_positive_rate": 0.0,
+      "ground_truth_isolation": "evaluation fields used only after detector inference",
+      "identity_overlap": {
+        "detector_state_reset_from_ground_truth": false,
+        "note": "Ground-truth fields never control detector state. Use distinct identities or explicit externally defined scenario boundaries for isolated evaluation.",
+        "sources_present_in_attack_and_benign_units": [
+          "192.168.20.50",
+          "192.168.20.60"
+        ]
+      },
+      "per_class": {
+        "botnet_c2_beaconing": {
+          "detected_units": 1,
+          "expected_units": 1,
+          "missed_units": 0
+        },
+        "data_exfiltration": {
+          "detected_units": 1,
+          "expected_units": 1,
+          "missed_units": 0
+        },
+        "dga_domain": {
+          "detected_units": 1,
+          "expected_units": 1,
+          "missed_units": 0
+        },
+        "dns_tunnelling": {
+          "detected_units": 1,
+          "expected_units": 1,
+          "missed_units": 0
+        },
+        "encrypted_session_malware": {
+          "detected_units": 1,
+          "expected_units": 1,
+          "missed_units": 0
+        },
+        "reconnaissance_port_scan": {
+          "detected_units": 1,
+          "expected_units": 1,
+          "missed_units": 0
+        },
+        "udp_reflection_amplification": {
+          "detected_units": 1,
+          "expected_units": 1,
+          "missed_units": 0
+        },
+        "volumetric_ddos_syn_flood": {
+          "detected_units": 1,
+          "expected_units": 1,
+          "missed_units": 0
+        }
+      },
+      "precision": 1.0,
+      "recall": 1.0,
+      "scope": "scenario_endpoint_units",
+      "true_negative": 86,
+      "true_positive": 8,
+      "units": 94,
+      "unmatched_alerts": []
+    },
+    "findings": 8,
+    "incidents": 8,
+    "quality": "healthy",
+    "record_types": {
+      "connection": 342,
+      "dns": 79,
+      "tls": 31
+    },
+    "records": 452,
+    "rejected": 0,
+    "schema": "mixed"
+  },
+  "passed": true,
+  "schema_version": "drastha-sprint31-input-compliance-audit-v1"
+}

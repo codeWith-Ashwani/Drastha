@@ -235,7 +235,7 @@ def normalize_conn_record(record: dict[str, Any], line_number: int = 1) -> Netwo
             outbound_packets=_integer(record, "orig_pkts"),
             inbound_packets=_integer(record, "resp_pkts"),
             connection_state=_connection_state(record),
-            source="zeek:conn",
+            source=str(record.get("_drastha_source") or "zeek:conn"),
             raw=record,
         )
     except ZeekRecordError:

@@ -1,0 +1,2 @@
+{"flow_format":"netflow-v5","unix_secs":1789027200,"sequence":4101,"srcaddr":"192.0.2.10","srcport":51001,"dstaddr":"198.51.100.20","dstport":443,"prot":6,"dOctets":1200,"dPkts":10,"OUT_BYTES":4800,"OUT_PKTS":8,"first":1000,"last":1400,"tcp_flags":18}
+{"flow_format":"netflow-v5","unix_secs":1789027201,"sequence":4102,"srcaddr":"192.0.2.11","srcport":53001,"dstaddr":"198.51.100.53","dstport":53,"prot":17,"dOctets":240,"dPkts":2,"OUT_BYTES":640,"OUT_PKTS":2,"first":2000,"last":2050,"tcp_flags":0}

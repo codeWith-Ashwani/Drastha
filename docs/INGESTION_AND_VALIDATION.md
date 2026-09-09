@@ -24,6 +24,13 @@ The replay path is:
 7. Detectors, correlation, persistence, the API response and dashboard consume
    canonical events and structured quality results.
 
+Collector-decoded NetFlow, IPFIX and sFlow JSON records first pass through
+`flow_exports.py`. It converts exporter timestamps, IP protocol numbers,
+directional counters and addresses while retaining the original fields and
+adding passive source provenance. These records then use the same connection
+normalizer and all the same quality rules. This is a decoded-record contract,
+not a raw binary datagram decoder.
+
 PCAP ingestion remains separate: `zeek_runner.py` invokes a local Zeek process
 and its generated logs enter the same Zeek normalizers. Simulated streams and
 CLI replays also use those normalizers.
@@ -44,6 +51,11 @@ Ports are optional and default to zero when absent. Addresses accept valid IPv4
 and IPv6. Timestamps accept Unix seconds and ISO-8601, including timezone-aware
 values. Unknown fields and useful Zeek optional fields remain available in the
 raw canonical record.
+
+For sFlow, Drastha preserves the observed sampled packet size/count and reports
+the sampling rate in provenance. It does not multiply counters by sampling rate,
+because doing so without a collector/exporter contract would manufacture volume
+evidence and could create false DDoS or exfiltration alerts.
 
 ## Error origins
 

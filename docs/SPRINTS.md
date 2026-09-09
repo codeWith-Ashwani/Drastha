@@ -64,6 +64,10 @@ Production follow-on sequence (the original sprint plan below is historical):
   actual upload replay, nine-threat hardening, alert schema, deployment and
   performance gates are revalidated by one command. The bundle is submission-demo
   ready and explicitly not production ready.
+- Sprint 26: deterministic prepared-host demo bundle and isolated-directory
+  rehearsal delivered (see `SPRINT_26.md`). The bundle has a per-file integrity
+  manifest, excludes local secrets/captures/databases, reproduces byte-for-byte,
+  and reruns release acceptance plus the double demo story after extraction.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

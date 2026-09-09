@@ -12,6 +12,12 @@ deferred because they are production requirements, not demo blockers.
 
 ## Capture and scale
 
+- Sprint 24 demonstrates a signed 60-second connection/DNS/TLS metadata mix at
+  50 input records/sec with zero loss/rejection/final backlog. Two 100 records/sec
+  attempts processed every record but failed the strict maximum producer-lag
+  gate. This is ASGI/synthetic metadata, not PCAP-to-browser or production
+  capacity. See `SPRINT_24.md`.
+
 - Sprint 16 reduces repeated transaction/normalization work without bypassing
   integrity checks. Default batch-64 still fails 1,000 records/sec latency;
   explicit batch-256 meets visibility latency but fails producer scheduling.
@@ -22,7 +28,7 @@ deferred because they are production requirements, not demo blockers.
 - Sprint 14 adds 60-second synthetic conn-load/SQLite/ASGI timing and resource
   measurements. Signed 100 records/sec passed; signed 1,000 records/sec failed
   delivery/latency gates. See `SPRINT_14.md`. Real Zeek is unavailable on the
-  tested machine. Live packet loss, all-protocol capacity, TLS/browser latency,
+  tested machine. Live packet loss, PCAP conversion capacity, TLS/browser latency,
   multi-client contention and longer operational soaks remain unverified.
 - Sprint 12 adds bounded local-file backpressure and durable checkpoints/recovery.
   Seamless rotation, state compaction/retention, multi-sensor ordering and sustained

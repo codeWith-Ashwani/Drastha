@@ -84,6 +84,12 @@ Production follow-on sequence (the original sprint plan below is historical):
   A deterministic 40,000-domain sample is checksum-pinned after full-source and
   UMUDGA-overlap audit. Frozen inference and bounded upload chunks match exactly,
   but recall and FPR gates fail; absent TLD/family metadata blocks promotion.
+- Sprint 31: SIH input-format and dataset provenance closure delivered (see
+  `SPRINT_31.md`). Collector-decoded NetFlow, IPFIX and sFlow records use the
+  shared passive analysis path, while an actual loopback-only iperf3/hping3 PCAP
+  is converted by Zeek into a checksum-pinned healthy replay. Binary flow-wire
+  decoding, vendor-wide interoperability and accuracy from this tool capture are
+  explicitly not claimed.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

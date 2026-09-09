@@ -1,0 +1,2 @@
+{"flow_format":"sflow","unixSecondsUTC":1789027220,"flowSample":{"sequence_number":7001},"srcIP":"192.0.2.50","srcPort":54001,"dstIP":"198.51.100.50","dstPort":443,"ipProtocol":6,"sampledPacketSize":1514,"sampledPacketCount":1,"samplingRate":1000,"tcpFlags":18}
+{"flow_format":"sflow","unixSecondsUTC":1789027221,"flowSample":{"sequence_number":7002},"srcIP":"192.0.2.51","srcPort":54002,"dstIP":"198.51.100.51","dstPort":123,"ipProtocol":17,"sampledPacketSize":128,"sampledPacketCount":1,"samplingRate":1000}

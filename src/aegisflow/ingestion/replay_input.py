@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from aegisflow.ingestion.zeek_jsonl import FIELD_ALIASES, ZeekRecordError
+from aegisflow.ingestion.flow_exports import detect_flow_format
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,6 +96,9 @@ def record_schema(record: dict[str, Any]) -> str:
     ):
         transport = str(record.get("transport") or record.get("proto") or "tls").lower()
         return "quic" if transport == "quic" else "tls"
+    flow_format = detect_flow_format(record)
+    if flow_format:
+        return flow_format
     return "connection"
 
 

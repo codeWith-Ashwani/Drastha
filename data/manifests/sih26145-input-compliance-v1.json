@@ -1,0 +1,64 @@
+{
+  "schema_version": "drastha-input-compliance-manifest-v1",
+  "corpus_id": "sih26145-input-compliance-v1",
+  "scope": "passive SIH prototype input-format and tool-provenance evidence",
+  "collector_contract": {
+    "accepted_containers": ["JSONL", "NDJSON", "JSON array", "wrapped records array"],
+    "export_formats": ["NetFlow", "IPFIX", "sFlow"],
+    "representation": "collector-decoded JSON records",
+    "binary_wire_decoder_claimed": false,
+    "read_only": true
+  },
+  "artifacts": [
+    {
+      "path": "tests/fixtures/netflow_v5.jsonl",
+      "sha256": "91401e44687ca0e41518192f41fa4d3fa623bfbeef773c718a8b549e1465e883",
+      "format": "netflow",
+      "records": 2,
+      "origin": "deterministic format-contract fixture"
+    },
+    {
+      "path": "tests/fixtures/ipfix.jsonl",
+      "sha256": "21cff05b5741d760bfe8d5caf014e9c36ac097f645c4fd2f4245e6cf1f95fb20",
+      "format": "ipfix",
+      "records": 2,
+      "origin": "deterministic format-contract fixture"
+    },
+    {
+      "path": "tests/fixtures/sflow.jsonl",
+      "sha256": "b4af2a9295533a6ba3951df3b04081d4efbb846f6f9df8165afb1d2aaab37400",
+      "format": "sflow",
+      "records": 2,
+      "origin": "deterministic format-contract fixture"
+    },
+    {
+      "path": "examples/sih26145_tool_capture_zeek_v1.jsonl",
+      "sha256": "fb5a3ef6e4a3f8ee4049c573d4d0e0c942a988ad607a881c71a16778ee314c57",
+      "format": "zeek-jsonl",
+      "records": 45,
+      "origin": "Zeek 8.0.10 metadata derived from the local-only PCAP below"
+    }
+  ],
+  "local_capture_provenance": {
+    "path": "data/raw/sih26145-tools-v1/iperf3-hping3-loopback.pcap",
+    "committed": false,
+    "reason_not_committed": "raw packet captures are intentionally excluded from Git",
+    "sha256": "bc05dae5319399222026f387636189fa00daa5ed81ceaee6625971eb34e46a86",
+    "interface": "Linux loopback only",
+    "destinations": ["127.0.0.1"],
+    "tools": {
+      "iperf3": "3.16",
+      "hping3": "3.0.0-alpha-2",
+      "tcpdump": "4.99.4",
+      "zeek": "8.0.10"
+    },
+    "generation_script": "scripts/generate_sih_tool_capture.sh",
+    "fixture_builder": "scripts/build_sprint31_capture_fixture.py"
+  },
+  "interpretation_boundaries": [
+    "The tool capture proves local packet generation, capture and Zeek conversion; it is not used to claim detection accuracy.",
+    "The NetFlow/IPFIX/sFlow fixtures validate collector-decoded record semantics, not raw binary wire decoding or vendor interoperability.",
+    "sFlow sample counters are preserved as observed and are never multiplied by sampling rate.",
+    "Loopback directionality can differ from a monitored gateway, so the tool-derived fixture is an ingest proof rather than a representative deployment corpus."
+  ]
+}

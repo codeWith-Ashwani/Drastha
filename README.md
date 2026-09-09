@@ -11,6 +11,13 @@ The repository contains a working offline SIH demonstration and a production
 hardening track. Controlled replay results are reproducible; real-traffic
 generalization, continuous-service scale and operational deployment remain open.
 
+Sprint 31 adds [SIH input-format and dataset provenance closure](docs/SPRINT_31.md).
+Collector-decoded NetFlow, IPFIX and sFlow JSON/NDJSON now enter the same quality,
+detection, correlation and dashboard path as Zeek records. A local-only
+iperf3/hping3 PCAP was captured with tcpdump and converted by Zeek 8.0.10 into a
+checksum-pinned 45-record healthy replay. Raw binary flow datagrams and broad
+vendor interoperability are explicitly not claimed.
+
 Sprint 25 adds the [checksum-pinned final SIH prototype acceptance bundle](docs/SPRINT_25.md).
 One command verifies ten evidence/configuration artifacts and reruns the actual
 upload replay, contextual hardening, public alert schema, deployment and
@@ -78,7 +85,7 @@ using 24 training, four validation and four previously unseen final-test familie
 The frozen candidate failed validation uncertainty and final-holdout
 generalization gates, so production loading remains blocked.
 
-Latest verified baseline (10 September 2026): **433 Python tests**, **18 frontend
+Latest verified baseline (10 September 2026): **444 Python tests**, **18 frontend
 tests**, and a successful dashboard production build. The corrected accuracy
 replay produces **8 findings, 8 incidents, 0 false-positive behaviours and healthy
 input quality**. These are controlled synthetic results, not production accuracy.

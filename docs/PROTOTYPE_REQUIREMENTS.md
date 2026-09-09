@@ -12,6 +12,7 @@ or mitigation code. The SSE channel is between the monitoring-side API and its
 dashboard; it is not a path to any address represented by the telemetry.
 
 - PCAP and Zeek adapters: `src/aegisflow/ingestion/`
+- Collector-decoded NetFlow/IPFIX/sFlow adapter: `src/aegisflow/ingestion/flow_exports.py`
 - Mixed replay ingestion: `src/aegisflow/upload_analysis.py`
 - Incremental simulated stream: `src/aegisflow/streaming_demo.py`
 - API safety signal: `return_path_required: false`
@@ -135,3 +136,12 @@ pnpm run build
 Synthetic scenario validation proves deterministic implementation behaviour. Real
 deployment accuracy still requires licensed datasets, deployment-specific benign
 baselines, threshold calibration, drift monitoring, and operational validation.
+
+## SIH traffic representations
+
+Sprint 31 demonstrates the actual local-only path
+`iperf3/hping3 -> tcpdump PCAP -> Zeek -> canonical replay -> upload analysis`.
+It also accepts collector-decoded NetFlow, IPFIX and sFlow JSON/NDJSON. The
+checksum-pinned contract, tool versions and strict claim boundaries are recorded
+in `data/manifests/sih26145-input-compliance-v1.json` and `docs/SPRINT_31.md`.
+Raw binary flow datagram decoding is not claimed by the SIH prototype.

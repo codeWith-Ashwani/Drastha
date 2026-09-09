@@ -80,6 +80,10 @@ def analyse_prepared(prepared, repository, *, filename="passive-replay", upload_
             "dns_records": len(dns_events),
             "encrypted_session_records": len(encrypted_events),
             "supplied_labels_ignored": True,
+            "exported_flow_formats": {
+                name: count for name, count in prepared.input_schema.get("record_types", {}).items()
+                if name in {"netflow", "ipfix", "sflow"}
+            },
         },
         "context_policy": {
             "source": context_policy.source,

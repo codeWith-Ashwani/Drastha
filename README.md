@@ -17,6 +17,11 @@ upload replay, contextual hardening, public alert schema, deployment and
 performance gates. The machine-readable result is submission-demo ready and
 explicitly not production ready.
 
+Sprint 26 adds a [deterministic prepared-host demo bundle](docs/SPRINT_26.md) with
+per-file SHA-256 verification and an isolated-directory acceptance rehearsal. It
+includes the compiled dashboard but deliberately excludes runtimes, dependencies,
+credentials, databases and packet captures; it is not a self-contained installer.
+
 Sprint 19 adds a real offline Zeek 8.0.10 sensor proof: a deterministic mixed
 SYN/DNS/TLS PCAP produces native `conn.log`, `dns.log`, and `ssl.log`, then passes
 through shared analysis and dashboard API readback with healthy quality, no
@@ -50,7 +55,7 @@ using 24 training, four validation and four previously unseen final-test familie
 The frozen candidate failed validation uncertainty and final-holdout
 generalization gates, so production loading remains blocked.
 
-Latest verified baseline (9 September 2026): **415 Python tests**, **18 frontend
+Latest verified baseline (9 September 2026): **418 Python tests**, **18 frontend
 tests**, and a successful dashboard production build. The corrected accuracy
 replay produces **8 findings, 8 incidents, 0 false-positive behaviours and healthy
 input quality**. These are controlled synthetic results, not production accuracy.

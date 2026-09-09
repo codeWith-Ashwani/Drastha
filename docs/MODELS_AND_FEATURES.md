@@ -14,6 +14,14 @@ feature or uploaded context claim is sufficient. Approved periodic, bulk and
 scanner activity is handled only by validated operator policy; see
 [Sprint 22](SPRINT_22.md).
 
+Sprint 23 standardizes confidence semantics across alert and run provenance.
+Detector confidence remains a bounded, deterministic evidence-strength score;
+it is not a posterior probability, infection probability or calibrated risk.
+The deployment contract exposes `confidence_is_probability: false` and
+`not_probability_calibrated`. This prevents threshold selection or strong lab
+metrics from being mislabeled as probability calibration. See
+[Sprint 23](SPRINT_23.md).
+
 ## Detection strategy
 
 Sprint 11 adds public-domain DGA training and **validation-selected decision

@@ -49,6 +49,7 @@ $OpsArgs = @(
   '--tls-key', 'D:\DrasthaOps\tls\server.key',
   '--web', 'F:\Drastha\Drastha\web\dist',
   '--root', 'F:\Drastha\Drastha',
+  '--deployment-config', 'F:\Drastha\Drastha\config\deployment_profile.json',
   '--host', '127.0.0.1', '--port', '8443'
 )
 .venv\Scripts\python.exe scripts/operate.py preflight @OpsArgs
@@ -68,7 +69,9 @@ applies; do not copy an active DB by ignoring its WAL.
 
 It also validates distinct configuration files, the built dashboard/root, all
 three unexpired roles, a matching loopback HTTPS origin/port, TLS key-pair loading
-and the configured model/policy. It explicitly returns `production_ready: false`.
+and the checksum-linked deployment boundary/policy. It refuses overlapping CIDRs,
+dual environment/file boundary authorities and an unapproved DNS model. It
+explicitly returns `production_ready: false`.
 Treat a failed check as a stop condition; do not suppress it.
 
 ## 3. Explicit local startup and readiness

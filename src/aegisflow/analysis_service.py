@@ -112,7 +112,10 @@ def analyse_prepared(prepared, repository, *, filename="passive-replay", upload_
             {"name": "Connect findings", "status": "critical" if any(item.severity == "critical" for item in incidents) else "completed", "detail": "Grouped related findings into incidents", "incidents": len(incidents), "duration_ms": correlation_ms},
             {"name": "Show result", "status": "ready", "detail": "Stored evidence and prepared the judge view", "incidents": len(incidents), "duration_ms": persistence_ms},
         ],
-        "scope_note": f"Profile: {profile.name}. Production deployment requires environment-specific calibration.",
+        "scope_note": (
+            f"Profile: {profile.name}. Detector confidence is a heuristic evidence score, "
+            "not a calibrated probability of attack."
+        ),
     }
     report["run_id"] = uuid4().hex
     if hasattr(repository, "save_analysis_run"):

@@ -116,6 +116,13 @@ class Alert:
             "flow_identifier": self.flow_ids[0] if self.flow_ids else None,
             "threat_class": THREAT_CLASS_BY_SUBTYPE.get(self.subtype, self.threat_type),
             "supporting_evidence": record["evidence"],
+            "confidence_semantics": self.analysis_provenance.get(
+                "confidence_semantics", "heuristic_evidence_score"
+            ),
+            "confidence_calibration_status": self.analysis_provenance.get(
+                "confidence_calibration_status", "not_probability_calibrated"
+            ),
+            "confidence_is_probability": False,
         })
         return record
 

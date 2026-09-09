@@ -50,11 +50,17 @@ class AnalysisProfile:
     feature_mode: str = "compatibility"
     passive_features: PassiveFeatureConfig = field(default_factory=PassiveFeatureConfig)
     internal_cidrs: tuple[str, ...] = ()
+    confidence_semantics: str = "heuristic_evidence_score"
+    confidence_calibration_status: str = "not_probability_calibrated"
 
     def __post_init__(self):
         if self.feature_mode not in {"compatibility", "derived"}:
             raise ValueError("Unknown passive feature mode")
         NetworkScope(self.internal_cidrs)
+        if self.confidence_semantics != "heuristic_evidence_score":
+            raise ValueError("Unsupported confidence semantics")
+        if self.confidence_calibration_status != "not_probability_calibrated":
+            raise ValueError("No probability calibrator is approved for this release")
         if not self.enabled or set(self.enabled) - {"recon", "ddos", "c2", "dns", "encrypted", "exfiltration"}:
             raise ValueError("Profile must select known detectors")
 
@@ -129,15 +135,38 @@ class AnalysisSession:
         model_path: str | Path | None = None,
     ) -> AnalysisSession:
         root = Path(root)
+        deployment_path = os.getenv("DRASTHA_DEPLOYMENT_CONFIG")
+        deployment = None
+        if deployment_path:
+            if profile.name != DEPLOYMENT_BASELINE.name:
+                raise ValueError("deployment configuration requires the deployment-baseline profile")
+            from aegisflow.deployment_config import load_deployment_config
+            deployment = load_deployment_config(deployment_path)
+            profile = replace(
+                profile,
+                name=f"deployment:{deployment.deployment_id}",
+                internal_cidrs=deployment.internal_cidrs,
+                confidence_semantics=deployment.confidence_semantics,
+                confidence_calibration_status=deployment.confidence_calibration_status,
+            )
         configured_cidrs = os.getenv("DRASTHA_INTERNAL_NETWORKS")
+        if deployment is not None and configured_cidrs is not None:
+            raise ValueError("network boundaries have two authorities; remove DRASTHA_INTERNAL_NETWORKS")
         if configured_cidrs is not None:
             profile = replace(profile, internal_cidrs=tuple(x.strip() for x in configured_cidrs.split(",") if x.strip()))
         configured = model_path or os.getenv("DRASTHA_DNS_MODEL")
+        if deployment is not None and (configured or require_model):
+            raise ValueError("deployment contract has no approved DNS model; remove model override")
         path = Path(configured) if configured else root / "output" / "models" / "dns_dga_demo.json"
         if configured and not path.is_absolute():
             path = root / path
-        model = DNSNgramModel.load(path) if configured or require_model or path.is_file() else None
-        return cls(profile, context_policy=load_context_policy(root), dns_model=model)
+        model = (
+            None if deployment is not None
+            else DNSNgramModel.load(path) if configured or require_model or path.is_file()
+            else None
+        )
+        policy = deployment.context_policy if deployment is not None else load_context_policy(root)
+        return cls(profile, context_policy=policy, dns_model=model)
 
     def process(self, event: PassiveEvent) -> list[Alert]:
         if self._finished:
@@ -216,6 +245,9 @@ class AnalysisSession:
             "dns_model_version": self.dns_model.payload.get("version") if self.dns_model else None,
             "dns_model_sha256": digest(self.dns_model.payload) if self.dns_model else None,
             "dns_score_semantics": "uncalibrated n-gram class score, not infection probability",
+            "confidence_semantics": self.profile.confidence_semantics,
+            "confidence_calibration_status": self.profile.confidence_calibration_status,
+            "confidence_is_probability": False,
             "dns_model_input": self.dns_model.payload.get("input_mode", "legacy-two-label-at-detector") if self.dns_model else None,
             "dns_model_research_status": self.dns_model.payload.get("research_status") if self.dns_model else None,
             "c2_metadata_mode": "observed-event-time-v1",

@@ -201,6 +201,19 @@ class OperationsTests(unittest.TestCase):
         self.assertFalse(result["proxy_headers"])
         self.assertEqual(result["workers"], 1)
 
+    def test_preflight_reports_pinned_deployment_boundary_and_score_contract(self):
+        config = self.config()
+        with patch("aegisflow.operations.ssl.SSLContext"):
+            result = preflight(
+                **config, deployment_config=ROOT / "config" / "deployment_profile.json"
+            )
+        contract = result["deployment_contract"]
+        self.assertEqual("staged-enclave-lab-v1", contract["deployment_id"])
+        self.assertEqual("heuristic_evidence_score", contract["confidence_semantics"])
+        self.assertEqual("not_probability_calibrated", contract["confidence_calibration_status"])
+        self.assertEqual("none_production_approved", contract["dns_model_status"])
+        self.assertTrue(result["analysis_provenance"]["configuration"]["internal_cidrs"])
+
     def test_invalid_tls_key_pair_is_not_accepted(self):
         with self.assertRaises(Exception):
             preflight(**self.config())

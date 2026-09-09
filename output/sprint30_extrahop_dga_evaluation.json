@@ -1,0 +1,246 @@
+{
+  "candidate_sha256": "95003671bc7117b96e5b6fddbb39e067f9a5872231affed592a33d162281cb6a",
+  "corpus_id": "extrahop-dga-independent-core-holdout-v1",
+  "dataset_numeric_gates_passed": false,
+  "external_manifest_sha256": "5b9a1b75904189c9a4fcda402f7d33bf1a0a7ac56c75c50e4b5430abf4e3aff2",
+  "gate_failures": [
+    "fpr_wilson_upper_bound_exceeds_budget",
+    "recall_below_minimum"
+  ],
+  "limitations": [
+    "Approximately balanced benign/DGA core domain strings, passively harvested or synthesized from known DGA algorithms; TLD and country-code data are absent.",
+    "The source has no malware-family labels, so per-family recall cannot be measured.",
+    "The source omits TLDs; core strings are evaluated unchanged and full-query compatibility is not proven.",
+    "Publisher benign/DGA labels are not deployment traffic, infection labels or prevalence.",
+    "No model feature, weight or threshold was selected using this external sample."
+  ],
+  "metrics": {
+    "f1": 0.7446958565971202,
+    "fn": 7329,
+    "fp": 1359,
+    "fpr": 0.06795,
+    "fpr_interval_95": [
+      0.06454455054799034,
+      0.07152138780808966
+    ],
+    "per_family": {
+      "extrahop-benign": {
+        "f1": 0.0,
+        "fn": 0,
+        "fp": 1359,
+        "fpr": 0.06795,
+        "fpr_interval_95": [
+          0.06454455054799034,
+          0.07152138780808966
+        ],
+        "precision": 0.0,
+        "recall": null,
+        "recall_interval_95": null,
+        "tn": 18641,
+        "tp": 0
+      },
+      "extrahop-dga-unlabelled-family": {
+        "f1": 0.7756726148572128,
+        "fn": 7329,
+        "fp": 0,
+        "fpr": null,
+        "fpr_interval_95": null,
+        "precision": 1.0,
+        "recall": 0.63355,
+        "recall_interval_95": [
+          0.6268471840494606,
+          0.6402015231199537
+        ],
+        "tn": 0,
+        "tp": 12671
+      }
+    },
+    "precision": 0.903136136849608,
+    "recall": 0.63355,
+    "recall_interval_95": [
+      0.6268471840494606,
+      0.6402015231199537
+    ],
+    "records": 40000,
+    "score_diagnostics": {
+      "brier": 0.10379318589440745,
+      "ece_10_bins": 0.08683490497143925,
+      "log_loss": 0.8740230106272436,
+      "reliability_bins": [
+        {
+          "bin": 0,
+          "count": 17904,
+          "mean_score": 0.010747806249009225,
+          "positive_fraction": 0.07942359249329758
+        },
+        {
+          "bin": 1,
+          "count": 1168,
+          "mean_score": 0.14539267355713048,
+          "positive_fraction": 0.4203767123287671
+        },
+        {
+          "bin": 2,
+          "count": 706,
+          "mean_score": 0.24620892534133976,
+          "positive_fraction": 0.5028328611898017
+        },
+        {
+          "bin": 3,
+          "count": 594,
+          "mean_score": 0.3485847624183208,
+          "positive_fraction": 0.5420875420875421
+        },
+        {
+          "bin": 4,
+          "count": 462,
+          "mean_score": 0.4497563664251386,
+          "positive_fraction": 0.6212121212121212
+        },
+        {
+          "bin": 5,
+          "count": 491,
+          "mean_score": 0.5510540343981895,
+          "positive_fraction": 0.6822810590631364
+        },
+        {
+          "bin": 6,
+          "count": 509,
+          "mean_score": 0.6504667606473297,
+          "positive_fraction": 0.756385068762279
+        },
+        {
+          "bin": 7,
+          "count": 609,
+          "mean_score": 0.7501797053001729,
+          "positive_fraction": 0.8013136288998358
+        },
+        {
+          "bin": 8,
+          "count": 915,
+          "mean_score": 0.8560333580511726,
+          "positive_fraction": 0.8502732240437159
+        },
+        {
+          "bin": 9,
+          "count": 16642,
+          "mean_score": 0.9932434735056139,
+          "positive_fraction": 0.9095661579137123
+        }
+      ]
+    },
+    "threshold": 0.99,
+    "tn": 18641,
+    "tp": 12671
+  },
+  "production_approved": false,
+  "promotion_blockers": [
+    "publisher_family_labels_unavailable",
+    "publisher_tld_unavailable_for_full_query_compatibility",
+    "not_deployment_time_or_environment_telemetry"
+  ],
+  "promotion_eligible": false,
+  "report_sha256": "5538ed609c19afb795e712a2d2eb2f8817dcd9c8e0339031ed91fe6ba1c8c23c",
+  "sample_audit": {
+    "comment_or_blank_lines": 5,
+    "eligible_dns_by_label": {
+      "0": 7982092,
+      "1": 8261879
+    },
+    "invalid_records": 0,
+    "oversample_unique_by_label": {
+      "0": 79360,
+      "1": 81822
+    },
+    "sample_sha256": "b8106b16fda61bababb0b78258c7ada342669f47dce9552844ed2157710c3a07",
+    "selected_by_label": {
+      "0": 20000,
+      "1": 20000
+    },
+    "selected_unique_domains": 40000,
+    "source_by_label": {
+      "0": 7984127,
+      "1": 8261879
+    },
+    "source_records": 16246006,
+    "umudga_core_overlaps_excluded": 36379,
+    "unsupported_dns_host_labels_excluded": 2035
+  },
+  "sample_contract": {
+    "adapter": "publisher core string unchanged; no synthetic TLD appended",
+    "hash_algorithm": "sha256",
+    "labels_not_used_for_model_or_threshold_selection": true,
+    "oversample_hash_fraction": 0.01,
+    "records_per_label": 20000,
+    "seed": "drastha-sprint30-extrahop-independent-v1",
+    "selection": "smallest unique seeded hashes per label after UMUDGA core-overlap exclusion"
+  },
+  "schema_version": "drastha-external-dga-evaluation-v1",
+  "source_commit": "aa208020259c6a4e7b9aa838ebd7b48ad6f4a3a3",
+  "source_sha256": "536c3292c95f405219ee6851fc89d4cb6c36406fe2c0bb89a950bce22aa5d8ab",
+  "umudga_manifest_sha256": "adcc4dc710a194cb93a0132e8efd22f96cae14f0e262163932b14d931cd4921e",
+  "upload_analysis": {
+    "chunk_size": 8000,
+    "chunks": [
+      {
+        "findings": 1,
+        "incidents": 1,
+        "index": 0,
+        "quality_status": "healthy",
+        "records": 8000,
+        "records_accepted": 8000,
+        "records_rejected": 0
+      },
+      {
+        "findings": 1,
+        "incidents": 1,
+        "index": 1,
+        "quality_status": "healthy",
+        "records": 8000,
+        "records_accepted": 8000,
+        "records_rejected": 0
+      },
+      {
+        "findings": 1,
+        "incidents": 1,
+        "index": 2,
+        "quality_status": "healthy",
+        "records": 8000,
+        "records_accepted": 8000,
+        "records_rejected": 0
+      },
+      {
+        "findings": 1,
+        "incidents": 1,
+        "index": 3,
+        "quality_status": "healthy",
+        "records": 8000,
+        "records_accepted": 8000,
+        "records_rejected": 0
+      },
+      {
+        "findings": 1,
+        "incidents": 1,
+        "index": 4,
+        "quality_status": "healthy",
+        "records": 8000,
+        "records_accepted": 8000,
+        "records_rejected": 0
+      }
+    ],
+    "metrics": {
+      "fn": 7329,
+      "fp": 1359,
+      "tn": 18641,
+      "tp": 12671
+    },
+    "quality": {
+      "records_accepted": 40000,
+      "records_rejected": 0,
+      "status": "healthy"
+    },
+    "scope": "bounded chunks through actual upload-analysis demo path",
+    "unexpected_subtypes": {}
+  },
+  "upload_prediction_parity": true
+}

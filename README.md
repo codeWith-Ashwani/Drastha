@@ -39,6 +39,12 @@ is deliberately non-promotable. No tested threshold satisfies the unchanged FPR,
 pooled-recall and per-family gates together; a different external or future
 environment dataset is required before another final promotion attempt.
 
+Sprint 30 adds an [independent ExtraHop DGA evaluation](docs/SPRINT_30.md). The
+full checksum-pinned source is streamed into a deterministic 20k benign / 20k DGA
+sample after excluding UMUDGA overlaps. Direct and bounded upload-path predictions
+match exactly with healthy quality, but 63.36% recall and 6.80% FPR fail the frozen
+gates. Missing publisher TLD/family metadata also keeps promotion blocked.
+
 Sprint 19 adds a real offline Zeek 8.0.10 sensor proof: a deterministic mixed
 SYN/DNS/TLS PCAP produces native `conn.log`, `dns.log`, and `ssl.log`, then passes
 through shared analysis and dashboard API readback with healthy quality, no
@@ -72,7 +78,7 @@ using 24 training, four validation and four previously unseen final-test familie
 The frozen candidate failed validation uncertainty and final-holdout
 generalization gates, so production loading remains blocked.
 
-Latest verified baseline (9 September 2026): **430 Python tests**, **18 frontend
+Latest verified baseline (10 September 2026): **433 Python tests**, **18 frontend
 tests**, and a successful dashboard production build. The corrected accuracy
 replay produces **8 findings, 8 incidents, 0 false-positive behaviours and healthy
 input quality**. These are controlled synthetic results, not production accuracy.

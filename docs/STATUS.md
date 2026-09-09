@@ -1,8 +1,15 @@
 # Drastha build status
 
-Last updated: 9 September 2026
+Last updated: 10 September 2026
 
 ## Production roadmap update
+
+Sprint 30 is complete. The frozen Sprint 28 DGA candidate was evaluated on a
+deterministic, overlap-audited 40,000-domain sample from ExtraHop's independent
+MIT-licensed corpus. Direct inference and five bounded upload replays match exactly;
+all 40,000 records are accepted with healthy quality. Recall is 63.36% and FPR is
+6.80%, so both unchanged numeric gates fail. Missing TLD and malware-family fields
+remain explicit promotion blockers. See `docs/SPRINT_30.md`.
 
 Sprint 29 is complete. A deterministic, bounded hashed character/lexical logistic
 classifier was evaluated with three family-blocked folds across all 87,829 UMUDGA

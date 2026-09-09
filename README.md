@@ -33,6 +33,12 @@ failed final-holdout recall (34.50%, including 20.37% on Vawtrak), so promotion 
 correctly rejected. Exact upload parity and healthy quality confirm a model
 generalization gap, not an ingestion issue; the deployed demo model is unchanged.
 
+Sprint 29 adds [family-blocked hashed-logistic DGA development](docs/SPRINT_29.md).
+All UMUDGA families have now been inspected, so the 87,829-domain three-fold result
+is deliberately non-promotable. No tested threshold satisfies the unchanged FPR,
+pooled-recall and per-family gates together; a different external or future
+environment dataset is required before another final promotion attempt.
+
 Sprint 19 adds a real offline Zeek 8.0.10 sensor proof: a deterministic mixed
 SYN/DNS/TLS PCAP produces native `conn.log`, `dns.log`, and `ssl.log`, then passes
 through shared analysis and dashboard API readback with healthy quality, no
@@ -66,7 +72,7 @@ using 24 training, four validation and four previously unseen final-test familie
 The frozen candidate failed validation uncertainty and final-holdout
 generalization gates, so production loading remains blocked.
 
-Latest verified baseline (9 September 2026): **427 Python tests**, **18 frontend
+Latest verified baseline (9 September 2026): **430 Python tests**, **18 frontend
 tests**, and a successful dashboard production build. The corrected accuracy
 replay produces **8 findings, 8 incidents, 0 false-positive behaviours and healthy
 input quality**. These are controlled synthetic results, not production accuracy.

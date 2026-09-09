@@ -1,0 +1,65 @@
+{
+  "demonstrated_target": {
+    "duration_seconds": 60,
+    "max_backlog_records": 8,
+    "peak_disk_mib": 3.076279640197754,
+    "peak_rss_mib": 79.84765625,
+    "producer_lag_max_ms": 99.77600000001985,
+    "record_mix": {
+      "connection": 2400,
+      "dns": 600,
+      "encrypted": 300
+    },
+    "records": 3000,
+    "records_per_second": 50,
+    "visibility_p95_ms": 111.25070000025516
+  },
+  "evidence_sha256": {
+    "failed_100rps_fair_boundary": "8dd6f5370ac784b0b734b2abc7d40efd0edb2de2ce691e0698418c7ccb5a2074",
+    "failed_100rps_initial": "676e62b5126e003393195b379cc2e6cf59b066513ec365f2fa32f4ce9ddf0e48",
+    "passing_50rps": "114808308d5f827e0c206f050ac2a35d8753b6565f339682879316307e53cff5"
+  },
+  "gates": {
+    "all_3000_records_observed": true,
+    "all_passing_gates_true": true,
+    "explicit_boundary_applied": true,
+    "failed_100rps_runs_remain_failed": true,
+    "failure_reason_not_hidden": true,
+    "fifty_records_per_second_demonstrated": true,
+    "healthy_zero_rejection": true,
+    "mixed_protocol_counts_exact": true,
+    "passing_report_is_60_seconds": true,
+    "signed_store_exercised": true,
+    "source_preserved": true,
+    "zero_final_backlog": true
+  },
+  "limitations": [
+    "Single-process independent paced producer thread; scheduling lag is a release gate",
+    "Fixed offer window; tail timer jitter may use at most the stated scheduling-lag/drain budget, with overrun reported",
+    "Synthetic passive records; not accuracy evaluation, production traffic, PCAP conversion or network throughput",
+    "Write-start to first ASGI readback is an upper-bound visibility observation, not packet-to-alert latency",
+    "First-alert latency starts at latest supporting input record, not the start of the detector observation window",
+    "TestClient runs actual API/auth code but no TCP, TLS handshake, proxy or browser rendering",
+    "RSS/disk/backlog sampled per poll; peaks between samples and transient SQLite sidecars may be higher",
+    "CPU includes producer, worker and API; prepared workload and setup excluded from elapsed, included in RSS",
+    "Final incident/detail readback and final ledger verification are correctness gates outside timed interval",
+    "Deadlines/resource stops checked between bounded polls; not preemptive process limits",
+    "No state resets or disabled quality/integrity checks; finite journal only, not an unlimited-service soak"
+  ],
+  "passed": true,
+  "production_ready": false,
+  "schema_version": "drastha-sprint24-performance-audit-v1",
+  "undemonstrated_target": {
+    "attempts": 2,
+    "producer_lag_max_ms": [
+      106.81609999983266,
+      110.37329999999201
+    ],
+    "reason": "producer max scheduling lag exceeded the strict 100 ms gate",
+    "records_observed_each_attempt": [
+      6000,
+      6000
+    ],
+    "records_per_second": 100
+  }
+}

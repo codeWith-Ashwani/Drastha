@@ -31,7 +31,8 @@ class Sprint14ValidationTests(unittest.TestCase):
     def test_bounded_configuration_rejects_invalid_values(self):
         for kwargs in ({"rate": 0}, {"rate": True}, {"seconds": float("nan")}, {"seconds": 0},
                        {"rate": 5000, "seconds": 60}, {"seconds": 301}, {"drain_seconds": 121},
-                       {"batch_records": 5000}, {"rss_budget_mib": -1}, {"latency_budget_ms": float("inf")}):
+                       {"batch_records": 5000}, {"rss_budget_mib": -1}, {"latency_budget_ms": float("inf")},
+                       {"protocol_mix": "invalid"}):
             with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
                 LoadConfig(**kwargs)
 
@@ -48,6 +49,20 @@ class Sprint14ValidationTests(unittest.TestCase):
         self.assertEqual(sum(r["conn_state"] == "S0" for r in records), 20)
         self.assertFalse(any("evaluation_label" in r for r in records))
         self.assertTrue(all(all(k in r for k in ("ts", "uid", "id.orig_h", "id.resp_h", "proto")) for r in records))
+
+    def test_mixed_workload_is_deterministic_chronological_and_feature_complete(self):
+        config = LoadConfig(rate=100, seconds=1, protocol_mix="mixed")
+        records = list(workload(config))
+        self.assertEqual(records, list(workload(config)))
+        self.assertEqual(100, len(records))
+        self.assertEqual(20, sum("query" in row for row in records))
+        self.assertEqual(10, sum("ja4" in row for row in records))
+        self.assertEqual(10, sum("packet_observations" in row for row in records))
+        self.assertEqual(70, sum("query" not in row and "ja4" not in row for row in records))
+        self.assertEqual(100, len({row["uid"] for row in records}))
+        self.assertEqual([row["ts"] for row in records], sorted(row["ts"] for row in records))
+        answer_keys = {"label", "evaluation_label", "confidence", "ml_evidence"}
+        self.assertFalse(any(set(row) & answer_keys for row in records))
 
     def gates(self, **changes):
         args = dict(emitted=100, observed=100,

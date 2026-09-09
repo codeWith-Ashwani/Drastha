@@ -4,6 +4,14 @@ Last updated: 9 September 2026
 
 ## Production roadmap update
 
+Sprint 24 is complete. The actual continuous worker, derived features, signed
+SQLite projection and authenticated API sustained a deterministic connection /
+DNS / TLS mix at 50 input records/sec for 60 seconds: 3,000 accepted and observed,
+zero rejected/backlogged, healthy quality, 111.25 ms visibility P95 and 79.85 MiB
+sampled peak RSS. Two 100 records/sec attempts observed all 6,000 records but
+failed the unchanged 100 ms maximum producer-lag gate, so that rate remains
+undemonstrated. See `docs/SPRINT_24.md`.
+
 Sprint 23 is complete. Protected deployment can now load one fail-closed,
 checksum-linked contract for explicit monitored CIDRs, context policy, passive
 safety constraints and confidence semantics. Dual boundary authorities,

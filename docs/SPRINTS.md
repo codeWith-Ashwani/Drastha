@@ -56,7 +56,9 @@ Production follow-on sequence (the original sprint plan below is historical):
   machine-readable confidence status delivered (see `SPRINT_23.md`). Heuristic
   scores are explicitly not probabilities; representative probability
   calibration remains open instead of being claimed from synthetic data.
-- Sprint 24 (planned): sustained mixed-protocol performance and reliability.
+- Sprint 24: signed mixed-protocol sustained-load and reliability measurement
+  delivered (see `SPRINT_24.md`). 50 records/sec for 60 seconds passes every
+  gate; two 100 records/sec attempts remain honestly failed on producer lag.
 - Sprint 25 (planned): final reproducible SIH release validation.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.

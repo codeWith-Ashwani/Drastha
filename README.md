@@ -23,6 +23,11 @@ Sprint 20 adds a [reproducible SIH-guided offline lab corpus](docs/SPRINT_20.md)
 ground-truth sidecars and an honest shared-pipeline baseline. No attack tool or
 live network transmission is used.
 
+Sprint 24 adds a [signed sustained mixed-protocol measurement](docs/SPRINT_24.md).
+The shared continuous path passes every gate at 50 records/sec for 60 seconds;
+two 100 records/sec attempts remain failed evidence because their maximum producer
+lag exceeded 100 ms.
+
 Sprint 23 adds a [fail-closed deployment and confidence contract](docs/SPRINT_23.md):
 explicit monitored CIDRs, checksum-linked context policy, passive safety flags,
 and machine-readable disclosure that detector confidence is a heuristic evidence
@@ -39,7 +44,7 @@ using 24 training, four validation and four previously unseen final-test familie
 The frozen candidate failed validation uncertainty and final-holdout
 generalization gates, so production loading remains blocked.
 
-Latest verified baseline (9 September 2026): **408 Python tests**, **18 frontend
+Latest verified baseline (9 September 2026): **412 Python tests**, **18 frontend
 tests**, and a successful dashboard production build. The corrected accuracy
 replay produces **8 findings, 8 incidents, 0 false-positive behaviours and healthy
 input quality**. These are controlled synthetic results, not production accuracy.

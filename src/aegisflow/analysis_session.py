@@ -104,6 +104,7 @@ class AnalysisSession:
         self.feature_extractor = PassiveFeatureExtractor(profile.passive_features)
         self.network_scope = NetworkScope(profile.internal_cidrs)
         self.direction_counts = {}
+        self.normalized_event_counts = {"connection": 0, "dns": 0, "encrypted": 0}
         self.dns_context = PassiveDNSContext()
         self._latest_timestamp: float | None = None
         self._metadata: dict[tuple[str, str, str], EncryptedSessionMetadata] = {}
@@ -179,13 +180,16 @@ class AnalysisSession:
         self._metadata = {key: value for key, value in self._metadata.items()
                           if value.timestamp >= event.timestamp - self.profile.c2.window_seconds}
         if isinstance(event, DNSEvent):
+            self.normalized_event_counts["dns"] += 1
             self.dns_context.observe(event)
             alerts = self.dns.process(event) if "dns" in self.profile.enabled else []
         elif isinstance(event, EncryptedSessionMetadata):
+            self.normalized_event_counts["encrypted"] += 1
             event = self.feature_extractor.enrich(event, allow_supplied=self.profile.feature_mode == "compatibility")
             self._metadata[(event.flow_id, event.src_ip, event.dst_ip)] = event
             alerts = self.encrypted.process(event) if "encrypted" in self.profile.enabled else []
         else:
+            self.normalized_event_counts["connection"] += 1
             self.c2.encrypted_metadata = build_encrypted_metadata_index([
                 value for value in self._metadata.values()
                 if value.src_ip == event.src_ip and value.dst_ip == event.dst_ip
@@ -258,6 +262,7 @@ class AnalysisSession:
 
     def feature_summary(self):
         return {**self.feature_extractor.summary(), "mode": self.profile.feature_mode,
+                "normalized_event_counts": dict(self.normalized_event_counts),
                 "network_direction_counts": dict(self.direction_counts),
                 "network_direction_status": "configured" if self.profile.internal_cidrs else "unconfigured",
                 "exfiltration_direction": "legacy-originator-view" if not self.profile.internal_cidrs and

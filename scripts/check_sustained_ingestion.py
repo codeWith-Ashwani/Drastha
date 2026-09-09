@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import argparse
 from contextlib import contextmanager
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -42,6 +42,7 @@ class LoadConfig:
     producer_lag_budget_ms: float = 100
     rss_budget_mib: float = 512
     disk_budget_mib: float = 512
+    protocol_mix: str = "conn"
 
     def __post_init__(self):
         if type(self.rate) is not int or not 1 <= self.rate <= 5000:
@@ -54,6 +55,8 @@ class LoadConfig:
         if self.seconds > 300 or self.drain_seconds > 120 or not 1 <= self.records <= 100_000:
             raise ValueError("Bounded run: <=300 seconds, <=120 seconds drain, 1..100000 records")
         StreamLimits(batch_records=self.batch_records)
+        if self.protocol_mix not in {"conn", "mixed"}:
+            raise ValueError("protocol_mix must be conn or mixed")
 
     @property
     def records(self):
@@ -96,11 +99,9 @@ def resident_bytes():
     raise RuntimeError("RSS measurement currently supports Windows and Linux only")
 
 
-def workload(config):
-    """Deterministic conn-only workload, 10% scan attempts, NOT accuracy labels."""
-    for index in range(config.records):
-        scan = index % 10 == 0
-        yield {"ts": 1_788_336_000 + index / config.rate, "uid": f"LOAD{index:08d}",
+def _connection_record(config, index):
+    scan = index % 10 == 0
+    return {"ts": 1_788_336_000 + index / config.rate, "uid": f"LOAD{index:08d}",
                "id.orig_h": "192.0.2.250" if scan else f"192.0.2.{1 + index % 32}",
                "id.resp_h": "198.51.100.250" if scan else f"198.51.100.{1 + (index // 32) % 16}",
                "id.orig_p": 40000 + index % 20000,
@@ -110,6 +111,56 @@ def workload(config):
                "orig_bytes": 0 if scan else 500 + index % 701,
                "resp_bytes": 0 if scan else 1500 + index % 1601,
                "orig_pkts": 1 if scan else 5, "resp_pkts": 0 if scan else 8}
+
+
+def workload(config):
+    """Deterministic telemetry load with no labels or supplied detector scores."""
+    for index in range(config.records):
+        if config.protocol_mix != "mixed":
+            yield _connection_record(config, index)
+            continue
+        kind = index % 10
+        timestamp = 1_788_336_000 + index / config.rate
+        if kind in {0, 1}:
+            yield {
+                "ts": timestamp, "uid": f"DNSLOAD{index:08d}",
+                "id.orig_h": f"10.40.0.{1 + index % 200}", "id.resp_h": "10.40.0.53",
+                "id.orig_p": 53000 + index % 1000, "id.resp_p": 53, "proto": "udp",
+                "query": f"node-{index}.service-{index % 100}.example",
+                "qtype_name": "A", "rcode_name": "NOERROR", "answers": ["198.51.100.8"],
+            }
+        elif kind == 2:
+            row = _connection_record(config, index)
+            row["id.orig_h"] = f"10.50.0.{1 + index % 200}"
+            row.update({
+                "uid": f"TLSLOAD{index:08d}", "service": "ssl", "transport": "tls",
+                "ja4": f"t13d1516h2_{index % 20:02d}", "server_name": f"service-{index % 50}.example",
+                "version": "TLSv13", "cipher": "TLS_AES_128_GCM_SHA256",
+                "next_protocol": "h2", "established": True,
+                "packet_observations": [
+                    {"ts": timestamp - .003 + position * .001, "ip_bytes": size,
+                     "direction": "orig" if position % 2 == 0 else "resp"}
+                    for position, size in enumerate((120, 1400, 90, 1100))
+                ],
+            })
+            yield row
+        else:
+            row = _connection_record(config, index)
+            row["id.orig_h"] = (
+                "10.50.0.250" if index % 10 == 0 else f"10.50.0.{1 + index % 200}"
+            )
+            yield row
+
+
+@contextmanager
+def fair_thread_scheduling(interval_seconds=.001):
+    """Scope a shorter GIL switch interval to the same-process load harness."""
+    previous = sys.getswitchinterval()
+    sys.setswitchinterval(interval_seconds)
+    try:
+        yield
+    finally:
+        sys.setswitchinterval(previous)
 
 
 @contextmanager
@@ -204,8 +255,14 @@ def run(config):
                 producer_done_at.append(time.perf_counter())
                 done.set()
 
-        with TestClient(app, base_url="https://load.test", headers={"Authorization": "Bearer " + token}) as client:
-            with ContinuousIngestor(source, directory / "journal.db", lambda: AnalysisSession(DEPLOYMENT_BASELINE),
+        load_profile = (
+            replace(DEPLOYMENT_BASELINE, name="sprint24-mixed-load-v1", internal_cidrs=("10.0.0.0/8",))
+            if config.protocol_mix == "mixed" else DEPLOYMENT_BASELINE
+        )
+        with fair_thread_scheduling(), TestClient(
+            app, base_url="https://load.test", headers={"Authorization": "Bearer " + token}
+        ) as client:
+            with ContinuousIngestor(source, directory / "journal.db", lambda: AnalysisSession(load_profile),
                                     limits=limits, repository=repo) as worker:
                 cpu_start, started = time.process_time(), time.perf_counter()
                 producer = threading.Thread(target=produce, name="paced-sensor", daemon=True)
@@ -289,15 +346,40 @@ def run(config):
         quality = last.get("quality", {})
         latency, scheduling = distribution(latencies), distribution(lag)
         source_matches = source.read_bytes() == raw
+        decoded = [json.loads(line) for line in lines]
+        kinds = {
+            "connection_records": sum("query" not in item for item in decoded),
+            "dns_records": sum("query" in item for item in decoded),
+            "tls_records": sum("ja4" in item for item in decoded),
+        }
         gates = assess(config, emitted=len(times), observed=observed, quality=quality, lag=scheduling,
                        latency=latency, rss=rss_peak, disk=disk_peak, errors=errors, source_matches=source_matches)
-        return {"experiment": "paced-conn-sqlite-asgi-v1", "config": asdict(config),
+        feature_coverage = last.get("feature_coverage", {})
+        event_counts = feature_coverage.get("normalized_event_counts", {})
+        expected_event_counts = {
+            "connection": config.records - kinds["dns_records"],
+            "dns": kinds["dns_records"],
+            "encrypted": kinds["tls_records"],
+        }
+        gates["protocol_event_counts_match"] = (
+            event_counts == expected_event_counts if config.protocol_mix == "mixed"
+            else event_counts.get("connection") == config.records
+        )
+        gates["network_boundary_applied"] = (
+            feature_coverage.get("network_direction_status") == "configured"
+            and feature_coverage.get("network_direction_counts", {}).get("outbound") == expected_event_counts["connection"]
+            if config.protocol_mix == "mixed" else True
+        )
+        return {"experiment": "paced-passive-sqlite-asgi-v2", "config": asdict(config),
                 "recorded_at": recorded_at, "harness_sha256": harness_sha256,
                 "environment": {"platform": platform.platform(), "python": platform.python_version(),
-                                "logical_cpus": os.cpu_count()},
-                "workload": {"name": "synthetic-conn-90pct-balanced-10pct-scan-v1", "sha256": sha256(raw).hexdigest(),
-                             "records": config.records, "bytes": len(raw)},
+                                "logical_cpus": os.cpu_count(), "harness_thread_switch_interval_seconds": .001},
+                "workload": {"name": ("synthetic-70conn-only-20dns-10tls-plus-conn-v1" if config.protocol_mix == "mixed"
+                                        else "synthetic-conn-90pct-balanced-10pct-scan-v1"),
+                             "sha256": sha256(raw).hexdigest(), "records": config.records,
+                             "record_kinds": kinds, "bytes": len(raw)},
                 "provenance": last.get("analysis_provenance"), "quality": quality,
+                "feature_coverage": feature_coverage,
                 "findings": len(last.get("alerts", [])), "incidents": len(last.get("incidents", [])),
                 "emitted": len(times), "api_observed": observed, "unobserved": config.records - observed,
                 "producer_elapsed_seconds": producer_done_at[0] - started,
@@ -318,7 +400,7 @@ def run(config):
                 "limitations": [
                     "Single-process independent paced producer thread; scheduling lag is a release gate",
                     "Fixed offer window; tail timer jitter may use at most the stated scheduling-lag/drain budget, with overrun reported",
-                    "Conn-only synthetic workload; not accuracy evaluation, production traffic or all-protocol capacity",
+                    "Synthetic passive records; not accuracy evaluation, production traffic, PCAP conversion or network throughput",
                     "Write-start to first ASGI readback is an upper-bound visibility observation, not packet-to-alert latency",
                     "First-alert latency starts at latest supporting input record, not the start of the detector observation window",
                     "TestClient runs actual API/auth code but no TCP, TLS handshake, proxy or browser rendering",
@@ -338,6 +420,7 @@ def main():
     parser.add_argument("--drain-seconds", type=float, default=30)
     parser.add_argument("--latency-budget-ms", type=float, default=1000)
     parser.add_argument("--report-output", type=Path)
+    parser.add_argument("--protocol-mix", choices=("conn", "mixed"), default="conn")
     args = parser.parse_args()
     if args.report_output and args.report_output.exists():
         parser.error("Report is create-only; choose a new filename")

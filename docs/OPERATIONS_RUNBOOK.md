@@ -15,12 +15,16 @@ release. Do not infer live accuracy from synthetic evaluation.
 
 - Keep the protected-network mirror/data-diode input read-only. No health probe,
   handshake, DNS lookup or mitigation command may cross that ingest boundary.
-- Select explicit `DRASTHA_INTERNAL_NETWORKS` for directional/exfiltration analysis.
-  Review the effective model and context policy in preflight provenance. The
-  default demo DGA model is not a production-calibrated model.
+- Prefer the checksum-linked `--deployment-config` contract for
+  directional/exfiltration analysis; never combine it with
+  `DRASTHA_INTERNAL_NETWORKS`. Review the effective model and context policy in
+  preflight provenance. The default demo DGA model is not production-calibrated.
 - Sprint 14 measured only a bounded 100 conn-records/sec workload. Signed 1,000
   records/sec failed; do not deploy against that load on the basis of old demo
   throughput numbers. Real Zeek/all-protocol capacity remain unverified.
+- Sprint 24 demonstrates only 50 mixed connection/DNS/TLS metadata records/sec
+  for 60 seconds. The tested 100 records/sec mix failed producer scheduling even
+  though it eventually drained without loss; do not advertise that rate.
 - Provision owner-only storage, sufficient free disk and separately controlled
   keys. On Windows, review inherited NTFS ACLs; POSIX `0700`/`0600` requests do not
   establish Windows ACL protection. Do not store security files in the served

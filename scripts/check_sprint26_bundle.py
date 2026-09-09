@@ -215,6 +215,10 @@ def audit(root: Path, bundle_output: Path) -> dict:
         bundle_output.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(first, bundle_output)
     final = verify_bundle(bundle_output)
+    try:
+        final["path"] = bundle_output.resolve().relative_to(root).as_posix()
+    except ValueError:
+        final["path"] = bundle_output.name
     gates = {
         "tracked_candidate_clean": True,
         "two_builds_byte_identical": deterministic,

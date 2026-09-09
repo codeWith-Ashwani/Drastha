@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-from aegisflow.dns_features import character_ngrams, normalized_domain
+from aegisflow.dns_features import character_ngrams, lexical_features, normalized_domain
 
 
 @dataclass(frozen=True, slots=True)
@@ -22,7 +22,7 @@ class DNSLabelledDomain:
 class DNSNgramModel:
     """Small, inspectable character n-gram Naive Bayes DGA classifier."""
 
-    version = "1.0"
+    version = "1.1"
 
     def __init__(self, payload: dict) -> None:
         self.payload = payload
@@ -41,6 +41,9 @@ class DNSNgramModel:
         totals = {0: 0, 1: 0}
         documents = Counter(row.label for row in training)
         vocabulary: set[str] = set()
+        feature_names = tuple(sorted(lexical_features("example.test")))
+        lexical_values = {0: {name: [] for name in feature_names},
+                          1: {name: [] for name in feature_names}}
         for row in training:
             grams = character_ngrams(row.domain, ngram_size)
             if count_mode == "binary_presence":
@@ -48,6 +51,20 @@ class DNSNgramModel:
             counts[row.label].update(grams)
             totals[row.label] += len(grams)
             vocabulary.update(grams)
+            features = lexical_features(row.domain)
+            for name in feature_names:
+                lexical_values[row.label][name].append(features[name])
+        lexical_stats = {}
+        for label in (0, 1):
+            lexical_stats[str(label)] = {}
+            for name in feature_names:
+                values = lexical_values[label][name]
+                mean = sum(values) / len(values)
+                variance = sum((value - mean) ** 2 for value in values) / len(values)
+                lexical_stats[str(label)][name] = {
+                    "mean": mean,
+                    "variance": max(variance, 1e-6),
+                }
         return cls({
             "model_type": "character_ngram_multinomial_naive_bayes",
             "version": cls.version,
@@ -61,6 +78,9 @@ class DNSNgramModel:
                 for label, label_counts in counts.items()
             },
             "vocabulary_size": len(vocabulary),
+            "lexical_stats": lexical_stats,
+            "ngram_weight": 1.0,
+            "lexical_weight": 0.0,
         })
 
     def predict_probability(self, domain: str) -> float:
@@ -88,6 +108,27 @@ class DNSNgramModel:
                              for gram in grams)
             score += likelihood / max(len(grams), 1) if score_mode == "mean_log_likelihood" else likelihood
             scores[label] = score
+        ngram_log_odds = scores[1] - scores[0]
+        lexical_log_odds = 0.0
+        lexical_weight = float(self.payload.get("lexical_weight", 0.0))
+        if lexical_weight:
+            statistics = self.payload.get("lexical_stats")
+            if not isinstance(statistics, dict) or set(statistics) != {"0", "1"}:
+                raise ValueError("Hybrid DNS model requires lexical class statistics")
+            features = lexical_features(domain)
+            lexical_scores = {}
+            for label in (0, 1):
+                lexical_scores[label] = 0.0
+                for name, value in features.items():
+                    descriptor = statistics[str(label)].get(name)
+                    if not isinstance(descriptor, dict):
+                        raise ValueError(f"Hybrid DNS model is missing lexical feature: {name}")
+                    variance = max(float(descriptor["variance"]), 1e-6)
+                    difference = value - float(descriptor["mean"])
+                    lexical_scores[label] += -0.5 * (math.log(variance) + difference * difference / variance)
+            lexical_log_odds = lexical_scores[1] - lexical_scores[0]
+        combined = float(self.payload.get("ngram_weight", 1.0)) * ngram_log_odds + lexical_weight * lexical_log_odds
+        scores = {0: 0.0, 1: max(-700.0, min(700.0, combined))}
         maximum = max(scores.values())
         benign = math.exp(scores[0] - maximum)
         malicious = math.exp(scores[1] - maximum)

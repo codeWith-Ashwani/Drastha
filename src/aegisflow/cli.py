@@ -190,6 +190,11 @@ def _parser() -> argparse.ArgumentParser:
     holdout.add_argument("--data-root", required=True, type=Path)
     holdout.add_argument("--report-output", required=True, type=Path)
 
+    promotion = subparsers.add_parser("promote-dns-candidate", help="create a deployable DNS model only from a cryptographically bound passing holdout")
+    promotion.add_argument("--candidate", required=True, type=Path)
+    promotion.add_argument("--evaluation", required=True, type=Path)
+    promotion.add_argument("--model-output", required=True, type=Path)
+
     c2 = subparsers.add_parser("c2-replay", help="replay conn.log for periodic C2-like beacons")
     c2.add_argument("--input", required=True, type=Path)
     c2.add_argument("--encrypted-input", type=Path, help="optional Zeek ssl.log or quic.log JSONL")
@@ -646,9 +651,12 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "follow":
             from aegisflow.continuous_ingestion import run_continuous
             return run_continuous(args)
-        if args.command in {"fit-dns-candidate", "evaluate-dns-candidate"}:
-            from aegisflow.dns_calibration import fit_candidate, evaluate_candidate, write_new_json
-            output = args.candidate_output if args.command == "fit-dns-candidate" else args.report_output
+        if args.command in {"fit-dns-candidate", "evaluate-dns-candidate", "promote-dns-candidate"}:
+            from aegisflow.dns_calibration import (evaluate_candidate, fit_candidate,
+                                                   promote_candidate, write_new_json)
+            output = (args.candidate_output if args.command == "fit-dns-candidate"
+                      else args.report_output if args.command == "evaluate-dns-candidate"
+                      else args.model_output)
             if output.exists():
                 raise ValueError("Research outputs are create-only; choose a new path, never overwrite an experiment")
             if args.command == "fit-dns-candidate":
@@ -656,12 +664,17 @@ def main(argv: list[str] | None = None) -> int:
                 summary = {"candidate_sha256": report["candidate_sha256"],
                            "threshold": report["validation"]["threshold"],
                            "validation_gate_failures": report["validation_gate_failures"]}
-            else:
+            elif args.command == "evaluate-dns-candidate":
                 report = evaluate_candidate(args.candidate, args.manifest, args.data_root)
                 summary = {"candidate_sha256": report["candidate_sha256"],
                            "dataset_gates_passed": report["dataset_gates_passed"],
                            "test_gate_failures": report["test_gate_failures"],
                            "upload_prediction_parity": report["upload_prediction_parity"]}
+            else:
+                report = promote_candidate(args.candidate, args.evaluation)
+                summary = {"candidate_sha256": report["approval"]["candidate_sha256"],
+                           "evaluation_sha256": report["approval"]["evaluation_sha256"],
+                           "approval_status": report["approval"]["status"]}
             write_new_json(output, report)
             print(json.dumps({**summary, "production_approved": False, "output": str(output)}))
             return 0

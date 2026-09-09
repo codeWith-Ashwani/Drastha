@@ -4,6 +4,14 @@ Last updated: 9 September 2026
 
 ## Production roadmap update
 
+Sprint 28 is complete. A new official UMUDGA family-separated experiment uses
+87,829 unique domains and predeclared hybrid n-gram/lexical variants. The frozen
+candidate passed validation (88.75% recall, 0.625% FPR) but failed its untouched
+final holdout (34.50% recall, 0.583% FPR), driven by 20.37% Vawtrak recall. Upload
+parity is exact and quality is healthy. Checksum-bound promotion rejects the model,
+creates no deployable artifact and leaves the demo/deployment configuration
+unchanged. See `docs/SPRINT_28.md`.
+
 Sprint 24 is complete. The actual continuous worker, derived features, signed
 SQLite projection and authenticated API sustained a deterministic connection /
 DNS / TLS mix at 50 input records/sec for 60 seconds: 3,000 accepted and observed,

@@ -27,6 +27,12 @@ detected before `--fresh` can reset the demo database, an available alternative 
 suggested, and the exact pre-bound listener is handed to Uvicorn. Start on another
 port with `.\scripts\start-demo.ps1 -Port 8001`.
 
+Sprint 28 adds an [independent DGA family holdout and fail-closed promotion
+gate](docs/SPRINT_28.md). A predeclared n-gram/lexical hybrid passed validation but
+failed final-holdout recall (34.50%, including 20.37% on Vawtrak), so promotion is
+correctly rejected. Exact upload parity and healthy quality confirm a model
+generalization gap, not an ingestion issue; the deployed demo model is unchanged.
+
 Sprint 19 adds a real offline Zeek 8.0.10 sensor proof: a deterministic mixed
 SYN/DNS/TLS PCAP produces native `conn.log`, `dns.log`, and `ssl.log`, then passes
 through shared analysis and dashboard API readback with healthy quality, no
@@ -60,7 +66,7 @@ using 24 training, four validation and four previously unseen final-test familie
 The frozen candidate failed validation uncertainty and final-holdout
 generalization gates, so production loading remains blocked.
 
-Latest verified baseline (9 September 2026): **423 Python tests**, **18 frontend
+Latest verified baseline (9 September 2026): **427 Python tests**, **18 frontend
 tests**, and a successful dashboard production build. The corrected accuracy
 replay produces **8 findings, 8 incidents, 0 false-positive behaviours and healthy
 input quality**. These are controlled synthetic results, not production accuracy.

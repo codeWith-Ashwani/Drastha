@@ -19,8 +19,8 @@ from aegisflow.api_store import IncidentRepository
 from aegisflow.analysis_session import AnalysisSession, UPLOAD_DEMO
 from aegisflow.cli import main
 from aegisflow.dns_calibration import (fit_candidate, evaluate_candidate, load_candidate, pipeline_evaluation,
-                                      scored_metrics, gate_failures, write_new_json)
-from aegisflow.dns_corpus import load_dns_corpus, read_manifest
+                                      promote_candidate, scored_metrics, gate_failures, write_new_json)
+from aegisflow.dns_corpus import digest, load_dns_corpus, read_manifest
 from aegisflow.dns_model import DNSLabelledDomain, DNSNgramModel
 from aegisflow.public_suffix import PublicSuffixList
 
@@ -234,6 +234,14 @@ class DNSCalibrationTests(unittest.TestCase):
             self.save()
             with self.assertRaises(ValueError):
                 read_manifest(self.path)
+        for variants in ([], [{"ngram_weight": 0, "lexical_weight": 0}],
+                         [{"ngram_weight": float("nan"), "lexical_weight": 1}],
+                         [{"ngram_weight": 1, "unexpected": 0}]):
+            self.manifest = deepcopy(original)
+            self.manifest["feature_variants"] = variants
+            self.save()
+            with self.assertRaises(ValueError):
+                read_manifest(self.path)
 
     def test_cli_create_only_outputs_preserve_inputs_and_existing_experiments(self):
         before = self.path.read_bytes()
@@ -249,6 +257,49 @@ class DNSCalibrationTests(unittest.TestCase):
                                    "--candidate", str(self.candidate_path), "--report-output", str(self.root/"result.json")]), 0)
         with self.assertRaises(FileExistsError):
             write_new_json(self.candidate_path, {})
+
+    def test_promotion_requires_bound_passing_report_and_is_create_only(self):
+        self.manifest["gates"].update(maximum_fpr=1.0, minimum_recall=0.0,
+                                      minimum_family_recall=0.0)
+        self.save()
+        candidate = self.candidate()
+        evaluation = evaluate_candidate(self.candidate_path, self.path, self.root)
+        self.assertTrue(evaluation["dataset_gates_passed"])
+        evaluation_path = self.root / "evaluation.json"
+        write_new_json(evaluation_path, evaluation)
+        before_candidate = self.candidate_path.read_bytes()
+        before_evaluation = evaluation_path.read_bytes()
+        model = promote_candidate(self.candidate_path, evaluation_path)
+        self.assertNotIn("research_status", model)
+        self.assertEqual("corpus_holdout_gates_passed", model["approval"]["status"])
+        self.assertFalse(model["approval"]["confidence_is_probability"])
+        self.assertEqual(candidate["candidate_sha256"], model["approval"]["candidate_sha256"])
+        model_path = self.root / "approved-model.json"
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(main(["promote-dns-candidate", "--candidate", str(self.candidate_path),
+                                   "--evaluation", str(evaluation_path),
+                                   "--model-output", str(model_path)]), 0)
+        self.assertIsInstance(DNSNgramModel.load(model_path), DNSNgramModel)
+        with redirect_stderr(io.StringIO()):
+            self.assertEqual(main(["promote-dns-candidate", "--candidate", str(self.candidate_path),
+                                   "--evaluation", str(evaluation_path),
+                                   "--model-output", str(model_path)]), 2)
+        self.assertEqual(before_candidate, self.candidate_path.read_bytes())
+        self.assertEqual(before_evaluation, evaluation_path.read_bytes())
+
+    def test_promotion_rejects_failed_or_tampered_holdout(self):
+        self.candidate()
+        evaluation = evaluate_candidate(self.candidate_path, self.path, self.root)
+        self.assertFalse(evaluation["dataset_gates_passed"])
+        failed_path = self.root / "failed.json"
+        write_new_json(failed_path, evaluation)
+        with self.assertRaisesRegex(ValueError, "not eligible"):
+            promote_candidate(self.candidate_path, failed_path)
+        evaluation["dataset_gates_passed"] = True
+        tampered_path = self.root / "tampered.json"
+        write_new_json(tampered_path, evaluation)
+        with self.assertRaisesRegex(ValueError, "checksum mismatch"):
+            promote_candidate(self.candidate_path, tampered_path)
 
     def test_checked_in_manifest_is_valid_and_family_holdouts_are_explicit(self):
         manifest, _ = read_manifest(ROOT / "data/manifests/umudga_dns_v1.json")
@@ -294,6 +345,25 @@ class DNSCalibrationTests(unittest.TestCase):
         self.assertTrue(report["upload_prediction_parity"])
         self.assertEqual("healthy", report["upload_analysis"]["quality"]["status"])
         self.assertEqual(9947, report["upload_analysis"]["quality"]["records_accepted"])
+        self.assertFalse(report["production_approved"])
+
+    def test_sprint28_fresh_holdout_is_checksum_bound_and_honestly_rejected(self):
+        manifest_path = ROOT / "data/manifests/umudga_dns_v3.json"
+        manifest, manifest_hash = read_manifest(manifest_path)
+        contract = manifest["selection_contract"]
+        self.assertEqual({"tempedreve", "vawtrak"}, set(contract["final_test_families"]))
+        self.assertEqual({"sisron", "symmi"}, set(contract["validation_families"]))
+        self.assertTrue(contract["final_test_is_single_use"])
+        report = json.loads((ROOT / "output/umudga_dns_holdout_v3_bound.json").read_text())
+        self.assertEqual(manifest_hash, report["audit"]["manifest_sha256"])
+        self.assertEqual(report["evaluation_sha256"],
+                         digest({key: value for key, value in report.items()
+                                 if key != "evaluation_sha256"}))
+        self.assertEqual({"tp": 1380, "fp": 29, "fn": 2620, "tn": 4944},
+                         {key: report["test"][key] for key in ("tp", "fp", "fn", "tn")})
+        self.assertTrue(report["upload_prediction_parity"])
+        self.assertEqual("healthy", report["upload_analysis"]["quality"]["status"])
+        self.assertFalse(report["dataset_gates_passed"])
         self.assertFalse(report["production_approved"])
 
     def test_suffix_grouping_handles_country_private_wildcard_and_exception_rules(self):

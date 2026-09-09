@@ -47,6 +47,22 @@ def read_manifest(path):
             or any(value not in {"frequency", "binary_presence"} for value in count_modes)
             or len(set(count_modes)) != len(count_modes)):
         raise ValueError("count_modes must contain unique supported DNS n-gram count modes")
+    feature_variants = manifest.get("feature_variants", [
+        {"ngram_weight": 1.0, "lexical_weight": 0.0}
+    ])
+    if not isinstance(feature_variants, list) or not feature_variants or len(feature_variants) > 20:
+        raise ValueError("feature_variants must contain 1..20 predeclared variants")
+    normalized_variants = []
+    for variant in feature_variants:
+        if not isinstance(variant, dict) or set(variant) != {"ngram_weight", "lexical_weight"}:
+            raise ValueError("Each feature variant requires only ngram_weight and lexical_weight")
+        values = (variant["ngram_weight"], variant["lexical_weight"])
+        if any(type(value) not in (int, float) or not math.isfinite(value) or value < 0 or value > 4
+               for value in values) or not any(values):
+            raise ValueError("DNS feature weights must be finite in [0,4] and not both zero")
+        normalized_variants.append(tuple(float(value) for value in values))
+    if len(set(normalized_variants)) != len(normalized_variants):
+        raise ValueError("DNS feature variants must be unique")
     gates = manifest.get("gates", {})
     for key in ("maximum_fpr", "minimum_recall", "minimum_family_recall"):
         value = gates.get(key)

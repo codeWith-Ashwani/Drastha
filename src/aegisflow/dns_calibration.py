@@ -4,6 +4,7 @@ This calibrates a DECISION THRESHOLD, not a probability or an infection verdict.
 No network operations, production policy changes, or automatic model promotion.
 """
 from collections import Counter
+from copy import deepcopy
 from dataclasses import replace
 import json
 import math
@@ -68,36 +69,52 @@ def gate_failures(result, gates):
 def fit_candidate(manifest_path, data_root):
     manifest, parts, audit = load_dns_corpus(manifest_path, data_root)
     # Test is audited for identity/leakage, but never scored or passed to fit.
-    models = []
+    models = {}
     candidates = []
+    feature_variants = manifest.get("feature_variants", [
+        {"ngram_weight": 1.0, "lexical_weight": 0.0}
+    ])
     for ngram_size in manifest.get("ngram_sizes", [3]):
         for count_mode in manifest.get("count_modes", ["frequency"]):
             for score_mode in manifest.get("score_modes", ["multinomial"]):
-                candidate_model = DNSNgramModel.train(parts["train"], ngram_size=ngram_size,
-                                                       count_mode=count_mode)
-                candidate_model.payload["score_mode"] = score_mode
-                scores = [candidate_model.predict_probability(row.domain) for row in parts["validation"]]
-                models.append(candidate_model)
-                for threshold in manifest["threshold_grid"]:
-                    result = scored_metrics(parts["validation"], scores, threshold)
-                    result.update(ngram_size=ngram_size, score_mode=score_mode, count_mode=count_mode)
-                    candidates.append(result)
+                base_model = DNSNgramModel.train(parts["train"], ngram_size=ngram_size,
+                                                  count_mode=count_mode)
+                base_model.payload["score_mode"] = score_mode
+                models[(ngram_size, count_mode, score_mode)] = base_model
+                for variant in feature_variants:
+                    candidate_model = DNSNgramModel({
+                        **base_model.payload,
+                        "ngram_weight": float(variant["ngram_weight"]),
+                        "lexical_weight": float(variant["lexical_weight"]),
+                    })
+                    scores = [candidate_model.predict_probability(row.domain)
+                              for row in parts["validation"]]
+                    for threshold in manifest["threshold_grid"]:
+                        result = scored_metrics(parts["validation"], scores, threshold)
+                        result.update(ngram_size=ngram_size, score_mode=score_mode,
+                                      count_mode=count_mode,
+                                      ngram_weight=candidate_model.payload["ngram_weight"],
+                                      lexical_weight=candidate_model.payload["lexical_weight"])
+                        candidates.append(result)
     eligible = [value for value in candidates if not gate_failures(value, manifest["gates"])]
     if eligible:
         selected = min(eligible, key=lambda value: (-value["recall"], value["fpr"],
                                                      value["ngram_size"], value["count_mode"],
-                                                     value["score_mode"], value["threshold"]))
+                                                     value["score_mode"], value["ngram_weight"],
+                                                     value["lexical_weight"], value["threshold"]))
     else:
         # Retain the unsuccessful experiment, not a manufactured pass or an
         # alert-disabled threshold of 1. No production defaults are changed.
-        fallback = (lambda value: (value["fpr"], -value["recall"], value["threshold"])) if len(models) == 1 else (
+        fallback = (lambda value: (value["fpr"], -value["recall"], value["threshold"])) if len(candidates) == len(manifest["threshold_grid"]) else (
             lambda value: (len(gate_failures(value, manifest["gates"])), value["fpr"],
                            -value["recall"], value["ngram_size"], value["count_mode"],
-                           value["score_mode"], value["threshold"]))
+                           value["score_mode"], value["ngram_weight"],
+                           value["lexical_weight"], value["threshold"]))
         selected = min(candidates, key=fallback)
-    model = next(value for value in models if value.payload["ngram_size"] == selected["ngram_size"]
-                 and value.payload["count_mode"] == selected["count_mode"]
-                 and value.payload["score_mode"] == selected["score_mode"])
+    base_model = models[(selected["ngram_size"], selected["count_mode"], selected["score_mode"])]
+    model = DNSNgramModel(deepcopy(base_model.payload))
+    model.payload.update(ngram_weight=selected["ngram_weight"],
+                         lexical_weight=selected["lexical_weight"])
     model.payload.update({"input_mode": "full-query-v1", "research_status": "not_approved",
                           "operating_threshold": selected["threshold"]})
     result = {
@@ -106,9 +123,10 @@ def fit_candidate(manifest_path, data_root):
         "threshold_grid": manifest["threshold_grid"], "ngram_sizes": manifest.get("ngram_sizes", [3]),
         "score_modes": manifest.get("score_modes", ["multinomial"]),
         "count_modes": manifest.get("count_modes", ["frequency"]),
-        "model_selection_scope": "predeclared n-gram size and threshold selected on validation only",
+        "feature_variants": feature_variants,
+        "model_selection_scope": "predeclared n-gram, lexical weights and threshold selected on validation only",
         "validation": selected,
-        "validation_candidates": [{key: value[key] for key in ("ngram_size", "count_mode", "score_mode", "threshold", "tp", "fp", "fn", "tn", "recall", "fpr")}
+        "validation_candidates": [{key: value[key] for key in ("ngram_size", "count_mode", "score_mode", "ngram_weight", "lexical_weight", "threshold", "tp", "fp", "fn", "tn", "recall", "fpr")}
                                   for value in candidates],
         "validation_gate_failures": gate_failures(selected, manifest["gates"]),
         "test_used_for_selection": False, "production_approved": False,
@@ -177,7 +195,7 @@ def evaluate_candidate(candidate_path, manifest_path, data_root, repository=None
         failures.append("upload_prediction_parity_failed")
     if pipeline["quality"]["status"] != "healthy" or pipeline["unexpected_subtypes"]:
         failures.append("upload_quality_or_isolation_failed")
-    return {
+    report = {
         "schema_version": "drastha-dns-holdout-v1", "candidate_sha256": candidate["candidate_sha256"],
         "corpus_id": candidate["corpus_id"], "audit": audit,
         "validation": candidate["validation"], "validation_gate_failures": candidate["validation_gate_failures"],
@@ -193,6 +211,63 @@ def evaluate_candidate(candidate_path, manifest_path, data_root, repository=None
                         "Final holdout is now inspected: further tuning needs a newly reserved final holdout.",
                         "No automatic deployment or promotion, even if these research dataset gates pass."],
     }
+    report["evaluation_sha256"] = digest(report)
+    return report
+
+
+def promote_candidate(candidate_path, evaluation_path):
+    """Return a deployable model only for an untampered, fully passing holdout.
+
+    Promotion is deliberately explicit and does not update an operator deployment
+    profile.  The holdout proves only the declared corpus gates, not production
+    accuracy or calibrated probabilities.
+    """
+    candidate = load_candidate(candidate_path)
+    evaluation_path = Path(evaluation_path)
+    if evaluation_path.stat().st_size > 20_000_000:
+        raise ValueError("DNS holdout evaluation exceeds 20 MB")
+    evaluation = json.loads(evaluation_path.read_text(encoding="utf-8"))
+    if not isinstance(evaluation, dict) or evaluation.get("schema_version") != "drastha-dns-holdout-v1":
+        raise ValueError("Unsupported DNS holdout evaluation")
+    expected = evaluation.get("evaluation_sha256")
+    actual = digest({key: value for key, value in evaluation.items() if key != "evaluation_sha256"})
+    if expected != actual:
+        raise ValueError("Holdout evaluation checksum mismatch")
+    frozen_fields = ("candidate_sha256", "corpus_id", "audit", "gates", "validation",
+                     "validation_gate_failures", "validation_candidates")
+    for key in frozen_fields:
+        candidate_key = candidate["candidate_sha256"] if key == "candidate_sha256" else candidate[key]
+        if evaluation.get(key) != candidate_key:
+            raise ValueError(f"Holdout evaluation is not bound to the frozen candidate: {key}")
+    validation_failures = gate_failures(evaluation["validation"], candidate["gates"])
+    test_failures = gate_failures(evaluation.get("test", {}), candidate["gates"])
+    pipeline = evaluation.get("upload_analysis", {})
+    if (validation_failures or test_failures
+            or evaluation.get("validation_gate_failures") != []
+            or evaluation.get("test_gate_failures") != []
+            or evaluation.get("dataset_gates_passed") is not True
+            or evaluation.get("upload_prediction_parity") is not True
+            or pipeline.get("quality", {}).get("status") != "healthy"
+            or pipeline.get("unexpected_subtypes") != {}
+            or evaluation.get("production_approved") is not False):
+        reasons = sorted(set(validation_failures + test_failures
+                             + list(evaluation.get("validation_gate_failures") or [])
+                             + list(evaluation.get("test_gate_failures") or [])))
+        detail = ", ".join(reasons) if reasons else "holdout/parity/quality status is not eligible"
+        raise ValueError(f"DNS candidate is not eligible for promotion: {detail}")
+    model = deepcopy(candidate["model"])
+    if model.pop("research_status", None) != "not_approved":
+        raise ValueError("Frozen candidate has an invalid research status")
+    model["approval"] = {
+        "status": "corpus_holdout_gates_passed",
+        "scope": "declared family-separated corpus only; operator deployment remains explicit",
+        "candidate_sha256": candidate["candidate_sha256"],
+        "evaluation_sha256": expected,
+        "corpus_id": candidate["corpus_id"],
+        "manifest_sha256": candidate["audit"]["manifest_sha256"],
+        "confidence_is_probability": False,
+    }
+    return model
 
 
 def write_new_json(path, payload):

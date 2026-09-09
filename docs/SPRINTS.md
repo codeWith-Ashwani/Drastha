@@ -72,6 +72,10 @@ Production follow-on sequence (the original sprint plan below is historical):
   pre-binds the exact Uvicorn socket before any `--fresh` database mutation,
   refuses non-loopback demo hosts, suggests an available port on conflict, and
   removes the misleading pre-bind ready message.
+- Sprint 28: independent DGA family holdout and fail-closed promotion delivered
+  (see `SPRINT_28.md`). The predeclared hybrid candidate passed validation but
+  failed untouched final-holdout recall, especially on Vawtrak; checksum-bound
+  promotion correctly refuses it and the deployed demo model remains unchanged.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

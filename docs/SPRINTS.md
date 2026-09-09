@@ -59,7 +59,11 @@ Production follow-on sequence (the original sprint plan below is historical):
 - Sprint 24: signed mixed-protocol sustained-load and reliability measurement
   delivered (see `SPRINT_24.md`). 50 records/sec for 60 seconds passes every
   gate; two 100 records/sec attempts remain honestly failed on producer lag.
-- Sprint 25 (planned): final reproducible SIH release validation.
+- Sprint 25: final reproducible SIH prototype release validation delivered (see
+  `SPRINT_25.md`). Ten evidence/configuration artifacts are checksum-pinned; the
+  actual upload replay, nine-threat hardening, alert schema, deployment and
+  performance gates are revalidated by one command. The bundle is submission-demo
+  ready and explicitly not production ready.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

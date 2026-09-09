@@ -6,6 +6,13 @@ installation, a Zeek installer, or a production-readiness certification. The
 existing Docker/PostgreSQL composition and `start-demo.ps1` remain demo paths.
 Never run `demo-serve --fresh` against operational data.
 
+For the separate local SIH demo, `demo-serve` is loopback-only and now reserves
+its requested port before any `--fresh` reset. If 8000 is occupied, inspect it with
+`Get-NetTCPConnection -LocalPort 8000` and either deliberately stop the owning
+process or run `.\scripts\start-demo.ps1 -Port 8001`. The launcher never kills an
+existing process automatically. Wait for Uvicorn's application-startup completion
+log; a free port by itself is not a readiness check.
+
 ## 1. Release and safety gates
 
 Before installation or upgrade, an operator must approve the release commit,

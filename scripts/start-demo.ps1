@@ -1,3 +1,8 @@
+param(
+    [ValidateRange(1, 65535)]
+    [int]$Port = 8000
+)
+
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $PythonCandidates = @(
@@ -18,11 +23,11 @@ Write-Host "Checking the Drastha demo..." -ForegroundColor Cyan
 & $PythonExecutable -m aegisflow.cli demo-preflight
 if ($LASTEXITCODE -ne 0) { throw "Demo preflight failed." }
 
-Write-Host "Starting Drastha at http://127.0.0.1:8000" -ForegroundColor Green
+Write-Host "Starting Drastha at http://127.0.0.1:$Port" -ForegroundColor Green
 Write-Host "Keep this window open during the demonstration." -ForegroundColor DarkGray
 Start-Job -ScriptBlock {
     param($DashboardUrl)
     Start-Sleep -Seconds 2
     Start-Process $DashboardUrl
-} -ArgumentList "http://127.0.0.1:8000" | Out-Null
-& $PythonExecutable -m aegisflow.cli demo-serve --root $ProjectRoot --fresh
+} -ArgumentList "http://127.0.0.1:$Port" | Out-Null
+& $PythonExecutable -m aegisflow.cli demo-serve --root $ProjectRoot --fresh --port $Port

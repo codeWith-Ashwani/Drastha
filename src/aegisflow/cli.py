@@ -22,7 +22,7 @@ from aegisflow.detectors import (
     ExfiltrationConfig,
     ReconConfig,
 )
-from aegisflow.demo import demo_preflight, prepare_demo, rehearse_demo
+from aegisflow.demo import demo_preflight, prepare_demo, rehearse_demo, reserve_demo_listener
 from aegisflow.dns_model import DNSNgramModel
 from aegisflow.dns_training import train_and_evaluate
 from aegisflow.evaluation import evaluate_demo
@@ -579,20 +579,34 @@ def _run_demo_prepare(args: argparse.Namespace) -> int:
 
 
 def _run_demo_serve(args: argparse.Namespace) -> int:
-    preflight = demo_preflight(args.root)
-    if not preflight["ready"]:
-        raise RuntimeError("demo preflight failed; run demo-preflight for details")
-    project_root = args.root.resolve()
-    database = args.database if args.database.is_absolute() else project_root / args.database
-    if not args.skip_prepare:
-        prepare_demo(project_root, database, fresh=args.fresh)
-    os.environ["DRASTHA_DB"] = str(database.resolve())
-    os.environ["DRASTHA_ROOT"] = str(project_root)
-    os.environ["DRASTHA_WEB"] = str((project_root / "web" / "dist").resolve())
-    import uvicorn
-    print(f"Drastha demo ready: http://{args.host}:{args.port}", file=sys.stderr)
-    uvicorn.run("aegisflow.api:app", host=args.host, port=args.port)
-    return 0
+    # Retain the exact listener before --fresh can mutate the demo database. This
+    # also removes the check-then-bind race that caused misleading startup output.
+    listener = reserve_demo_listener(args.host, args.port)
+    environment_names = ("DRASTHA_DB", "DRASTHA_ROOT", "DRASTHA_WEB")
+    previous_environment = {name: os.environ.get(name) for name in environment_names}
+    try:
+        preflight = demo_preflight(args.root)
+        if not preflight["ready"]:
+            raise RuntimeError("demo preflight failed; run demo-preflight for details")
+        project_root = args.root.resolve()
+        database = args.database if args.database.is_absolute() else project_root / args.database
+        if not args.skip_prepare:
+            prepare_demo(project_root, database, fresh=args.fresh)
+        os.environ["DRASTHA_DB"] = str(database.resolve())
+        os.environ["DRASTHA_ROOT"] = str(project_root)
+        os.environ["DRASTHA_WEB"] = str((project_root / "web" / "dist").resolve())
+        import uvicorn
+        print(f"Starting Drastha demo: http://{args.host}:{args.port}", file=sys.stderr)
+        config = uvicorn.Config("aegisflow.api:app", host=args.host, port=args.port)
+        uvicorn.Server(config).run(sockets=[listener])
+        return 0
+    finally:
+        listener.close()
+        for name, previous in previous_environment.items():
+            if previous is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = previous
 
 
 def _run_demo_evaluation(args: argparse.Namespace) -> int:

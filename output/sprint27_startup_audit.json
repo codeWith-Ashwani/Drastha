@@ -1,0 +1,24 @@
+{
+  "default_url": "http://127.0.0.1:8000",
+  "failure_semantics": "fail before demo preparation or --fresh database reset",
+  "gates": {
+    "alternative_port_is_suggested": true,
+    "database_unchanged_before_bind_failure": true,
+    "free_loopback_port_is_accepted": true,
+    "launcher_accepts_explicit_port": true,
+    "misleading_ready_message_removed": true,
+    "non_loopback_demo_host_is_rejected": true,
+    "occupied_port_returns_controlled_error": true,
+    "powershell_owner_diagnostic_is_present": true,
+    "real_loopback_health_readback": true,
+    "uvicorn_receives_prebound_socket": true
+  },
+  "limitations": [
+    "This hardens the loopback demo launcher, not the protected TLS operator service.",
+    "The bounded localhost health check is not browser, TLS or protected-network validation.",
+    "Process-owner lookup is shown as an operator command and is not executed automatically."
+  ],
+  "passed": true,
+  "production_ready": false,
+  "schema_version": "drastha-sprint27-startup-audit-v1"
+}

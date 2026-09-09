@@ -4,6 +4,7 @@ import importlib.util
 import json
 import platform
 import shutil
+import socket
 import sys
 import time
 from pathlib import Path
@@ -22,6 +23,67 @@ DEMO_FILES = (
     "output/sprint4_exfil_alerts.jsonl",
     "output/sprint4_feedback.json",
 )
+
+DEMO_LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
+
+
+def _demo_endpoint(host: str, port: int) -> tuple[int, str]:
+    if host not in DEMO_LOOPBACK_HOSTS:
+        raise ValueError("demo-serve only supports loopback hosts: 127.0.0.1, ::1 or localhost")
+    if not 1 <= port <= 65535:
+        raise ValueError("demo port must be between 1 and 65535")
+    family = socket.AF_INET6 if host == "::1" else socket.AF_INET
+    address = "::1" if host == "::1" else "127.0.0.1"
+    return family, address
+
+
+def available_demo_port(host: str, preferred_port: int, attempts: int = 20) -> int | None:
+    """Return the first bindable loopback port without contacting another host."""
+    family, address = _demo_endpoint(host, preferred_port)
+    final_port = min(65535, preferred_port + max(0, attempts))
+    for port in range(preferred_port, final_port + 1):
+        candidate = socket.socket(family, socket.SOCK_STREAM)
+        try:
+            if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+                candidate.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+            candidate.bind((address, port))
+            return port
+        except OSError:
+            continue
+        finally:
+            candidate.close()
+    return None
+
+
+def require_demo_port(host: str, port: int) -> None:
+    """Fail before demo preparation when the requested listener cannot bind."""
+    listener = reserve_demo_listener(host, port)
+    listener.close()
+
+
+def reserve_demo_listener(host: str, port: int) -> socket.socket:
+    """Bind and retain the exact socket Uvicorn will use, avoiding a bind race."""
+    family, address = _demo_endpoint(host, port)
+    listener = socket.socket(family, socket.SOCK_STREAM)
+    try:
+        if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+            listener.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        listener.bind((address, port))
+        listener.set_inheritable(True)
+        return listener
+    except OSError as error:
+        listener.close()
+        alternate = available_demo_port(host, min(port + 1, 65535), attempts=19)
+        suggestion = (
+            f" Use --port {alternate} instead."
+            if alternate is not None
+            else " No free port was found in the next 20 ports."
+        )
+        raise RuntimeError(
+            f"Demo port {port} on {host} is already in use. Drastha was not started "
+            f"and demo data was not reset.{suggestion} On PowerShell, inspect the owner "
+            f"with Get-NetTCPConnection -LocalPort {port}."
+        ) from error
 
 
 def demo_preflight(root: str | Path) -> dict[str, Any]:

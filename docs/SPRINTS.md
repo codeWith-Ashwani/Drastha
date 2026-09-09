@@ -68,6 +68,10 @@ Production follow-on sequence (the original sprint plan below is historical):
   rehearsal delivered (see `SPRINT_26.md`). The bundle has a per-file integrity
   manifest, excludes local secrets/captures/databases, reproduces byte-for-byte,
   and reruns release acceptance plus the double demo story after extraction.
+- Sprint 27: safe loopback demo startup delivered (see `SPRINT_27.md`). The CLI
+  pre-binds the exact Uvicorn socket before any `--fresh` database mutation,
+  refuses non-loopback demo hosts, suggests an available port on conflict, and
+  removes the misleading pre-bind ready message.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

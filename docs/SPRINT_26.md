@@ -49,3 +49,17 @@ installer. It includes prebuilt dashboard assets but not Python, Node, packages,
 containers or OS libraries. The isolated-directory run reuses this host's Python
 runtime and installed API dependencies. It is not a clean VM, different-OS,
 live-mirror or hardware-data-diode test, and it remains explicitly non-production.
+
+## Verified result
+
+The retained acceptance run packages clean source revision
+`7d461e112df12fe24897dba007ed2af953bfd109` into 335 members. The resulting
+13,434,033-byte archive has SHA-256
+`156f6c1e76ab59f8798c3174f16e38c39501ae3ae7c110247b2175c480c44a9b`.
+All ten bundle/rehearsal gates pass, including byte-identical duplicate builds,
+the extracted Sprint 25 audit, preflight, attack story, evaluation and idempotent
+second replay. The machine-readable proof is `output/sprint26_bundle_audit.json`.
+
+Regression verification: 418 Python tests passed, 18 frontend tests passed, and
+the TypeScript/Vite production build completed successfully. The existing Vite
+test WebSocket port warning remains visible and did not fail the suite.

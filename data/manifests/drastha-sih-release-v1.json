@@ -1,0 +1,87 @@
+{
+  "schema_version": "drastha-sih-release-manifest-v1",
+  "release_id": "drastha-sih-demo-2026-09-09",
+  "baseline_commit": "a24d477d02afda270e20e1b54059bf862e095e4b",
+  "scope": "offline SIH prototype acceptance",
+  "status": "submission_demo_ready",
+  "production_ready": false,
+  "evidence": [
+    {
+      "path": "output/sprint17_coordinated_recovery_final.json",
+      "sha256": "644047d4a64f44d3303dc8ab9ef0b0aafdf2e229a3c688955d428cbf814b8c18",
+      "purpose": "signed journal and analyst-state recovery"
+    },
+    {
+      "path": "output/sprint18_siem_export.json",
+      "sha256": "288d82fa4ff9170b6b446b299f845abe78ee7bc42ec5c34549e7641d988f0e07",
+      "purpose": "authenticated JSON and NDJSON SIEM export"
+    },
+    {
+      "path": "output/sprint19_sensor_integration.json",
+      "sha256": "3d221e5fadcebf0658c1ad3653669dc626b5af6d53937b781146f45dc52f0aa1",
+      "purpose": "real Zeek offline PCAP-to-metadata integration"
+    },
+    {
+      "path": "output/sprint22_hardening_audit.json",
+      "sha256": "55a418f6386aaf9b54800e965a9ab0397385ba7d41d938bcf9a1912ac90c889e",
+      "purpose": "nine-threat and contextual false-positive benchmark"
+    },
+    {
+      "path": "output/sprint23_deployment_audit.json",
+      "sha256": "2a48daf4c837b1ded07763087df25f7f3bf36158c2b0e7b37d4191725c4dab5d",
+      "purpose": "fail-closed boundary and confidence contract"
+    },
+    {
+      "path": "output/sprint24_performance_audit.json",
+      "sha256": "e71c9abbd674728b3f8da89f1a0fb684abe5551de550df825b0ee24c033aa5cd",
+      "purpose": "sustained mixed-protocol throughput evidence"
+    },
+    {
+      "path": "output/umudga_dns_holdout_v2_final.json",
+      "sha256": "f6e268f7bfe6cb28ebd4a394586889ea048b82658eab36f962deff8f92b1e098",
+      "purpose": "rejected DGA candidate and preserved gate failures"
+    },
+    {
+      "path": "examples/drastha_accuracy_fp_test_v2.jsonl",
+      "sha256": "3fb2f1740929f74a9ba9e4b16ca3b98687b049626004228b81c78d3c3954f17b",
+      "purpose": "actual upload-path eight-behaviour accuracy replay"
+    },
+    {
+      "path": "config/deployment_profile.json",
+      "sha256": "b5c3aa84decffcdc93c04463974b966aacaa27aae2c3ee21e45ee185f1f199aa",
+      "purpose": "staged enclave deployment contract"
+    },
+    {
+      "path": "config/context_policy.json",
+      "sha256": "0f1ec9840d43caef463c1f3ce300ec99a29233cfa6e9308f594d8de804187c7a",
+      "purpose": "operator-governed demo context policy"
+    }
+  ],
+  "requirements": {
+    "read_only_ingest": ["sensor_integration", "deployment_contract"],
+    "no_payload_decryption": ["sensor_integration", "deployment_contract"],
+    "incremental_streaming": ["performance", "recovery"],
+    "defined_throughput": ["performance"],
+    "standard_alert_schema": ["accuracy_replay"],
+    "threat_specific_detection": ["hardening", "accuracy_replay"],
+    "contextual_false_positive_control": ["hardening", "accuracy_replay"],
+    "dashboard_and_export": ["accuracy_replay", "siem_export"]
+  },
+  "accepted_claims": {
+    "lab_threat_behaviours": 9,
+    "lab_metrics": {"tp": 9, "fp": 0, "fn": 0, "tn": 5},
+    "accuracy_replay_metrics": {"tp": 8, "fp": 0, "fn": 0},
+    "demonstrated_records_per_second": 50,
+    "demonstrated_duration_seconds": 60,
+    "real_zeek_sensor_version": "8.0.10"
+  },
+  "excluded_claims": [
+    "production accuracy",
+    "probability-calibrated detector confidence",
+    "100 records/second sustained capacity",
+    "live mirror or hardware-diode interoperability",
+    "QUIC sensor interoperability",
+    "production-approved DGA model",
+    "automatic blocking or mitigation"
+  ]
+}

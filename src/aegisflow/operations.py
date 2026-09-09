@@ -176,7 +176,8 @@ def restore_database(bundle, destination, key, expected_head):
     return {"completed": True, **verified, "automatic_cutover": False}
 
 
-def preflight(*, database, audit_key, auth, cert, tls_key, web, root, host="127.0.0.1", port=8443):
+def preflight(*, database, audit_key, auth, cert, tls_key, web, root, host="127.0.0.1", port=8443,
+              deployment_config=None):
     """Local configuration readiness only; no network probes or writes."""
     if host not in {"127.0.0.1", "::1"}:
         raise ValueError("Protected launcher is loopback-only; remote deployment needs an explicitly reviewed network design")
@@ -205,13 +206,40 @@ def preflight(*, database, audit_key, auth, cert, tls_key, web, root, host="127.
     context.minimum_version = ssl.TLSVersion.TLSv1_2
     context.load_cert_chain(str(cert), str(tls_key), password="")  # No interactive password prompt.
     verified = verify_database(database, read_key(audit_key))
-    provenance = AnalysisSession.from_root(root, DEPLOYMENT_BASELINE).provenance()
+    deployment = None
+    if deployment_config is not None:
+        from aegisflow.deployment_config import load_deployment_config
+        deployment = load_deployment_config(deployment_config)
+        if os.getenv("DRASTHA_INTERNAL_NETWORKS") is not None:
+            raise ValueError("remove DRASTHA_INTERNAL_NETWORKS when using a deployment contract")
+        previous = os.environ.get("DRASTHA_DEPLOYMENT_CONFIG")
+        os.environ["DRASTHA_DEPLOYMENT_CONFIG"] = str(Path(deployment_config).resolve())
+        try:
+            provenance = AnalysisSession.from_root(root, DEPLOYMENT_BASELINE).provenance()
+        finally:
+            if previous is None:
+                os.environ.pop("DRASTHA_DEPLOYMENT_CONFIG", None)
+            else:
+                os.environ["DRASTHA_DEPLOYMENT_CONFIG"] = previous
+    else:
+        provenance = AnalysisSession.from_root(root, DEPLOYMENT_BASELINE).provenance()
     return {"local_checks_passed": True, "production_ready": False, "evidence": verified,
             "analysis_provenance": provenance,
-            "profile": "deployment-baseline-uncalibrated-v1", "host": host, "port": port,
+            "deployment_contract": ({
+                "deployment_id": deployment.deployment_id,
+                "source": deployment.source,
+                "sha256": deployment.sha256,
+                "internal_cidrs": deployment.internal_cidrs,
+                "context_policy_sha256": deployment.context_policy_sha256,
+                "confidence_semantics": deployment.confidence_semantics,
+                "confidence_calibration_status": deployment.confidence_calibration_status,
+                "dns_model_status": deployment.dns_model_status,
+            } if deployment else None),
+            "profile": provenance["profile"], "host": host, "port": port,
             "proxy_headers": False, "workers": 1,
             "warnings": ["TLS key-pair load is not certificate expiry/hostname/chain trust validation; test a trusted HTTPS client",
                          "Loopback-only staged deployment; Windows ACLs, disk permissions and service supervision require operator review",
                          "Analyst backup excludes sensor and stream journal; recovery is not cross-database exactly-once",
                          "Signed 1000 records/sec failed Sprint 14; 100 records/sec is only a bounded synthetic measurement",
-                         "Real Zeek, browser QA, model calibration, rotation/compaction and external anchoring remain open"]}
+                         "Detector confidence is a heuristic evidence score, not a calibrated attack probability",
+                         "Real Zeek, browser QA, probability calibration, rotation/compaction and external anchoring remain open"]}

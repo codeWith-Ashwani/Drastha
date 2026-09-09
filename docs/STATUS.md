@@ -4,6 +4,15 @@ Last updated: 9 September 2026
 
 ## Production roadmap update
 
+Sprint 23 is complete. Protected deployment can now load one fail-closed,
+checksum-linked contract for explicit monitored CIDRs, context policy, passive
+safety constraints and confidence semantics. Dual boundary authorities,
+overlapping CIDRs, policy tampering, unsafe constraints and unapproved DNS models
+are rejected. Alerts and provenance explicitly state that confidence is a
+heuristic evidence score, not a calibrated probability. The staged profile is
+still not production-ready. Verification passes with 408 Python tests, 18
+frontend tests and the production dashboard build; see `docs/SPRINT_23.md`.
+
 Sprint 22 is complete. A metadata-only Slow HTTP connection-exhaustion subtype
 closes the lab false negative, and checksum-pinned operator context removes the
 three known contextual false positives without suppressing any of the nine attack

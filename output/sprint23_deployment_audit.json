@@ -1,0 +1,42 @@
+{
+  "confidence": {
+    "calibration_status": "not_probability_calibrated",
+    "is_probability": false,
+    "semantics": "heuristic_evidence_score"
+  },
+  "deployment": {
+    "context_policy_sha256": "0f1ec9840d43caef463c1f3ce300ec99a29233cfa6e9308f594d8de804187c7a",
+    "dns_model_status": "none_production_approved",
+    "id": "staged-enclave-lab-v1",
+    "internal_cidrs": [
+      "10.0.0.0/8",
+      "172.16.0.0/12",
+      "192.168.0.0/16"
+    ],
+    "source_sha256": "b5c3aa84decffcdc93c04463974b966aacaa27aae2c3ee21e45ee185f1f199aa"
+  },
+  "directions": {
+    "external": "external",
+    "inbound": "inbound",
+    "internal": "internal",
+    "outbound": "outbound"
+  },
+  "gates": {
+    "all_direction_classes_verified": true,
+    "confidence_is_not_probability": true,
+    "confidence_limitation_machine_readable": true,
+    "context_policy_checksum_verified": true,
+    "deployment_config_checksum_pinned": true,
+    "network_boundaries_nonempty": true,
+    "no_production_dns_model_loaded": true,
+    "single_deployment_profile_selected": true
+  },
+  "limitations": [
+    "The checked-in CIDRs describe a staged lab profile and must be replaced for the real enclave.",
+    "Detector confidence remains heuristic and is not an attack probability.",
+    "No DNS model is production-approved; Sprint 21's failed candidate remains excluded."
+  ],
+  "passed": true,
+  "production_ready": false,
+  "schema_version": "drastha-sprint23-deployment-audit-v1"
+}

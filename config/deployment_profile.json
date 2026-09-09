@@ -1,0 +1,25 @@
+{
+  "schema_version": "drastha-deployment-v1",
+  "deployment_id": "staged-enclave-lab-v1",
+  "internal_cidrs": [
+    "10.0.0.0/8",
+    "172.16.0.0/12",
+    "192.168.0.0/16"
+  ],
+  "context_policy": {
+    "path": "context_policy.json",
+    "sha256": "0f1ec9840d43caef463c1f3ce300ec99a29233cfa6e9308f594d8de804187c7a"
+  },
+  "confidence": {
+    "semantics": "heuristic_evidence_score",
+    "probability_calibrated": false,
+    "calibration_status": "not_probability_calibrated"
+  },
+  "dns_model": null,
+  "passive_constraints": {
+    "read_only_ingest": true,
+    "no_return_path": true,
+    "payload_decryption": false,
+    "active_mitigation": false
+  }
+}

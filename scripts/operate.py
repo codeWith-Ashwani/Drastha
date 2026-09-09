@@ -53,6 +53,7 @@ def main(argv=None):
         cmd.add_argument("--root", type=Path, default=ROOT)
         cmd.add_argument("--host", default="127.0.0.1")
         cmd.add_argument("--port", type=int, default=8443)
+        cmd.add_argument("--deployment-config", type=Path)
     args = parser.parse_args(argv)
     try:
         key = read_key(args.audit_key)
@@ -86,6 +87,8 @@ def main(argv=None):
                                   DRASTHA_AUTH_FILE=str(args.auth.resolve()), DRASTHA_AUDIT_KEY_FILE=str(args.audit_key.resolve()),
                                   DRASTHA_ROOT=str(args.root.resolve()), DRASTHA_WEB=str(args.web.resolve()),
                                   DRASTHA_ANALYSIS_PROFILE="deployment-baseline")
+                if args.deployment_config is not None:
+                    os.environ["DRASTHA_DEPLOYMENT_CONFIG"] = str(args.deployment_config.resolve())
                 import uvicorn
                 print(json.dumps(result), flush=True)
                 uvicorn.run("aegisflow.api:app", host=args.host, port=args.port, proxy_headers=False,

@@ -52,8 +52,10 @@ Production follow-on sequence (the original sprint plan below is historical):
   delivered on the checksum-pinned SIH lab corpus (see `SPRINT_22.md`). Exact
   operator policy removes the three known control FPs while all nine attacks
   remain detected. Real unseen production validation remains an explicit limit.
-- Sprint 23 (planned): deployment profile, network boundaries and confidence
-  calibration.
+- Sprint 23: checksum-linked deployment profile, explicit network boundaries and
+  machine-readable confidence status delivered (see `SPRINT_23.md`). Heuristic
+  scores are explicitly not probabilities; representative probability
+  calibration remains open instead of being claimed from synthetic data.
 - Sprint 24 (planned): sustained mixed-protocol performance and reliability.
 - Sprint 25 (planned): final reproducible SIH release validation.
 

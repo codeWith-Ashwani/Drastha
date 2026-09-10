@@ -90,6 +90,11 @@ Production follow-on sequence (the original sprint plan below is historical):
   is converted by Zeek into a checksum-pinned healthy replay. Binary flow-wire
   decoding, vendor-wide interoperability and accuracy from this tool capture are
   explicitly not claimed.
+- Sprint 32: final SIH threat and evidence validation delivered (see
+  `SPRINT_32.md`). Two final fixtures traverse the HTTP upload, SQLite, saved-run,
+  incident-detail and SIEM-export paths; incremental SSE, context hardening,
+  standardized alerts, cautious scientific wording and signed 50 records/second
+  evidence are gated by one checksum-pinned audit.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

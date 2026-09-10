@@ -66,6 +66,14 @@ class UploadAnalysisTests(unittest.TestCase):
         self.assertEqual(subtypes, {"vertical_port_scan", "outbound_volume_anomaly"})
         self.assertTrue(report["telemetry"]["supplied_labels_ignored"])
         self.assertEqual(report["quality"]["records_accepted"], 8)
+        self.assertEqual(report["safety"], {
+            "ingest_mode": "read_only",
+            "passive_observation_only": True,
+            "return_path_required": False,
+            "source_or_destination_contacted": False,
+            "payload_decryption_performed": False,
+            "mitigation_command_issued": False,
+        })
         recon = next(item for item in report["alerts"] if item["subtype"] == "vertical_port_scan")
         ports_evidence = next(
             item for item in recon["evidence"] if item["name"] == "unique_destination_ports"

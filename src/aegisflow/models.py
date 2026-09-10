@@ -10,7 +10,14 @@ THREAT_CLASS_BY_SUBTYPE = {
     "udp_reflection_amplification": "Volumetric DDoS - UDP Reflection/Amplification",
     "distributed_source_syn_flood": "Volumetric DDoS - Distributed-Source SYN Flood",
     "slow_http_connection_exhaustion": "Protocol DDoS - Slow HTTP Connection Exhaustion",
+    "periodic_beacon": "Botnet C2 Beaconing",
+    "dga_like_domain": "DGA Domain Activity",
+    "dns_tunnelling": "DNS Tunnelling",
     "encrypted_session_metadata_anomaly": "Encrypted-session metadata anomaly",
+    "vertical_port_scan": "Reconnaissance - Vertical Port Scan",
+    "horizontal_host_scan": "Reconnaissance - Horizontal Host Scan",
+    "multi_host_port_scan": "Reconnaissance - Multi-Host/Port Scan",
+    "outbound_volume_anomaly": "Data Exfiltration - Outbound Volume Anomaly",
 }
 
 

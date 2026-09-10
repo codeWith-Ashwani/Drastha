@@ -82,6 +82,11 @@ providing a simple interoperable contract. `threat_type` remains the stable
 machine family identifier, while `threat_class` is the presentation-ready,
 subtype-specific classification (for example `Volumetric DDoS - SYN Flood`).
 
+All supported subtypes now have specific presentation classes, including Botnet
+C2 Beaconing, DGA Domain Activity, DNS Tunnelling, the three reconnaissance
+patterns and Data Exfiltration - Outbound Volume Anomaly. A completed replay also
+serializes its read-only/passive/no-decryption/no-mitigation safety contract.
+
 ## No payload decryption
 
 Encrypted-session analysis accepts visible TLS/QUIC metadata and derived timing or
@@ -145,3 +150,12 @@ It also accepts collector-decoded NetFlow, IPFIX and sFlow JSON/NDJSON. The
 checksum-pinned contract, tool versions and strict claim boundaries are recorded
 in `data/manifests/sih26145-input-compliance-v1.json` and `docs/SPRINT_31.md`.
 Raw binary flow datagram decoding is not claimed by the SIH prototype.
+
+## Final SIH validation
+
+`scripts/check_sprint32_sih_validation.py` exercises the HTTP upload, SQLite
+persistence, saved-run snapshot, incident-detail evidence, SIEM export and SSE
+streaming routes. It also verifies the contextual lab benchmark, Sprint 31 input
+formats and the signed sustained-throughput evidence. Exact results and
+scientific limitations are in `docs/SPRINT_32.md` and
+`output/sprint32_sih_validation_audit.json`.

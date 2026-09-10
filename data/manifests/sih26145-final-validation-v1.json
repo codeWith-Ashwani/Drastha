@@ -1,0 +1,58 @@
+{
+  "schema_version": "drastha-sih-final-validation-manifest-v1",
+  "validation_id": "sih26145-sprint32-final-validation-v1",
+  "scope": "SIH prototype threat, quality, context, streaming, evidence and performance acceptance",
+  "artifacts": [
+    {
+      "path": "examples/drastha_mixed_evaluation_v3.jsonl",
+      "sha256": "5848e73370f34e26583dd3678339e93b63b877c9ae3ed3a26b05d15952d844fd",
+      "purpose": "452-record chronological eight-behaviour mixed replay"
+    },
+    {
+      "path": "examples/drastha_accuracy_fp_test_v2.jsonl",
+      "sha256": "3fb2f1740929f74a9ba9e4b16ca3b98687b049626004228b81c78d3c3954f17b",
+      "purpose": "identity-separated eight-behaviour and false-positive corroboration"
+    },
+    {
+      "path": "config/sih26145_lab_context_policy.json",
+      "sha256": "222973548e6cebe123b5901b9333b91e731eb8e836a51949dd6240b22c154cf7",
+      "purpose": "exact operator-governed health, backup and scanner context"
+    },
+    {
+      "path": "output/sprint22_hardening_audit.json",
+      "sha256": "55a418f6386aaf9b54800e965a9ab0397385ba7d41d938bcf9a1912ac90c889e",
+      "purpose": "nine attack controls and contextual benign controls"
+    },
+    {
+      "path": "output/sprint24_performance_audit.json",
+      "sha256": "e71c9abbd674728b3f8da89f1a0fb684abe5551de550df825b0ee24c033aa5cd",
+      "purpose": "signed sustained 50 records/second for 60 seconds"
+    },
+    {
+      "path": "output/sprint31_input_compliance_audit.json",
+      "sha256": "7e1927be3693b1ab2a088124866d37be298be9290783bfb87f969c888fac666f",
+      "purpose": "PCAP, Zeek and collector-decoded NetFlow/IPFIX/sFlow evidence"
+    }
+  ],
+  "required_subtypes": [
+    "distributed_source_syn_flood",
+    "udp_reflection_amplification",
+    "multi_host_port_scan",
+    "periodic_beacon",
+    "dga_like_domain",
+    "dns_tunnelling",
+    "encrypted_session_metadata_anomaly",
+    "outbound_volume_anomaly"
+  ],
+  "additional_lab_subtypes": [
+    "syn_flood",
+    "slow_http_connection_exhaustion"
+  ],
+  "scientific_boundaries": [
+    "Distributed source diversity supports but cannot prove source spoofing.",
+    "Encrypted-session metadata anomaly is not definitive malware identification.",
+    "Confidence is a heuristic evidence score and not attack probability.",
+    "Controlled lab metrics do not establish production accuracy.",
+    "Ground truth is evaluated only after detector inference."
+  ]
+}

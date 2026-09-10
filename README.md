@@ -11,6 +11,13 @@ The repository contains a working offline SIH demonstration and a production
 hardening track. Controlled replay results are reproducible; real-traffic
 generalization, continuous-service scale and operational deployment remain open.
 
+Sprint 32 adds the [final SIH threat and evidence validation](docs/SPRINT_32.md).
+Two independent HTTP-upload replays, SQLite persistence, saved-run snapshots,
+incident evidence readback, SIEM export and incremental SSE are checked together.
+The 452-record result remains 8 TP / 0 FP / 0 FN / 86 TN with healthy quality;
+every subtype now has a presentation-ready SIH threat class and every replay
+exposes its passive/read-only safety contract.
+
 Sprint 31 adds [SIH input-format and dataset provenance closure](docs/SPRINT_31.md).
 Collector-decoded NetFlow, IPFIX and sFlow JSON/NDJSON now enter the same quality,
 detection, correlation and dashboard path as Zeek records. A local-only
@@ -85,7 +92,7 @@ using 24 training, four validation and four previously unseen final-test familie
 The frozen candidate failed validation uncertainty and final-holdout
 generalization gates, so production loading remains blocked.
 
-Latest verified baseline (10 September 2026): **444 Python tests**, **18 frontend
+Latest verified baseline (10 September 2026): **446 Python tests**, **18 frontend
 tests**, and a successful dashboard production build. The corrected accuracy
 replay produces **8 findings, 8 incidents, 0 false-positive behaviours and healthy
 input quality**. These are controlled synthetic results, not production accuracy.

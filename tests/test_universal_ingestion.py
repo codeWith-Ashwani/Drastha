@@ -164,6 +164,27 @@ class UniversalIngestionTests(unittest.TestCase):
         self.assertEqual(report["telemetry"]["dns_records"], 1)
         self.assertEqual(report["telemetry"]["connection_records"], 0)
 
+    def test_zeek_dns_transactions_may_share_a_flow_uid(self):
+        records = [
+            {
+                "ts": 1 + index * 0.1, "uid": "shared-flow",
+                "id.orig_h": "10.34.0.2", "id.orig_p": 53000,
+                "id.resp_h": "10.34.0.1", "id.resp_p": 53,
+                "proto": "udp", "trans_id": 1000 + index,
+                "query": f"encoded-{index}.s34.test", "qtype_name": "TXT",
+            }
+            for index in range(3)
+        ]
+        report = self.analyse("dns-transactions.jsonl", "\n".join(map(json.dumps, records)))
+        self.assertEqual(report["quality"]["duplicate_uid_count"], 0)
+        self.assertEqual(report["quality"]["status"], "healthy")
+
+        duplicate = self.analyse(
+            "dns-duplicate.jsonl", "\n".join(map(json.dumps, [records[0], records[0]]))
+        )
+        self.assertEqual(duplicate["quality"]["exact_duplicate_count"], 1)
+        self.assertEqual(duplicate["quality"]["status"], "degraded")
+
     def test_tls_and_quic_metadata_are_passive_and_preserved(self):
         records = [
             {**connection("tls", 1), "ja3": "abc", "ja3s": "server"},

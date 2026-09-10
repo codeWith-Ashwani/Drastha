@@ -1,0 +1,124 @@
+{
+  "schema_version": "drastha-sih26145-real-tools-manifest-v1",
+  "capture_id": "sih26145-real-tools-v1",
+  "purpose": "Authorised isolated real-tool evidence for Slow HTTP, iodine DNS tunnelling, deterministic C2 timing and a jittered benign health-check control",
+  "safety": {
+    "environment": "WSL network namespaces",
+    "default_route_present": false,
+    "production_targets": false,
+    "client_links": [
+      "10.34.0.2/30 -> 10.34.0.1/30",
+      "10.34.1.2/30 -> 10.34.1.1/30"
+    ],
+    "payload_decryption": false,
+    "automatic_mitigation": false
+  },
+  "tools": {
+    "slowhttptest": "1.9.0, Slowloris/slow-header mode",
+    "iodine": "0.7.0",
+    "zeek": "8.0.10",
+    "tcpdump": "4.99.4",
+    "python": "3.12.3 deterministic socket emulators"
+  },
+  "derived_fixture": {
+    "path": "examples/sih26145_real_tools_v1.jsonl",
+    "sha256": "c9619d5ae1cf5e494de8a07bb819d33a1ec5490d73a26a5fb56ca56ee2206177",
+    "bytes": 89766,
+    "records": 141,
+    "connection_records": 89,
+    "dns_records": 52,
+    "evaluation_labels": false
+  },
+  "raw_local_evidence": [
+    {
+      "path": "data/raw/sih26145-real-tools-v1/sprint34-isolated-tools.pcap",
+      "sha256": "c6cdc13fcadcdefd9ec97ead3be19547671e5efe6ebdb77dfc819d48aa731ede",
+      "bytes": 110385,
+      "committed": false
+    },
+    {
+      "path": "data/raw/sih26145-real-tools-v1/zeek/conn.log",
+      "sha256": "1f03a9bdf6ded4377f30e1effff78ae88ff2727127b741463d2b78ba14e0c07e",
+      "bytes": 32090,
+      "records": 80,
+      "committed": false
+    },
+    {
+      "path": "data/raw/sih26145-real-tools-v1/zeek/dns.log",
+      "sha256": "6a8f9a6412d5dca9532b9c506430e6ac264e9866af8362a5de471116c3b5e4d7",
+      "bytes": 48668,
+      "records": 52,
+      "committed": false
+    },
+    {
+      "path": "data/raw/sih26145-real-tools-v1/benign-health/jittered-health-check.pcap",
+      "sha256": "c6ae063fc3f00fb7db3c5b6467ef7f56816812336cb10516fc3787a96d3e4f81",
+      "bytes": 10149,
+      "committed": false
+    },
+    {
+      "path": "data/raw/sih26145-real-tools-v1/benign-health/zeek/conn.log",
+      "sha256": "7f48d06808c17eb0ae345bd3e6c0171f97ab3415d7ffcf8c4e2843a081461100",
+      "bytes": 3883,
+      "records": 10,
+      "committed": false
+    }
+  ],
+  "measured_scenarios": {
+    "slow_http": {
+      "source": "10.34.0.2",
+      "destination": "10.34.0.1:18081",
+      "tool_connections_started": 24,
+      "zeek_long_lived_connections": 24,
+      "minimum_duration_seconds": 130.04,
+      "application_response_bytes": 0,
+      "expected_subtype": "slow_http_connection_exhaustion"
+    },
+    "c2_timing_emulator": {
+      "source": "10.34.0.2",
+      "destination": "10.34.0.1:18443",
+      "zeek_connections": 11,
+      "configured_interval_seconds": 3,
+      "measured_span_seconds": 30.009,
+      "expected_subtype": "periodic_beacon"
+    },
+    "iodine_dns_tunnel": {
+      "source": "10.34.0.2",
+      "destination": "10.34.0.1:53",
+      "base_domain": "s34.test",
+      "zeek_dns_transactions": 52,
+      "query_type": "TXT",
+      "tunneled_ping_success": true,
+      "expected_subtype": "dns_tunnelling"
+    },
+    "benign_health_check": {
+      "source": "10.34.1.2",
+      "destination": "10.34.1.1:18444",
+      "zeek_connections": 10,
+      "jittered_intervals_seconds": [2, 6, 2, 6, 2, 6, 2, 6, 2],
+      "alternating_payload_sizes": true,
+      "expected_alerts": 0
+    }
+  },
+  "expected_upload_result": {
+    "records_accepted": 141,
+    "records_rejected": 0,
+    "out_of_order_records": 0,
+    "duplicate_uid_count": 0,
+    "quality": "healthy",
+    "subtypes": [
+      "slow_http_connection_exhaustion",
+      "periodic_beacon",
+      "dns_tunnelling"
+    ],
+    "benign_health_alerts": 0,
+    "incidents": 1
+  },
+  "limitations": [
+    "The raw PCAP and Zeek working directory remain local and gitignored; the chronological derived Zeek fixture is committed.",
+    "The C2 program is a deterministic timing emulator, not a malware family or external command-and-control framework.",
+    "Slow HTTP evidence proves the traffic shape produced by slowhttptest Slowloris mode, not a particular attacker or server-impact claim.",
+    "The iodine tunnel was confined to a no-default-route private namespace and does not demonstrate encrypted DNS visibility.",
+    "This small controlled lab validates integration and detector evidence, not production accuracy."
+  ]
+}

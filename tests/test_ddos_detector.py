@@ -49,6 +49,20 @@ class DDoSDetectorTests(unittest.TestCase):
                 )
                 alerts.extend(detector.process(item))
             self.assertEqual(alerts, [])
+
+    def test_real_tool_shape_allows_clean_tcp_close_with_no_http_response(self):
+        detector = DDoSDetector(DDoSConfig(syn_attempt_threshold=100))
+        alerts = []
+        for index in range(24):
+            item = event(index * 0.04, f"R{index}", "10.34.0.2", "10.34.0.1", "tcp", state="SF")
+            item = __import__("dataclasses").replace(
+                item, dst_port=18081, duration_seconds=130.5,
+                outbound_bytes=241, inbound_bytes=0,
+                outbound_packets=7, inbound_packets=5,
+                raw={"service": "http"},
+            )
+            alerts.extend(detector.process(item))
+        self.assertEqual([item.subtype for item in alerts], ["slow_http_connection_exhaustion"])
     def test_syn_flood(self):
         detector = DDoSDetector(DDoSConfig(
             window_seconds=5, syn_attempt_threshold=5,

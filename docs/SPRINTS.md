@@ -95,6 +95,10 @@ Production follow-on sequence (the original sprint plan below is historical):
   incident-detail and SIEM-export paths; incremental SSE, context hardening,
   standardized alerts, cautious scientific wording and signed 50 records/second
   evidence are gated by one checksum-pinned audit.
+- Sprint 34: isolated real-tool SIH evidence delivered (see `SPRINT_34.md`). An
+  actual slowhttptest Slowloris-mode run, established iodine tunnel, deterministic
+  C2 timing emulator and jittered health control traverse tcpdump, Zeek and the
+  real upload path with 141 healthy records and exactly three intended findings.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

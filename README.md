@@ -11,6 +11,13 @@ The repository contains a working offline SIH demonstration and a production
 hardening track. Controlled replay results are reproducible; real-traffic
 generalization, continuous-service scale and operational deployment remain open.
 
+Sprint 34 adds [isolated real-tool evidence](docs/SPRINT_34.md): an actual
+`slowhttptest` Slowloris-mode run, an established iodine DNS tunnel carrying ping,
+eleven deterministic C2-timing callbacks and a jittered health-check control are
+captured with tcpdump and converted by Zeek 8.0.10. The 141-record actual upload
+replay is healthy and produces exactly Slow HTTP, C2 and DNS-tunnel findings while
+the benign health source remains alert-free. Raw PCAPs remain local and gitignored.
+
 Sprint 33 freezes the [final SIH submission release](docs/SPRINT_33.md) as
 `drastha-sih-v1.0`. Its checksum-pinned manifest and executable acceptance check
 cover the current HTTP upload path, both eight-behaviour replays, lab controls,
@@ -99,7 +106,7 @@ using 24 training, four validation and four previously unseen final-test familie
 The frozen candidate failed validation uncertainty and final-holdout
 generalization gates, so production loading remains blocked.
 
-Latest verified baseline (10 September 2026): **449 Python tests**, **18 frontend
+Latest verified baseline (10 September 2026): **454 Python tests**, **18 frontend
 tests**, and a successful dashboard production build. The corrected accuracy
 replay produces **8 findings, 8 incidents, 0 false-positive behaviours and healthy
 input quality**. These are controlled synthetic results, not production accuracy.

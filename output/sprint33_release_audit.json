@@ -1,0 +1,100 @@
+{
+  "excluded_claims": [
+    "production accuracy or production readiness",
+    "probability-calibrated detector confidence",
+    "raw binary NetFlow, IPFIX or sFlow datagram interoperability",
+    "live mirror or physical hardware-data-diode interoperability",
+    "payload decryption or automatic mitigation",
+    "production-approved DGA research model",
+    "general QUIC sensor interoperability"
+  ],
+  "gates": {
+    "all_evidence_checksums_verified": true,
+    "current_sih_acceptance_passed": true,
+    "identity_separated_claim_exact": true,
+    "lab_claim_exact": true,
+    "mixed_replay_claim_exact": true,
+    "passive_input_formats_verified": true,
+    "scientific_boundaries_preserved": true,
+    "throughput_claim_exact": true
+  },
+  "manifest": {
+    "path": "data/manifests/drastha-sih-release-v2.json",
+    "sha256": "6035875a00f35e1c77f929f9a899fd8c224185d033594cc8718091d9fc11c566"
+  },
+  "passed": true,
+  "production_ready": false,
+  "release_id": "drastha-sih-v1.0",
+  "schema_version": "drastha-sprint33-release-audit-v1",
+  "submission_demo_ready": true,
+  "verified_evidence_sha256": {
+    "config/context_policy.json": "0f1ec9840d43caef463c1f3ce300ec99a29233cfa6e9308f594d8de804187c7a",
+    "config/deployment_profile.json": "b5c3aa84decffcdc93c04463974b966aacaa27aae2c3ee21e45ee185f1f199aa",
+    "data/manifests/sih26145-final-validation-v1.json": "a83238025f52823980aabf7b26cfdf36a686f64b599b9e462f540a5916870cc6",
+    "examples/drastha_accuracy_fp_test_v2.jsonl": "3fb2f1740929f74a9ba9e4b16ca3b98687b049626004228b81c78d3c3954f17b",
+    "examples/drastha_mixed_evaluation_v3.jsonl": "5848e73370f34e26583dd3678339e93b63b877c9ae3ed3a26b05d15952d844fd",
+    "output/sprint19_sensor_integration.json": "3d221e5fadcebf0658c1ad3653669dc626b5af6d53937b781146f45dc52f0aa1",
+    "output/sprint20_lab_corpus_audit.json": "1c5663355630d6cfc9b56a1d77475a457653f65b1b39d5f44d9e10c7beb26870",
+    "output/sprint24_performance_audit.json": "e71c9abbd674728b3f8da89f1a0fb684abe5551de550df825b0ee24c033aa5cd",
+    "output/sprint31_input_compliance_audit.json": "7e1927be3693b1ab2a088124866d37be298be9290783bfb87f969c888fac666f",
+    "output/sprint32_sih_validation_audit.json": "642b1c062f09c069cd8ef65987b614277f2537f071a58f96169dda8824c78e2e"
+  },
+  "verified_results": {
+    "identity_separated_replay": {
+      "f1": 1.0,
+      "findings": 8,
+      "fn": 0,
+      "fp": 0,
+      "fpr": 0.0,
+      "identity_overlap": [],
+      "incidents": 8,
+      "precision": 1.0,
+      "quality": "healthy",
+      "recall": 1.0,
+      "records": 153,
+      "rejected": 0,
+      "tn": 107,
+      "tp": 8
+    },
+    "lab_corpus": {
+      "fn": 0,
+      "fp": 0,
+      "tn": 5,
+      "tp": 9
+    },
+    "mixed_replay": {
+      "f1": 1.0,
+      "findings": 8,
+      "fn": 0,
+      "fp": 0,
+      "fpr": 0.0,
+      "identity_overlap": [
+        "192.168.20.50",
+        "192.168.20.60"
+      ],
+      "incidents": 8,
+      "precision": 1.0,
+      "quality": "healthy",
+      "recall": 1.0,
+      "records": 452,
+      "rejected": 0,
+      "tn": 86,
+      "tp": 8
+    },
+    "performance": {
+      "duration_seconds": 60,
+      "max_backlog_records": 8,
+      "peak_disk_mib": 3.076279640197754,
+      "peak_rss_mib": 79.84765625,
+      "producer_lag_max_ms": 99.77600000001985,
+      "record_mix": {
+        "connection": 2400,
+        "dns": 600,
+        "encrypted": 300
+      },
+      "records": 3000,
+      "records_per_second": 50,
+      "visibility_p95_ms": 111.25070000025516
+    }
+  }
+}

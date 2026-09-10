@@ -11,6 +11,13 @@ The repository contains a working offline SIH demonstration and a production
 hardening track. Controlled replay results are reproducible; real-traffic
 generalization, continuous-service scale and operational deployment remain open.
 
+Sprint 33 freezes the [final SIH submission release](docs/SPRINT_33.md) as
+`drastha-sih-v1.0`. Its checksum-pinned manifest and executable acceptance check
+cover the current HTTP upload path, both eight-behaviour replays, lab controls,
+input formats, passive-safety contract, evidence persistence and demonstrated
+50 records/second target. The release is submission-demo ready, not production
+ready; its exclusions are explicit and machine-readable.
+
 Sprint 32 adds the [final SIH threat and evidence validation](docs/SPRINT_32.md).
 Two independent HTTP-upload replays, SQLite persistence, saved-run snapshots,
 incident evidence readback, SIEM export and incremental SSE are checked together.
@@ -92,7 +99,7 @@ using 24 training, four validation and four previously unseen final-test familie
 The frozen candidate failed validation uncertainty and final-holdout
 generalization gates, so production loading remains blocked.
 
-Latest verified baseline (10 September 2026): **446 Python tests**, **18 frontend
+Latest verified baseline (10 September 2026): **449 Python tests**, **18 frontend
 tests**, and a successful dashboard production build. The corrected accuracy
 replay produces **8 findings, 8 incidents, 0 false-positive behaviours and healthy
 input quality**. These are controlled synthetic results, not production accuracy.

@@ -1,0 +1,75 @@
+{
+  "schema_version": "drastha-sih-release-manifest-v2",
+  "release_id": "drastha-sih-v1.0",
+  "scope": "final SIH problem-statement prototype submission",
+  "status": "submission_demo_ready",
+  "production_ready": false,
+  "evidence": [
+    {
+      "path": "output/sprint31_input_compliance_audit.json",
+      "sha256": "7e1927be3693b1ab2a088124866d37be298be9290783bfb87f969c888fac666f",
+      "purpose": "PCAP, Zeek and collector-decoded NetFlow/IPFIX/sFlow compliance"
+    },
+    {
+      "path": "output/sprint32_sih_validation_audit.json",
+      "sha256": "642b1c062f09c069cd8ef65987b614277f2537f071a58f96169dda8824c78e2e",
+      "purpose": "final HTTP upload, evidence, persistence, export and streaming acceptance"
+    },
+    {
+      "path": "data/manifests/sih26145-final-validation-v1.json",
+      "sha256": "a83238025f52823980aabf7b26cfdf36a686f64b599b9e462f540a5916870cc6",
+      "purpose": "checksum-pinned final validation contract"
+    },
+    {
+      "path": "examples/drastha_mixed_evaluation_v3.jsonl",
+      "sha256": "5848e73370f34e26583dd3678339e93b63b877c9ae3ed3a26b05d15952d844fd",
+      "purpose": "452-record chronological mixed replay"
+    },
+    {
+      "path": "examples/drastha_accuracy_fp_test_v2.jsonl",
+      "sha256": "3fb2f1740929f74a9ba9e4b16ca3b98687b049626004228b81c78d3c3954f17b",
+      "purpose": "identity-separated accuracy and false-positive replay"
+    },
+    {
+      "path": "output/sprint20_lab_corpus_audit.json",
+      "sha256": "1c5663355630d6cfc9b56a1d77475a457653f65b1b39d5f44d9e10c7beb26870",
+      "purpose": "independent-ground-truth SIH laboratory corpus"
+    },
+    {
+      "path": "output/sprint24_performance_audit.json",
+      "sha256": "e71c9abbd674728b3f8da89f1a0fb684abe5551de550df825b0ee24c033aa5cd",
+      "purpose": "signed sustained throughput measurement"
+    },
+    {
+      "path": "output/sprint19_sensor_integration.json",
+      "sha256": "3d221e5fadcebf0658c1ad3653669dc626b5af6d53937b781146f45dc52f0aa1",
+      "purpose": "real Zeek offline sensor integration"
+    },
+    {
+      "path": "config/deployment_profile.json",
+      "sha256": "b5c3aa84decffcdc93c04463974b966aacaa27aae2c3ee21e45ee185f1f199aa",
+      "purpose": "fail-closed passive deployment boundary"
+    },
+    {
+      "path": "config/context_policy.json",
+      "sha256": "0f1ec9840d43caef463c1f3ce300ec99a29233cfa6e9308f594d8de804187c7a",
+      "purpose": "operator-governed contextual false-positive controls"
+    }
+  ],
+  "accepted_claims": {
+    "mixed_replay": {"records": 452, "findings": 8, "incidents": 8, "tp": 8, "fp": 0, "fn": 0, "tn": 86, "quality": "healthy"},
+    "identity_separated_replay": {"records": 153, "findings": 8, "incidents": 8, "tp": 8, "fp": 0, "fn": 0, "tn": 107, "quality": "healthy"},
+    "lab_corpus": {"tp": 9, "fp": 0, "fn": 0, "tn": 5},
+    "demonstrated_records_per_second": 50,
+    "demonstrated_duration_seconds": 60
+  },
+  "excluded_claims": [
+    "production accuracy or production readiness",
+    "probability-calibrated detector confidence",
+    "raw binary NetFlow, IPFIX or sFlow datagram interoperability",
+    "live mirror or physical hardware-data-diode interoperability",
+    "payload decryption or automatic mitigation",
+    "production-approved DGA research model",
+    "general QUIC sensor interoperability"
+  ]
+}

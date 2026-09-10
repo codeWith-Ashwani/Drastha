@@ -171,7 +171,12 @@ def _candidate_is_clean(root: Path) -> bool:
     return unstaged and staged
 
 
-def audit(root: Path, bundle_output: Path) -> dict:
+def audit(
+    root: Path,
+    bundle_output: Path,
+    *,
+    release_checker: str = "scripts/check_sprint25_release.py",
+) -> dict:
     root = root.resolve()
     if not _candidate_is_clean(root):
         raise ValueError("Tracked source must be committed and clean before building the release bundle")
@@ -191,8 +196,11 @@ def audit(root: Path, bundle_output: Path) -> dict:
         environment = os.environ.copy()
         environment["PYTHONPATH"] = str(extracted / "src")
         release_report = extracted / "output" / "sprint25-extracted-audit.json"
+        checker = extracted / PurePosixPath(release_checker)
+        if not checker.is_file() or checker.resolve().parent != (extracted / "scripts").resolve():
+            raise ValueError(f"Release checker must be a script in scripts/: {release_checker}")
         release = subprocess.run(
-            [sys.executable, str(extracted / "scripts" / "check_sprint25_release.py"),
+            [sys.executable, str(checker),
              "--repo-root", str(extracted), "--report-output", str(release_report)],
             cwd=extracted, env=environment, capture_output=True, text=True,
         )
@@ -226,7 +234,7 @@ def audit(root: Path, bundle_output: Path) -> dict:
         "exact_source_revision": final["source_revision"] == revision,
         "prebuilt_dashboard_included": final["frontend_prebuilt"],
         "dependencies_honestly_excluded": final["dependencies_included"] is False,
-        "extracted_sprint25_release_passed": release_payload["passed"],
+        "extracted_release_passed": release_payload["passed"],
         "extracted_demo_rehearsal_passed": rehearsal_payload["ready"],
         "double_replay_idempotent": rehearsal_payload["checks"]["replay_is_idempotent"],
         "archive_unchanged_by_rehearsal": archive_unchanged,
@@ -236,6 +244,7 @@ def audit(root: Path, bundle_output: Path) -> dict:
         "passed": all(gates.values()),
         "gates": gates,
         "bundle": final,
+        "release_checker": release_checker,
         "rehearsal_checks": rehearsal_payload["checks"],
         "submission_demo_ready": all(gates.values()),
         "production_ready": False,
@@ -253,10 +262,14 @@ def main() -> int:
     parser.add_argument("--repo-root", type=Path, default=ROOT)
     parser.add_argument("--bundle-output", type=Path, required=True)
     parser.add_argument("--report-output", type=Path, required=True)
+    parser.add_argument(
+        "--release-checker", default="scripts/check_sprint25_release.py",
+        help="Repository-relative acceptance checker to run after extraction",
+    )
     args = parser.parse_args()
     if args.report_output.exists():
         parser.error("Choose a new report output path")
-    report = audit(args.repo_root, args.bundle_output)
+    report = audit(args.repo_root, args.bundle_output, release_checker=args.release_checker)
     args.report_output.parent.mkdir(parents=True, exist_ok=True)
     args.report_output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"passed": report["passed"], "bundle": report["bundle"],

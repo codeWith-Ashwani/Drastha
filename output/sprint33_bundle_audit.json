@@ -1,0 +1,42 @@
+{
+  "bundle": {
+    "bytes": 13547446,
+    "dependencies_included": false,
+    "frontend_prebuilt": true,
+    "member_count": 376,
+    "passed": true,
+    "path": "build/drastha-sih-v1.0.zip",
+    "sha256": "e76e2cbcfe5eb610a56588639f1122866d5f4f0b6a19d4ad91bc364d9554ed8c",
+    "source_revision": "8ab70b8c730f01fd7dd6f6da211f1c62e3daf0cc"
+  },
+  "gates": {
+    "archive_unchanged_by_rehearsal": true,
+    "dependencies_honestly_excluded": true,
+    "double_replay_idempotent": true,
+    "embedded_inventory_verified": true,
+    "exact_source_revision": true,
+    "extracted_demo_rehearsal_passed": true,
+    "extracted_release_passed": true,
+    "prebuilt_dashboard_included": true,
+    "tracked_candidate_clean": true,
+    "two_builds_byte_identical": true
+  },
+  "limitations": [
+    "The bundle reuses the prepared host's Python runtime and installed API dependencies.",
+    "Prebuilt dashboard assets are included; Node dependencies and a Node runtime are not included.",
+    "The isolated-directory rehearsal is not a different OS, clean VM, live mirror or hardware data diode test.",
+    "The archive contains synthetic demo/evaluation evidence and is not a production deployment package."
+  ],
+  "passed": true,
+  "production_ready": false,
+  "rehearsal_checks": {
+    "attack_story_completed": true,
+    "critical_incident_created": true,
+    "evaluation_passed": true,
+    "preflight_ready": true,
+    "replay_is_idempotent": true
+  },
+  "release_checker": "scripts/check_sprint33_release.py",
+  "schema_version": "drastha-sprint26-bundle-audit-v1",
+  "submission_demo_ready": true
+}

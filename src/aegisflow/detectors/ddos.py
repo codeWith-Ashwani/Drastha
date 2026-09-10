@@ -28,7 +28,9 @@ class DDoSConfig:
     slow_http_connection_threshold: int = 20
     slow_http_minimum_duration_seconds: float = 120.0
     slow_http_maximum_bytes_per_connection: int = 2048
-    slow_http_maximum_packets_per_connection: int = 8
+    # A real slowhttptest Slowloris-mode capture used seven originator and five
+    # responder TCP packets per held socket, including handshake/ACK/teardown.
+    slow_http_maximum_packets_per_connection: int = 16
 
     def __post_init__(self) -> None:
         if self.window_seconds <= 0:
@@ -97,13 +99,23 @@ class DDoSDetector(Detector):
         prevents ordinary completed web downloads from satisfying the rule.
         """
         service = str(event.raw.get("service", "") or "").lower()
-        if event.dst_port not in {80, 8080, 8000, 8888} or service not in {"http", "http-alt"}:
+        # Trust Zeek's passive protocol identification so HTTP on a non-standard
+        # port is not missed; the remaining duration/state/volume gates still
+        # prevent the service label from becoming a standalone trigger.
+        if service not in {"http", "http-alt"}:
             return None
         window = self._slow_http_events.add(event.dst_ip, event.timestamp, event)
         candidates = [
             item.value for item in window
             if item.value.protocol == "tcp"
-            and item.value.connection_state in {"S1", "OTH"}
+            and (
+                item.value.connection_state in {"S1", "OTH"}
+                # Zeek reports SF when a held socket eventually closes cleanly
+                # after the test. Zero responder application bytes preserve the
+                # partial-request meaning without treating completed responses
+                # as slow exhaustion.
+                or (item.value.connection_state == "SF" and item.value.inbound_bytes == 0)
+            )
             and item.value.duration_seconds >= self.config.slow_http_minimum_duration_seconds
             and item.value.outbound_bytes + item.value.inbound_bytes
                 <= self.config.slow_http_maximum_bytes_per_connection

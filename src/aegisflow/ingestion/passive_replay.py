@@ -73,7 +73,7 @@ def _prepare_records(raw_records, source_name, source_kind, input_format):
     accepted_records: list[dict[str, Any]] = []
     alias_usage: Counter[tuple[str, str]] = Counter()
     schema_counts: Counter[str] = Counter()
-    seen_uids: dict[str, str] = {}
+    seen_uids: dict[tuple[str, ...], str] = {}
     latest_timestamp: float | None = None
     for line_number, raw in raw_records:
         quality.records_seen += 1
@@ -166,15 +166,24 @@ def _prepare_records(raw_records, source_name, source_kind, input_format):
 
         if len(raw_records) > 1:
             uid = str(canonical.get("uid", ""))
+            # A Zeek flow UID is intentionally shared by related protocol logs.
+            # DNS also emits one record per transaction on the same UDP flow, so
+            # UID alone is not a record-duplicate key. Preserve strict duplicate
+            # checks for connection/TLS rows while distinguishing DNS trans_id.
+            duplicate_key = (
+                (kind, uid, str(canonical.get("trans_id", "")))
+                if kind == "dns"
+                else (kind, uid)
+            )
             signature = json.dumps(canonical, sort_keys=True, separators=(",", ":"), default=str)
-            if uid in seen_uids:
+            if duplicate_key in seen_uids:
                 quality.duplicate_uid_count += 1
-                if seen_uids[uid] == signature:
+                if seen_uids[duplicate_key] == signature:
                     quality.exact_duplicate_count += 1
                 else:
                     quality.conflicting_duplicate_uid_count += 1
             else:
-                seen_uids[uid] = signature
+                seen_uids[duplicate_key] = signature
 
         record_timestamp = min(record_timestamps)
         if latest_timestamp is not None and record_timestamp < latest_timestamp:

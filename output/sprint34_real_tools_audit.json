@@ -1,0 +1,141 @@
+{
+  "alert_checks": {
+    "benign_health_remains_benign": true,
+    "c2_periodicity_measured": true,
+    "exact_subtypes": true,
+    "incident_count": true,
+    "iodine_txt_tunnel_measured": true,
+    "slow_http_measured": true
+  },
+  "claims": {
+    "actual_iodine_tunnel_with_ping": true,
+    "actual_jittered_health_control": true,
+    "actual_slowhttptest_slowloris_mode": true,
+    "deterministic_sandboxed_c2_timing_emulator": true,
+    "malware_family_c2_emulation": false,
+    "production_accuracy": false
+  },
+  "detections": [
+    {
+      "confidence": 0.707,
+      "evidence": {
+        "estimated_overlapping_connections": 20,
+        "http_destination_port": 18081,
+        "long_lived_partial_http_connections": 20,
+        "maximum_bytes_per_connection": 241,
+        "minimum_connection_duration_seconds": 130.203
+      },
+      "source": "10.34.0.2",
+      "subtype": "slow_http_connection_exhaustion",
+      "threat_class": "Protocol DDoS - Slow HTTP Connection Exhaustion"
+    },
+    {
+      "confidence": 0.88,
+      "evidence": {
+        "completed_connection_ratio": 1.0,
+        "connection_count": 11,
+        "interval_variation": 0.0001,
+        "mean_interval_seconds": 3.001,
+        "mean_transfer_bytes": 22.0,
+        "observation_span_seconds": 30.009,
+        "size_variation": 0.0
+      },
+      "source": "10.34.0.2",
+      "subtype": "periodic_beacon",
+      "threat_class": "Botnet C2 Beaconing"
+    },
+    {
+      "confidence": 0.854,
+      "evidence": {
+        "average_subdomain_entropy": 3.602,
+        "average_subdomain_length": 36.167,
+        "queries_to_base_domain": 6,
+        "txt_query_ratio": 1.0,
+        "unique_subdomain_labels": 6
+      },
+      "source": "10.34.0.2",
+      "subtype": "dns_tunnelling",
+      "threat_class": "DNS Tunnelling"
+    }
+  ],
+  "fixture_sha256": "c9619d5ae1cf5e494de8a07bb819d33a1ec5490d73a26a5fb56ca56ee2206177",
+  "incidents": 1,
+  "limitations": [
+    "The raw PCAP and Zeek working directory remain local and gitignored; the chronological derived Zeek fixture is committed.",
+    "The C2 program is a deterministic timing emulator, not a malware family or external command-and-control framework.",
+    "Slow HTTP evidence proves the traffic shape produced by slowhttptest Slowloris mode, not a particular attacker or server-impact claim.",
+    "The iodine tunnel was confined to a no-default-route private namespace and does not demonstrate encrypted DNS visibility.",
+    "This small controlled lab validates integration and detector evidence, not production accuracy."
+  ],
+  "manifest": "data/manifests/sih26145-real-tools-v1.json",
+  "manifest_sha256": "4c2a990b4575085676aa2452e189a06d7d524697734e661db6c8c3b4adc9db95",
+  "passed": true,
+  "quality": {
+    "conflicting_duplicate_uid_count": 0,
+    "degraded_reasons": [],
+    "duplicate_uid_count": 0,
+    "errors": [],
+    "exact_duplicate_count": 0,
+    "invalid_timestamp_count": 0,
+    "maximum_backward_skew_seconds": 0.0,
+    "out_of_order_records": 0,
+    "quarantined_records": [],
+    "records_accepted": 141,
+    "records_quarantined": 0,
+    "records_received": 141,
+    "records_rejected": 0,
+    "records_seen": 141,
+    "rejection_ratio": 0.0,
+    "source": "sih26145_real_tools_v1.jsonl",
+    "status": "healthy",
+    "stream": "passive:replay",
+    "unsupported_record_count": 0
+  },
+  "quality_checks": {
+    "duplicate_uid_count": true,
+    "out_of_order_records": true,
+    "quality_healthy": true,
+    "records_accepted": true,
+    "records_rejected": true
+  },
+  "raw_local_evidence": {
+    "data/raw/sih26145-real-tools-v1/benign-health/jittered-health-check.pcap": {
+      "available": true,
+      "checksum_matches": true,
+      "committed": false
+    },
+    "data/raw/sih26145-real-tools-v1/benign-health/zeek/conn.log": {
+      "available": true,
+      "checksum_matches": true,
+      "committed": false
+    },
+    "data/raw/sih26145-real-tools-v1/sprint34-isolated-tools.pcap": {
+      "available": true,
+      "checksum_matches": true,
+      "committed": false
+    },
+    "data/raw/sih26145-real-tools-v1/zeek/conn.log": {
+      "available": true,
+      "checksum_matches": true,
+      "committed": false
+    },
+    "data/raw/sih26145-real-tools-v1/zeek/dns.log": {
+      "available": true,
+      "checksum_matches": true,
+      "committed": false
+    }
+  },
+  "schema_version": "drastha-sprint34-real-tools-audit-v1",
+  "source_counts": {
+    "zeek:sprint34:benign-health": 10,
+    "zeek:sprint34:conn": 79,
+    "zeek:sprint34:dns": 52
+  },
+  "telemetry": {
+    "connection_records": 89,
+    "dns_records": 52,
+    "encrypted_session_records": 0,
+    "exported_flow_formats": {},
+    "supplied_labels_ignored": true
+  }
+}

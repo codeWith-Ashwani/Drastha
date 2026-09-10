@@ -4,6 +4,15 @@ Last updated: 10 September 2026
 
 ## Production roadmap update
 
+Sprint 34 is complete. A no-default-route WSL lab captures actual slowhttptest
+Slowloris-mode traffic, an established iodine tunnel with successful ping, eleven
+three-second C2-like callbacks and a jittered health-check control. Zeek 8.0.10
+produces a 141-record chronological replay; the real upload path accepts every
+record with healthy quality, detects exactly Slow HTTP, periodic beaconing and DNS
+tunnelling, and leaves the benign health source alert-free. Raw PCAPs remain local
+and the C2 program is explicitly a timing emulator, not malware-family proof. See
+`docs/SPRINT_34.md`.
+
 Sprint 30 is complete. The frozen Sprint 28 DGA candidate was evaluated on a
 deterministic, overlap-audited 40,000-domain sample from ExtraHop's independent
 MIT-licensed corpus. Direct inference and five bounded upload replays match exactly;

@@ -1,0 +1,240 @@
+{
+  "gates": {
+    "all_lab_quality_healthy": true,
+    "all_manifest_checksums": true,
+    "both_http_replays_pass": true,
+    "context_hardening_9tp_0fp_0fn": true,
+    "identity_separated_corroboration": true,
+    "input_formats_pass": true,
+    "streaming_contract": true,
+    "sustained_50rps_60s": true
+  },
+  "http_replay_gates": {
+    "drastha_accuracy_fp_test_v2.jsonl": {
+      "aggregate_risk_is_bounded_priority": true,
+      "alerts_map_once_to_incidents": true,
+      "all_required_subtypes_exact": true,
+      "encrypted_claim_is_cautious": true,
+      "ground_truth_is_post_inference": true,
+      "incident_conclusions_complete": true,
+      "incident_evidence_api_exact": true,
+      "passive_safety_contract": true,
+      "presentation_classes_exact": true,
+      "record_and_metric_contract": true,
+      "saved_run_snapshot_exact": true,
+      "siem_export_available": true,
+      "spoofing_claim_is_cautious": true,
+      "standard_alert_schema_complete": true
+    },
+    "drastha_mixed_evaluation_v3.jsonl": {
+      "aggregate_risk_is_bounded_priority": true,
+      "alerts_map_once_to_incidents": true,
+      "all_required_subtypes_exact": true,
+      "encrypted_claim_is_cautious": true,
+      "ground_truth_is_post_inference": true,
+      "incident_conclusions_complete": true,
+      "incident_evidence_api_exact": true,
+      "passive_safety_contract": true,
+      "presentation_classes_exact": true,
+      "record_and_metric_contract": true,
+      "saved_run_snapshot_exact": true,
+      "siem_export_available": true,
+      "spoofing_claim_is_cautious": true,
+      "standard_alert_schema_complete": true
+    }
+  },
+  "http_replays": {
+    "drastha_accuracy_fp_test_v2.jsonl": {
+      "metrics": {
+        "f1": 1.0,
+        "findings": 8,
+        "fn": 0,
+        "fp": 0,
+        "fpr": 0.0,
+        "identity_overlap": [],
+        "incidents": 8,
+        "precision": 1.0,
+        "quality": "healthy",
+        "recall": 1.0,
+        "records": 153,
+        "rejected": 0,
+        "tn": 107,
+        "tp": 8
+      },
+      "overall_risk": {
+        "affected_sources": 8,
+        "assessment": "8 incidents across 8 sources and 6 threat categories produce a critical overall investigation priority. Incident b478a16c70d3b64b7a54 is the dominant risk driver.",
+        "distinct_threat_types": 6,
+        "dominant_incident_id": "b478a16c70d3b64b7a54",
+        "dominant_threat_types": [
+          "data_exfiltration"
+        ],
+        "incident_count": 8,
+        "score": 88,
+        "scoring_factors": [
+          {
+            "comparison": "base component",
+            "explanation": "The highest incident score anchors replay-wide priority and is never averaged down.",
+            "name": "dominant_incident_risk",
+            "observed": 58
+          },
+          {
+            "comparison": "capped at 15",
+            "explanation": "Additional incidents increase operational investigation scope.",
+            "name": "incident_breadth_bonus",
+            "observed": 15
+          },
+          {
+            "comparison": "capped at 15",
+            "explanation": "Distinct threat categories indicate broader security exposure.",
+            "name": "threat_diversity_bonus",
+            "observed": 15
+          }
+        ],
+        "severity": "critical",
+        "uncertainty": "This score aggregates investigation priority from passive metadata. It is not an attack probability, and it does not prove that separate incidents are coordinated."
+      },
+      "subtype_classes": {
+        "dga_like_domain": "DGA Domain Activity",
+        "distributed_source_syn_flood": "Volumetric DDoS - Distributed-Source SYN Flood",
+        "dns_tunnelling": "DNS Tunnelling",
+        "encrypted_session_metadata_anomaly": "Encrypted-session metadata anomaly",
+        "multi_host_port_scan": "Reconnaissance - Multi-Host/Port Scan",
+        "outbound_volume_anomaly": "Data Exfiltration - Outbound Volume Anomaly",
+        "periodic_beacon": "Botnet C2 Beaconing",
+        "udp_reflection_amplification": "Volumetric DDoS - UDP Reflection/Amplification"
+      }
+    },
+    "drastha_mixed_evaluation_v3.jsonl": {
+      "metrics": {
+        "f1": 1.0,
+        "findings": 8,
+        "fn": 0,
+        "fp": 0,
+        "fpr": 0.0,
+        "identity_overlap": [
+          "192.168.20.50",
+          "192.168.20.60"
+        ],
+        "incidents": 8,
+        "precision": 1.0,
+        "quality": "healthy",
+        "recall": 1.0,
+        "records": 452,
+        "rejected": 0,
+        "tn": 86,
+        "tp": 8
+      },
+      "overall_risk": {
+        "affected_sources": 8,
+        "assessment": "8 incidents across 8 sources and 6 threat categories produce a critical overall investigation priority. Incident 64a0e8450985df701f75 is the dominant risk driver.",
+        "distinct_threat_types": 6,
+        "dominant_incident_id": "64a0e8450985df701f75",
+        "dominant_threat_types": [
+          "data_exfiltration"
+        ],
+        "incident_count": 8,
+        "score": 88,
+        "scoring_factors": [
+          {
+            "comparison": "base component",
+            "explanation": "The highest incident score anchors replay-wide priority and is never averaged down.",
+            "name": "dominant_incident_risk",
+            "observed": 58
+          },
+          {
+            "comparison": "capped at 15",
+            "explanation": "Additional incidents increase operational investigation scope.",
+            "name": "incident_breadth_bonus",
+            "observed": 15
+          },
+          {
+            "comparison": "capped at 15",
+            "explanation": "Distinct threat categories indicate broader security exposure.",
+            "name": "threat_diversity_bonus",
+            "observed": 15
+          }
+        ],
+        "severity": "critical",
+        "uncertainty": "This score aggregates investigation priority from passive metadata. It is not an attack probability, and it does not prove that separate incidents are coordinated."
+      },
+      "subtype_classes": {
+        "dga_like_domain": "DGA Domain Activity",
+        "distributed_source_syn_flood": "Volumetric DDoS - Distributed-Source SYN Flood",
+        "dns_tunnelling": "DNS Tunnelling",
+        "encrypted_session_metadata_anomaly": "Encrypted-session metadata anomaly",
+        "multi_host_port_scan": "Reconnaissance - Multi-Host/Port Scan",
+        "outbound_volume_anomaly": "Data Exfiltration - Outbound Volume Anomaly",
+        "periodic_beacon": "Botnet C2 Beaconing",
+        "udp_reflection_amplification": "Volumetric DDoS - UDP Reflection/Amplification"
+      }
+    }
+  },
+  "input_compliance_claims": {
+    "actual_local_iperf3_hping3_pcap_to_zeek": true,
+    "collector_decoded_netflow_ipfix_sflow": true,
+    "external_exporter_interoperability": false,
+    "production_accuracy": false,
+    "raw_binary_flow_wire_decoding": false
+  },
+  "integrity": {
+    "config/sih26145_lab_context_policy.json": true,
+    "examples/drastha_accuracy_fp_test_v2.jsonl": true,
+    "examples/drastha_mixed_evaluation_v3.jsonl": true,
+    "output/sprint22_hardening_audit.json": true,
+    "output/sprint24_performance_audit.json": true,
+    "output/sprint31_input_compliance_audit.json": true
+  },
+  "lab_hardening": {
+    "after_context": {
+      "fn": 0,
+      "fp": 0,
+      "tn": 5,
+      "tp": 9
+    },
+    "gates": {
+      "all_benign_controls_remain_benign": true,
+      "all_nine_attack_controls_detected": true,
+      "all_quality_healthy": true,
+      "empty_context_baseline_reproduced": true,
+      "hardened_metrics_reproduced": true,
+      "no_threshold_selection_on_test": true,
+      "only_expected_context_records_suppressed": true,
+      "policy_checksum_pinned": true,
+      "slow_http_specific_subtype": true
+    }
+  },
+  "limitations": [
+    "Distributed source diversity supports but cannot prove source spoofing.",
+    "Encrypted-session metadata anomaly is not definitive malware identification.",
+    "Confidence is a heuristic evidence score and not attack probability.",
+    "Controlled lab metrics do not establish production accuracy.",
+    "Ground truth is evaluated only after detector inference."
+  ],
+  "manifest": "data/manifests/sih26145-final-validation-v1.json",
+  "manifest_sha256": "a83238025f52823980aabf7b26cfdf36a686f64b599b9e462f540a5916870cc6",
+  "passed": true,
+  "performance": {
+    "duration_seconds": 60,
+    "max_backlog_records": 8,
+    "peak_disk_mib": 3.076279640197754,
+    "peak_rss_mib": 79.84765625,
+    "producer_lag_max_ms": 99.77600000001985,
+    "record_mix": {
+      "connection": 2400,
+      "dns": 600,
+      "encrypted": 300
+    },
+    "records": 3000,
+    "records_per_second": 50,
+    "visibility_p95_ms": 111.25070000025516
+  },
+  "schema_version": "drastha-sprint32-sih-validation-v1",
+  "streaming_gates": {
+    "alerts_emitted_before_completion": true,
+    "bounded_near_real_time": true,
+    "http_success": true,
+    "incremental_records_exact": true,
+    "passive_no_return_path": true
+  }
+}

@@ -9,6 +9,8 @@ from aegisflow.models import Alert
 
 EXPECTED_SUBTYPES = {
     "volumetric_ddos_syn_flood": {"syn_flood", "distributed_source_syn_flood"},
+    "volumetric_ddos_distributed_source_syn_flood": {"distributed_source_syn_flood"},
+    "volumetric_ddos_suspected_spoofed_source_flood": {"distributed_source_syn_flood"},
     "udp_reflection_amplification": {"udp_reflection_amplification"},
     "reconnaissance_port_scan": {
         "vertical_port_scan", "horizontal_host_scan", "multi_host_port_scan"

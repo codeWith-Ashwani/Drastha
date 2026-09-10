@@ -120,6 +120,14 @@ def analyse_prepared(prepared, repository, *, filename="passive-replay", upload_
             f"Profile: {profile.name}. Detector confidence is a heuristic evidence score, "
             "not a calibrated probability of attack."
         ),
+        "safety": {
+            "ingest_mode": "read_only",
+            "passive_observation_only": True,
+            "return_path_required": False,
+            "source_or_destination_contacted": False,
+            "payload_decryption_performed": False,
+            "mitigation_command_issued": False,
+        },
     }
     report["run_id"] = uuid4().hex
     if hasattr(repository, "save_analysis_run"):

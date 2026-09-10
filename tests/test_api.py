@@ -153,6 +153,23 @@ class AnalystAPITests(unittest.TestCase):
             if item["alert"]["threat_type"] == "encrypted_session_threat"
         }
         self.assertEqual(encrypted_classes, {"Encrypted-session metadata anomaly"})
+        expected_classes = {
+            "periodic_beacon": "Botnet C2 Beaconing",
+            "dga_like_domain": "DGA Domain Activity",
+            "dns_tunnelling": "DNS Tunnelling",
+            "outbound_volume_anomaly": "Data Exfiltration - Outbound Volume Anomaly",
+        }
+        observed_classes = {
+            item["alert"]["subtype"]: item["alert"]["threat_class"] for item in alerts
+        }
+        for subtype, threat_class in expected_classes.items():
+            self.assertEqual(threat_class, observed_classes[subtype])
+        recon_classes = {
+            item["alert"]["threat_class"] for item in alerts
+            if item["alert"]["threat_type"] == "reconnaissance"
+        }
+        self.assertTrue(recon_classes)
+        self.assertTrue(all(name.startswith("Reconnaissance - ") for name in recon_classes))
         for item in alerts:
             self.assertIn("confidence", item["alert"])
             self.assertTrue(item["alert"]["evidence"])

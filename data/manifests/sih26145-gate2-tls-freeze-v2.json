@@ -1,0 +1,10 @@
+{
+  "adapter_change": "transport=tls on native Zeek ssl.log rows only",
+  "fixture": "examples/sih26145_gate2_tls_v2.jsonl",
+  "fixture_sha256": "f60a3679346bf38c60b9ab1179be6ff00a2119ac168bc188da2160be11a81fde",
+  "labels_or_anomaly_scores_added": false,
+  "records": 232,
+  "schema_version": "drastha-sih-gate2-tls-adapter-v2",
+  "source_freeze": "data/manifests/sih26145-gate2-tls-freeze-v1.json",
+  "source_freeze_sha256": "4332e32697cc145a13ba44c446e1121306e73abeae4a7815dbad4b6bc66f73cc"
+}

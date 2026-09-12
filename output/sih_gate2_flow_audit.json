@@ -1,0 +1,223 @@
+{
+  "capture_id": "sih26145-gate2-flow-v3",
+  "labels_sha256": "62426b1e2a0e7e8b5065ef1b43d6b7391a7de7755dae8b66c6980f0e87a41688",
+  "limitations": [
+    "Controlled private lab traffic, not independent production-network accuracy.",
+    "A valid lab UDP amplification-shaped response is not proof of spoofing or third-party reflection.",
+    "iperf3 bulk asymmetry demonstrates a volume behaviour, not malicious data theft intent.",
+    "The hping3 UDP burst contained crafted packets; it is evaluated as a flood, not a valid application exchange."
+  ],
+  "passed": true,
+  "raw_captures_committed": false,
+  "reports": [
+    {
+      "accepted": 2,
+      "detected": [],
+      "duplicate_uids": 0,
+      "evidence": {},
+      "expected": [],
+      "findings": 0,
+      "fixture_sha256": "32b6aad06de60e33f5d5a47d9db0c6137ddd47bb6bdba62550d6c36e71349e42",
+      "fn": [],
+      "fp": [],
+      "incidents": 0,
+      "interpretation": "modest authorised lab load",
+      "out_of_order": 0,
+      "quality": "healthy",
+      "raw_pcap_sha256": "5e1c4a714086f7985066412ffd144424c57b4b4b9fe459548a5fd6a954efda25",
+      "records": 2,
+      "rejected": 0,
+      "scenario": "benign-iperf",
+      "source": "iperf3 2 Mbps",
+      "tn": 1,
+      "tp": []
+    },
+    {
+      "accepted": 140,
+      "detected": [
+        "syn_flood"
+      ],
+      "duplicate_uids": 0,
+      "evidence": {
+        "syn_flood": {
+          "connection_attempt_rate_per_second": 242.529,
+          "incomplete_connection_ratio": 1.0,
+          "normalized_source_ip_entropy": 0.0,
+          "target_port_concentration": 1.0,
+          "tcp_connection_attempts": 5,
+          "unique_source_ips": 1
+        }
+      },
+      "expected": [
+        "syn_flood"
+      ],
+      "findings": 1,
+      "fixture_sha256": "35f7a3d78571efb666fef4269a2903a14929eaacbaebe1186f7752776dc33908",
+      "fn": [],
+      "fp": [],
+      "incidents": 1,
+      "interpretation": "incomplete TCP concentration, not proof of service outage",
+      "out_of_order": 0,
+      "quality": "healthy",
+      "raw_pcap_sha256": "da9cf94e11f53aaf24b5b9729605503b27ae7bce6e1280a14f266e20d4a964c8",
+      "records": 140,
+      "rejected": 0,
+      "scenario": "syn-flood",
+      "source": "hping3 SYN burst",
+      "tn": 0,
+      "tp": [
+        "syn_flood"
+      ]
+    },
+    {
+      "accepted": 8,
+      "detected": [
+        "vertical_port_scan"
+      ],
+      "duplicate_uids": 0,
+      "evidence": {
+        "vertical_port_scan": {
+          "connection_attempts": 8,
+          "observation_window_seconds": 0.5,
+          "related_findings_merged": 1,
+          "unique_destination_ports": 8
+        }
+      },
+      "expected": [
+        "vertical_port_scan"
+      ],
+      "findings": 1,
+      "fixture_sha256": "86ebd91c7ec0b2f170ef6fc92e7abe862772861be98d9017a49c8cb9cb0c11d5",
+      "fn": [],
+      "fp": [],
+      "incidents": 1,
+      "interpretation": "fan-out behaviour, not proof of hostile intent",
+      "out_of_order": 0,
+      "quality": "healthy",
+      "raw_pcap_sha256": "91c78c59498cb7e36415f1f3b9d0cb4fab5e8e0dc3ea781b161dc7e20c0dabec",
+      "records": 8,
+      "rejected": 0,
+      "scenario": "port-scan",
+      "source": "hping3 eight distinct destination ports",
+      "tn": 0,
+      "tp": [
+        "vertical_port_scan"
+      ]
+    },
+    {
+      "accepted": 600,
+      "detected": [
+        "udp_flood"
+      ],
+      "duplicate_uids": 0,
+      "evidence": {
+        "udp_flood": {
+          "udp_outbound_bytes": 0,
+          "udp_packets_to_target": 500,
+          "unique_source_ips": 1
+        }
+      },
+      "expected": [
+        "udp_flood"
+      ],
+      "findings": 1,
+      "fixture_sha256": "15ab1a2f2ba98b887a0eda06e7b1b23c34b62c4dad7c6fa481a1db645311bfd5",
+      "fn": [],
+      "fp": [],
+      "incidents": 1,
+      "interpretation": "UDP packet flood; hping3-crafted checksums are not a reflection test",
+      "out_of_order": 0,
+      "quality": "healthy",
+      "raw_pcap_sha256": "5ea9666b2acabd3512aaeb57bf4f62ec02c44c59902357b649f512b61b227fda",
+      "records": 600,
+      "rejected": 0,
+      "scenario": "udp-flood",
+      "source": "hping3 UDP burst",
+      "tn": 0,
+      "tp": [
+        "udp_flood"
+      ]
+    },
+    {
+      "accepted": 16,
+      "detected": [
+        "udp_reflection_amplification"
+      ],
+      "duplicate_uids": 0,
+      "evidence": {
+        "udp_reflection_amplification": {
+          "observed_udp_services": "dns",
+          "responder_host_count": 1,
+          "response_recipient": "legacy-target-group",
+          "response_to_request_byte_ratio": 2048.0,
+          "udp_flows_to_target": 5,
+          "udp_response_bytes": 10240,
+          "unique_source_ips": 1
+        }
+      },
+      "expected": [
+        "udp_reflection_amplification"
+      ],
+      "findings": 1,
+      "fixture_sha256": "fba3d85a0046d288f507ee6bc6ecc4e830e4a451d95c82a76530df6cbe82eef2",
+      "fn": [],
+      "fp": [],
+      "incidents": 1,
+      "interpretation": "amplification-shaped replies, not spoofing or a third-party reflector",
+      "out_of_order": 0,
+      "quality": "healthy",
+      "raw_pcap_sha256": "cf851124476ab6b71833ab2fce4309b793bb87e3c8007288589f7a2c96c76cdf",
+      "records": 16,
+      "rejected": 0,
+      "scenario": "udp-amplification-shape",
+      "source": "valid UDP lab probe and fixed private responder",
+      "tn": 0,
+      "tp": [
+        "udp_reflection_amplification"
+      ]
+    },
+    {
+      "accepted": 2,
+      "detected": [
+        "outbound_volume_anomaly"
+      ],
+      "duplicate_uids": 0,
+      "evidence": {
+        "outbound_volume_anomaly": {
+          "average_outbound_bytes_per_flow": 50069541.0,
+          "destination_age_seconds": 0.001,
+          "outbound_bytes": 50069541,
+          "outbound_to_inbound_ratio": 50069541.0
+        }
+      },
+      "expected": [
+        "outbound_volume_anomaly"
+      ],
+      "findings": 1,
+      "fixture_sha256": "e4531ba005482d63c64a879993e3c119028808880dc6d8ef82211ca05386c345",
+      "fn": [],
+      "fp": [],
+      "incidents": 1,
+      "interpretation": "simulated unapproved bulk-transfer behaviour, not proof of stolen data",
+      "out_of_order": 0,
+      "quality": "healthy",
+      "raw_pcap_sha256": "1c9d052a7705bbdf77acb0eef42d268616f5dba0495d62a0714a571764ce6996",
+      "records": 2,
+      "rejected": 0,
+      "scenario": "bulk-asymmetry",
+      "source": "iperf3 200 Mbps lab transfer",
+      "tn": 0,
+      "tp": [
+        "outbound_volume_anomaly"
+      ]
+    }
+  ],
+  "schema_version": "drastha-sih-gate2-flow-audit-v1",
+  "totals": {
+    "fn": 0,
+    "fp": 0,
+    "records": 768,
+    "tn": 1,
+    "tp": 5
+  }
+}

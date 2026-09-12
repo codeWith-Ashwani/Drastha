@@ -1,0 +1,126 @@
+{
+  "capture_id": "sih26145-gate2-metadata-v1",
+  "iodine_tunnel_and_ping_success": true,
+  "labels_sha256": "26d801dd8ceb2e7ce2324392df79aa36924b755a1b94a3e7cba6f04e1bd8baaa",
+  "limitations": [
+    "The C2 emulator proves periodic callbacks, not a malware framework or attacker intent.",
+    "slowhttptest Slowloris mode proves held connection shape, not server impact.",
+    "iodine proves a classic visible DNS tunnel, not encrypted DNS visibility."
+  ],
+  "passed": true,
+  "raw_captures_committed": false,
+  "raw_pcap_sha256": "395fe02a06a1e695d1a60b16997019914dc14fc56139d4145b7fc29eadf7db0d",
+  "reports": [
+    {
+      "accepted": 71,
+      "detected": [
+        "slow_http_connection_exhaustion"
+      ],
+      "duplicate_uids": 0,
+      "evidence": {
+        "slow_http_connection_exhaustion": {
+          "estimated_overlapping_connections": 20,
+          "http_destination_port": 18081,
+          "long_lived_partial_http_connections": 20,
+          "maximum_bytes_per_connection": 192,
+          "minimum_connection_duration_seconds": 132.255
+        }
+      },
+      "expected": [
+        "slow_http_connection_exhaustion"
+      ],
+      "findings": 1,
+      "fixture_sha256": "eeac7ed6614daf97de7ac8632c98ca23d5e679ad8e4bb274cb01eeb9fcb3ced7",
+      "fn": [],
+      "fp": [],
+      "incidents": 1,
+      "out_of_order": 0,
+      "quality": "healthy",
+      "records": 71,
+      "rejected": 0,
+      "scenario": "slow-http",
+      "selector": "connection destination port 18081",
+      "source": "slowhttptest 1.9.0 Slowloris/slow-header mode, 26 connections",
+      "tp": [
+        "slow_http_connection_exhaustion"
+      ]
+    },
+    {
+      "accepted": 13,
+      "detected": [
+        "periodic_beacon"
+      ],
+      "duplicate_uids": 0,
+      "evidence": {
+        "periodic_beacon": {
+          "completed_connection_ratio": 1.0,
+          "connection_count": 13,
+          "interval_variation": 0.0033,
+          "mean_interval_seconds": 2.505,
+          "mean_transfer_bytes": 22.0,
+          "observation_span_seconds": 30.063,
+          "size_variation": 0.0
+        }
+      },
+      "expected": [
+        "periodic_beacon"
+      ],
+      "findings": 1,
+      "fixture_sha256": "22f5658ca4d915985e8b2c93152b02b68c5747c8116de9f2fff5e7e7189c56b5",
+      "fn": [],
+      "fp": [],
+      "incidents": 1,
+      "out_of_order": 0,
+      "quality": "healthy",
+      "records": 13,
+      "rejected": 0,
+      "scenario": "c2-timing",
+      "selector": "connection destination port 18443",
+      "source": "isolated deterministic socket emulator, 13 callbacks at 2.5 seconds",
+      "tp": [
+        "periodic_beacon"
+      ]
+    },
+    {
+      "accepted": 52,
+      "detected": [
+        "dns_tunnelling"
+      ],
+      "duplicate_uids": 0,
+      "evidence": {
+        "dns_tunnelling": {
+          "average_subdomain_entropy": 3.658,
+          "average_subdomain_length": 36.167,
+          "queries_to_base_domain": 6,
+          "txt_query_ratio": 1.0,
+          "unique_subdomain_labels": 6
+        }
+      },
+      "expected": [
+        "dns_tunnelling"
+      ],
+      "findings": 1,
+      "fixture_sha256": "53292dd1b2ec433b3db22e7f5114be31f214281d7e2c7e5e3a93f42a47d45b42",
+      "fn": [],
+      "fp": [],
+      "incidents": 1,
+      "out_of_order": 0,
+      "quality": "healthy",
+      "records": 52,
+      "rejected": 0,
+      "scenario": "dns-tunnel",
+      "selector": "Zeek DNS transaction for g2.test",
+      "source": "iodine 0.7.0 established TXT tunnel with ping",
+      "tp": [
+        "dns_tunnelling"
+      ]
+    }
+  ],
+  "schema_version": "drastha-sih-gate2-metadata-audit-v1",
+  "totals": {
+    "fn": 0,
+    "fp": 0,
+    "records": 136,
+    "tp": 3
+  }
+}

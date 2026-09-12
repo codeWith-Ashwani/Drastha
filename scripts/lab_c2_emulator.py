@@ -42,11 +42,13 @@ def beacon(count: int, interval: float) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Isolated deterministic C2 timing emulator")
     parser.add_argument("mode", choices=("server", "client"))
+    parser.add_argument("--profile", choices=("sprint34", "gate2"), default="sprint34")
     parser.add_argument("--count", type=int, default=11)
     parser.add_argument("--interval", type=float, default=3.0)
     args = parser.parse_args()
-    if args.count != 11 or args.interval != 3.0:
-        raise SystemExit("Sprint 34 evidence requires exactly 11 beacons at a 3-second interval")
+    expected = (11, 3.0) if args.profile == "sprint34" else (13, 2.5)
+    if (args.count, args.interval) != expected:
+        raise SystemExit(f"{args.profile} lab profile requires {expected[0]} beacons at a {expected[1]}-second interval")
     serve(args.count) if args.mode == "server" else beacon(args.count, args.interval)
     return 0
 

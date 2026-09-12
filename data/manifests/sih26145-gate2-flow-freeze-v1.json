@@ -1,0 +1,65 @@
+{
+  "artifacts": [
+    {
+      "fixture": "examples/sih26145_gate2_flow_v3/benign-iperf.jsonl",
+      "fixture_sha256": "32b6aad06de60e33f5d5a47d9db0c6137ddd47bb6bdba62550d6c36e71349e42",
+      "raw_conn_sha256": "cf9ef57e0b437668451ce938dd54995cdde62cd81ac9d15caaec069b4511982f",
+      "raw_pcap": "data/raw/sih26145-gate2-flow-v3/benign-iperf/traffic.pcap",
+      "raw_pcap_sha256": "5e1c4a714086f7985066412ffd144424c57b4b4b9fe459548a5fd6a954efda25",
+      "records": 2,
+      "scenario": "benign-iperf"
+    },
+    {
+      "fixture": "examples/sih26145_gate2_flow_v3/syn-flood.jsonl",
+      "fixture_sha256": "35f7a3d78571efb666fef4269a2903a14929eaacbaebe1186f7752776dc33908",
+      "raw_conn_sha256": "5c10ab1398f42144a5ab97a141e99d0b4c143b07b91ecef827392d14333c5d11",
+      "raw_pcap": "data/raw/sih26145-gate2-flow-v3/syn-flood/traffic.pcap",
+      "raw_pcap_sha256": "da9cf94e11f53aaf24b5b9729605503b27ae7bce6e1280a14f266e20d4a964c8",
+      "records": 140,
+      "scenario": "syn-flood"
+    },
+    {
+      "fixture": "examples/sih26145_gate2_flow_v3/port-scan.jsonl",
+      "fixture_sha256": "86ebd91c7ec0b2f170ef6fc92e7abe862772861be98d9017a49c8cb9cb0c11d5",
+      "raw_conn_sha256": "11f26ce0dc0fcf07a77960ed2d4cf947841ce54e10d022d1ef8f2dcbc91e4c9f",
+      "raw_pcap": "data/raw/sih26145-gate2-flow-v3/port-scan/traffic.pcap",
+      "raw_pcap_sha256": "91c78c59498cb7e36415f1f3b9d0cb4fab5e8e0dc3ea781b161dc7e20c0dabec",
+      "records": 8,
+      "scenario": "port-scan"
+    },
+    {
+      "fixture": "examples/sih26145_gate2_flow_v3/udp-flood.jsonl",
+      "fixture_sha256": "15ab1a2f2ba98b887a0eda06e7b1b23c34b62c4dad7c6fa481a1db645311bfd5",
+      "raw_conn_sha256": "6c3515bf85ab84d4c46fdba36e51489e56012e8b5347ac368ec2edfb94a34153",
+      "raw_pcap": "data/raw/sih26145-gate2-flow-v3/udp-flood/traffic.pcap",
+      "raw_pcap_sha256": "5ea9666b2acabd3512aaeb57bf4f62ec02c44c59902357b649f512b61b227fda",
+      "records": 600,
+      "scenario": "udp-flood"
+    },
+    {
+      "fixture": "examples/sih26145_gate2_flow_v3/udp-amplification-shape.jsonl",
+      "fixture_sha256": "fba3d85a0046d288f507ee6bc6ecc4e830e4a451d95c82a76530df6cbe82eef2",
+      "raw_conn_sha256": "f821626988161dcbeff3f56725d986f7b77e7a60ffb6ce1d716b21e8c0f09bc8",
+      "raw_pcap": "data/raw/sih26145-gate2-flow-v3/udp-amplification-shape/traffic.pcap",
+      "raw_pcap_sha256": "cf851124476ab6b71833ab2fce4309b793bb87e3c8007288589f7a2c96c76cdf",
+      "records": 16,
+      "scenario": "udp-amplification-shape"
+    },
+    {
+      "fixture": "examples/sih26145_gate2_flow_v3/bulk-asymmetry.jsonl",
+      "fixture_sha256": "e4531ba005482d63c64a879993e3c119028808880dc6d8ef82211ca05386c345",
+      "raw_conn_sha256": "61785fa03a2d7e99166897182aaa1882c2a98d214223245f7fe6d61f1edea7dc",
+      "raw_pcap": "data/raw/sih26145-gate2-flow-v3/bulk-asymmetry/traffic.pcap",
+      "raw_pcap_sha256": "1c9d052a7705bbdf77acb0eef42d268616f5dba0495d62a0714a571764ce6996",
+      "records": 2,
+      "scenario": "bulk-asymmetry"
+    }
+  ],
+  "capture_id": "sih26145-gate2-flow-v3",
+  "generator": "scripts/generate_sih_gate2_flow_capture.sh",
+  "inference_run_at_freeze": false,
+  "labels": "data/manifests/sih26145-gate2-flow-labels-v2.json",
+  "labels_sha256": "62426b1e2a0e7e8b5065ef1b43d6b7391a7de7755dae8b66c6980f0e87a41688",
+  "raw_captures_committed": false,
+  "schema_version": "drastha-sih-gate2-freeze-v1"
+}

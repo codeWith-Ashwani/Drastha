@@ -1,0 +1,12 @@
+{
+  "schema_version": "drastha-sih-gate2-tls-labels-v1",
+  "frozen_before_inference": true,
+  "capture_generator": "scripts/generate_sih_gate2_tls_capture.sh",
+  "capture_id": "sih26145-gate2-tls-v1",
+  "scenario": "110 completed TLS 1.2 baseline sessions followed by 6 changed TLS 1.3 sessions on the same isolated service",
+  "labels": {"baseline": "benign", "changed": "encrypted-session anomaly lab control"},
+  "source_of_truth": "raw client.csv source ports, capture PCAP and Zeek conn/ssl logs",
+  "claimed_malware_family": false,
+  "payload_decryption_by_analyser": false,
+  "expected_detection": "Report measured coverage and actual result; do not inject anomaly scores or require an alert by construction."
+}

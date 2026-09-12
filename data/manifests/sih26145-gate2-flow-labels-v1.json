@@ -1,0 +1,13 @@
+{
+  "schema_version": "drastha-sih-gate2-scenario-labels-v1",
+  "frozen_before_inference": true,
+  "capture_generator": "scripts/generate_sih_gate2_flow_capture.sh",
+  "network": "10.36.0.2/30 -> 10.36.0.1/30, isolated WSL namespace without default route",
+  "scenarios": [
+    {"name": "benign-iperf", "source": "iperf3 2 Mbps", "expected": [], "interpretation": "modest authorised lab load"},
+    {"name": "syn-flood", "source": "hping3 SYN burst", "expected": ["syn_flood"], "interpretation": "incomplete TCP concentration, not proof of service outage"},
+    {"name": "port-scan", "source": "hping3 eight distinct destination ports", "expected": ["vertical_port_scan"], "interpretation": "fan-out behaviour, not proof of hostile intent"},
+    {"name": "udp-amplification-shape", "source": "hping3 UDP requests plus fixed private responder", "expected": ["udp_reflection_amplification"], "interpretation": "amplification-shaped replies, not spoofing or a third-party reflector"},
+    {"name": "bulk-asymmetry", "source": "iperf3 200 Mbps lab transfer", "expected": ["outbound_volume_anomaly"], "interpretation": "simulated unapproved bulk-transfer behaviour, not proof of stolen data"}
+  ]
+}

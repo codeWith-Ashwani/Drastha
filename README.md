@@ -16,6 +16,14 @@ generalization, continuous-service scale and operational deployment remain open.
 The finite SIH-only delivery gates and stop condition are in
 [SIH closure plan](docs/SIH_CLOSURE_PLAN.md).
 
+[Sprint 36 fresh-source validation](docs/SPRINT_36.md) now checks separate,
+checksum-frozen `iperf3`, `hping3`, Slowloris-mode, iodine, C2-emulator,
+published-DGA and real-TLS sessions. Flow and metadata lab behaviours passed;
+the deployed DGA model missed 40/40 published Vawtrak domains, and six changed
+TLS sessions did not have the independent packet-size/timing anomaly needed for
+an alert. These failures are retained as SIH acceptance evidence, not folded
+into the controlled 452-record score.
+
 The problem statement's dataset field names **traffic generators and public DGA
 samples**, not one downloadable benchmark that trains all six detectors. The
 visible field ends mid-sentence after “Feature extraction: Extract flow”; we do

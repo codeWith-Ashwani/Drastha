@@ -1,0 +1,32 @@
+{
+  "artifacts": [
+    {
+      "fixture": "examples/sih26145_gate2_metadata_v1/slow-http.jsonl",
+      "fixture_sha256": "eeac7ed6614daf97de7ac8632c98ca23d5e679ad8e4bb274cb01eeb9fcb3ced7",
+      "records": 71,
+      "scenario": "slow-http"
+    },
+    {
+      "fixture": "examples/sih26145_gate2_metadata_v1/c2-timing.jsonl",
+      "fixture_sha256": "22f5658ca4d915985e8b2c93152b02b68c5747c8116de9f2fff5e7e7189c56b5",
+      "records": 13,
+      "scenario": "c2-timing"
+    },
+    {
+      "fixture": "examples/sih26145_gate2_metadata_v1/dns-tunnel.jsonl",
+      "fixture_sha256": "53292dd1b2ec433b3db22e7f5114be31f214281d7e2c7e5e3a93f42a47d45b42",
+      "records": 52,
+      "scenario": "dns-tunnel"
+    }
+  ],
+  "capture_id": "sih26145-gate2-metadata-v1",
+  "inference_run_at_freeze": false,
+  "labels": "data/manifests/sih26145-gate2-metadata-labels-v1.json",
+  "labels_sha256": "26d801dd8ceb2e7ce2324392df79aa36924b755a1b94a3e7cba6f04e1bd8baaa",
+  "raw_captures_committed": false,
+  "raw_conn_sha256": "20b2a451a88530576484f3f6c2ad6aec87ffa5fdcfb5d27385af40314e0c8b77",
+  "raw_dns_sha256": "58e92ffdb631a3847645ec3d041eef6bab33c04b491f3b98cabaf33355375b27",
+  "raw_pcap": "data/raw/sih26145-gate2-metadata-v1/traffic.pcap",
+  "raw_pcap_sha256": "395fe02a06a1e695d1a60b16997019914dc14fc56139d4145b7fc29eadf7db0d",
+  "schema_version": "drastha-sih-gate2-metadata-freeze-v1"
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": "drastha-sih-gate2-dga-labels-v1",
+  "frozen_before_inference": true,
+  "source": "UMUDGA public published-algorithm domains (Zago et al., 2020)",
+  "source_malicious": "data/raw/UMUDGA-v3/vawtrak_v3.txt",
+  "source_benign": "data/raw/UMUDGA-v3/legit-test.txt",
+  "selection": "40 unique domains per label with smallest SHA-256(seed|domain)",
+  "seed": "drastha-sih-gate2-public-dga-v1",
+  "labels_used_for_inference": false,
+  "caveat": "UMUDGA families were inspected in earlier research; this is fresh fixture selection for the unchanged deployed demo model, not a never-seen family holdout or production accuracy."
+}

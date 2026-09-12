@@ -1,0 +1,11 @@
+{
+  "schema_version": "drastha-sih-gate2-metadata-labels-v1",
+  "frozen_before_inference": true,
+  "capture_generator": "scripts/generate_sih_gate2_metadata_capture.sh",
+  "capture_id": "sih26145-gate2-metadata-v1",
+  "scenarios": [
+    {"name": "slow-http", "source": "slowhttptest 1.9.0 Slowloris/slow-header mode, 26 connections", "selector": "connection destination port 18081", "expected": ["slow_http_connection_exhaustion"]},
+    {"name": "c2-timing", "source": "isolated deterministic socket emulator, 13 callbacks at 2.5 seconds", "selector": "connection destination port 18443", "expected": ["periodic_beacon"]},
+    {"name": "dns-tunnel", "source": "iodine 0.7.0 established TXT tunnel with ping", "selector": "Zeek DNS transaction for g2.test", "expected": ["dns_tunnelling"]}
+  ]
+}

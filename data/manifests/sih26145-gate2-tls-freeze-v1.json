@@ -1,0 +1,45 @@
+{
+  "artifacts": [
+    {
+      "committed": true,
+      "path": "data/manifests/sih26145-gate2-tls-labels-v1.json",
+      "sha256": "478ee5854fd0466c67c8b7fe5e88cbf6e63dccc143cfc35abc5993fd3f7ec48f"
+    },
+    {
+      "committed": true,
+      "path": "data/manifests/sih26145-gate2-tls-uid-labels-v1.json",
+      "sha256": "baac7065156dd69b83df3584ebddd6658140f3f50d5383215b34767ba8f64a6e"
+    },
+    {
+      "committed": true,
+      "path": "examples/sih26145_gate2_tls_v1.jsonl",
+      "sha256": "ac810937834bca91f0540a1a8288a1b34e254d0f00e611f833d11b18fb9d17fd"
+    },
+    {
+      "committed": false,
+      "path": "data/raw/sih26145-gate2-tls-v1/traffic.pcap",
+      "sha256": "f860a41494c889cee4ad11381923ba25466dad4143bce22c4ad0df32446410ff"
+    },
+    {
+      "committed": false,
+      "path": "data/raw/sih26145-gate2-tls-v1/client.csv",
+      "sha256": "611d67d8d4a7c12975b2b303606704ce7cb39a7a4fe2180150578b8489192995"
+    },
+    {
+      "committed": false,
+      "path": "data/raw/sih26145-gate2-tls-v1/zeek/conn.log",
+      "sha256": "9e232616faf444ab5bd8057f290a85c6e4037018c0a21a2d39b38488a2bba65e"
+    },
+    {
+      "committed": false,
+      "path": "data/raw/sih26145-gate2-tls-v1/zeek/ssl.log",
+      "sha256": "e5938bb4fa066020c5e9851e475591f630a6d9327de6c358024a8b1bd617d049"
+    }
+  ],
+  "capture_id": "sih26145-gate2-tls-v1",
+  "inference_run_at_freeze": false,
+  "payload_decrypted_by_analyser": false,
+  "records": 232,
+  "schema_version": "drastha-sih-gate2-tls-freeze-v1",
+  "sessions": 116
+}

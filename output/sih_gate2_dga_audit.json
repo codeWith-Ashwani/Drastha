@@ -1,0 +1,53 @@
+{
+  "fpr": 0.05,
+  "labels_sha256": "403e40cc966e3f7cc2c64940db3e48ce025c26ef1665207633b858d5923b315a",
+  "limitations": [
+    "The deployed small n-gram model was trained on the separate bundled demo CSV, not UMUDGA.",
+    "UMUDGA families were inspected in prior research, so this is not a virgin family holdout.",
+    "Domain-level flow-ID attribution can undercount a campaign-level lexical alert; raw DGA alert count is also reported.",
+    "No domain was resolved or contacted; publisher strings were converted to passive DNS-like records."
+  ],
+  "provenance_valid": true,
+  "quality_healthy": true,
+  "recall": 0.0,
+  "reports": [
+    {
+      "accepted": 40,
+      "detected_domain_uids": [],
+      "dga_alerts": 0,
+      "fn": 40,
+      "fp": 0,
+      "label": "dga",
+      "quality": "healthy",
+      "records": 40,
+      "rejected": 0,
+      "tn": 0,
+      "tp": 0,
+      "unexpected_alert_subtypes": []
+    },
+    {
+      "accepted": 40,
+      "detected_domain_uids": [
+        "G2-benign-003",
+        "G2-benign-017"
+      ],
+      "dga_alerts": 1,
+      "fn": 0,
+      "fp": 2,
+      "label": "benign",
+      "quality": "healthy",
+      "records": 40,
+      "rejected": 0,
+      "tn": 38,
+      "tp": 0,
+      "unexpected_alert_subtypes": []
+    }
+  ],
+  "schema_version": "drastha-sih-gate2-dga-audit-v1",
+  "totals": {
+    "fn": 40,
+    "fp": 2,
+    "tn": 38,
+    "tp": 0
+  }
+}

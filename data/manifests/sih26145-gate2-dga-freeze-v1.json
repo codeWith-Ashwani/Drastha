@@ -1,0 +1,25 @@
+{
+  "artifacts": [
+    {
+      "fixture": "examples/sih26145_gate2_dga_v1/dga.jsonl",
+      "fixture_sha256": "5bb03e1108ea667df1950c44ce61c7841b2b3aa7ccb1ff8a919f0d615af348da",
+      "label": "dga",
+      "records": 40,
+      "source": "data/raw/UMUDGA-v3/vawtrak_v3.txt",
+      "source_sha256": "db47dcfa39ce46fc24a1e2df9cdadddd0a65a6c13f7fcd92e9295a30b04455c6"
+    },
+    {
+      "fixture": "examples/sih26145_gate2_dga_v1/benign.jsonl",
+      "fixture_sha256": "9fddc9701b61fa421efe50456372218d8766e5ec1bbd47dd9f8152d2aab8af0d",
+      "label": "benign",
+      "records": 40,
+      "source": "data/raw/UMUDGA-v3/legit-test.txt",
+      "source_sha256": "774b20769d6fdc85fd1911ba01ba04fae80485ee36b025d025259cc188690f0e"
+    }
+  ],
+  "inference_run_at_freeze": false,
+  "labels": "data/manifests/sih26145-gate2-dga-labels-v1.json",
+  "labels_sha256": "403e40cc966e3f7cc2c64940db3e48ce025c26ef1665207633b858d5923b315a",
+  "publisher_raw_committed": false,
+  "schema_version": "drastha-sih-gate2-dga-freeze-v1"
+}

@@ -83,3 +83,19 @@ test("dashboard presents one bounded replay-wide risk without calling it probabi
   assert.match(component, /overall investigation priority/);
   assert.match(base, /\.overall-risk/);
 });
+
+test("SOC overview prioritises saved incidents without claiming a live sensor", () => {
+  const app = read("App.tsx");
+  assert.match(app, /Security operations overview/);
+  assert.match(app, /priorityIncidents = useMemo/);
+  assert.match(app, /Last run quality/);
+  assert.match(app, /No production mirror is connected/);
+  assert.match(app, /Analysis service ready/);
+  assert.doesNotMatch(app, /Sensor online/);
+  for (const destination of ["soc-overview", "replay-workbench", "investigations"]) {
+    assert.match(app, new RegExp(`id="${destination}"`));
+  }
+  assert.match(app, /<ReplayEvidence/);
+  assert.match(app, /<IncidentConclusion/);
+  assert.match(base, /\.soc-priority-list/);
+});

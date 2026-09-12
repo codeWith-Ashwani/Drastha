@@ -11,6 +11,49 @@ The repository contains a working offline SIH demonstration and a production
 hardening track. Controlled replay results are reproducible; real-traffic
 generalization, continuous-service scale and operational deployment remain open.
 
+## SIH26145 dataset and traffic-tool provenance
+
+The finite SIH-only delivery gates and stop condition are in
+[SIH closure plan](docs/SIH_CLOSURE_PLAN.md).
+
+The problem statement's dataset field names **traffic generators and public DGA
+samples**, not one downloadable benchmark that trains all six detectors. The
+visible field ends mid-sentence after “Feature extraction: Extract flow”; we do
+not infer requirements from its missing continuation. The table distinguishes
+traffic **actually generated/captured** from offline metadata analogues and
+research-only domain corpora.
+
+| PS guidance / input | What we actually used | Purpose and exact evidence boundary |
+| --- | --- | --- |
+| Benign `iperf3`, Ostinato or TRex | `iperf3` 3.16 ran on WSL loopback; **Ostinato and TRex were not run**. | `scripts/generate_sih_tool_capture.sh` → local PCAP → Zeek → `examples/sih26145_tool_capture_zeek_v1.jsonl` (45 records). This proves passive ingestion, **not** benign-class accuracy. See `data/manifests/sih26145-input-compliance-v1.json`. |
+| `hping3` SYN/UDP traffic | `hping3` 3.0.0-alpha-2 generated controlled SYN and UDP packets on the same loopback capture. | The same 45-record Zeek fixture verifies the packet-to-metadata-to-upload path. It is **not** a labelled, representative SYN-flood or UDP-reflection accuracy test. |
+| Slowloris / slow HTTP exhaustion | `slowhttptest` 1.9.0 ran in its Slowloris/slow-header mode; the separate Slowloris executable was **not** run. | `scripts/generate_sprint34_real_tool_capture.sh` → isolated private-link PCAP → Zeek → `examples/sih26145_real_tools_v1.jsonl`; the Slow HTTP finding is measured from long-lived, low-byte connections. |
+| `dnscat2` or iodine DNS tunnel | iodine 0.7.0 established a TXT-based tunnel and carried a successful ping; **dnscat2 was not run**. | The same Sprint 34 capture produced 52 native Zeek DNS transactions; the actual upload path emitted a DNS-tunnelling finding. |
+| Published DGA algorithms / DGArchive | **DGArchive was not used.** The bundled `examples/dns_training_demo.csv` trains only the small deployed demonstration n-gram model. Separately, public **UMUDGA** domains were used for guarded DGA research training/validation/final tests, and independent **ExtraHop** domains were used only to test a frozen research candidate. | UMUDGA and ExtraHop research candidates failed promotion gates and **did not replace** the demonstration model. ExtraHop's 40,000-domain evaluation reached 63.36% recall and 6.80% FPR; see `docs/SPRINT_11.md`, `docs/SPRINT_28.md`, `docs/SPRINT_29.md` and `docs/SPRINT_30.md`. No public-domain result is claimed as production accuracy. |
+| Sandboxed C2 emulator | `scripts/lab_c2_emulator.py` generated eleven real TCP callbacks about three seconds apart inside the isolated Sprint 34 lab; it is a **timing emulator, not malware or a full C2 framework**. | Native Zeek connection records gave a periodic-beacon finding. A separate jittered, variable-size health-check capture stayed alert-free. Both enter the 141-record actual upload replay. |
+
+Before those real-tool captures, `scripts/build_sih_lab_corpus.py` created a
+**different**, deterministic 392-record offline corpus with semantic equivalents
+for the PS examples. Its separate ground-truth sidecars are used only **after
+inference** to score detector behaviour; that corpus is not a claim that the
+named tools were executed. The 452-record mixed and 153-record identity-separated
+replays are likewise controlled evaluation fixtures, not model-training data or
+proof of universal accuracy. The external CTU-13 flow evaluation is an additional
+independent check that exposed botnet-detection gaps, not a passing accuracy claim.
+See [Sprint 20](docs/SPRINT_20.md), [Sprint 31](docs/SPRINT_31.md),
+[Sprint 34](docs/SPRINT_34.md) and the [requirement audit](docs/SIH26145_REQUIREMENT_GAP_ANALYSIS.md).
+
+The feature-extraction path is: **PCAP / collector-decoded flow export / Zeek log
+→ read-only normalization → flow, DNS and TLS/QUIC metadata features → stateful
+detectors → structured alerts → dashboard**. Flow features include time, endpoints,
+ports, protocol, connection state, duration, bytes and packets; detectors then
+derive rates, source-IP entropy, fan-out, inter-arrival variation and volume
+ratios. DNS contributes query names/types/length/entropy, while encrypted-session
+analysis uses available fingerprints and packet-size/timing observations without
+decrypting payloads. See [ingestion and validation](docs/INGESTION_AND_VALIDATION.md)
+and [models and features](docs/MODELS_AND_FEATURES.md). NetFlow/IPFIX/sFlow support
+means **collector-decoded JSON/NDJSON**, not raw exporter wire decoding.
+
 Sprint 34 adds [isolated real-tool evidence](docs/SPRINT_34.md): an actual
 `slowhttptest` Slowloris-mode run, an established iodine DNS tunnel carrying ping,
 eleven deterministic C2-timing callbacks and a jittered health-check control are
@@ -168,6 +211,7 @@ reproduction steps](docs/SPRINT_10.md) and the
 
 ## Contents
 
+- [SIH26145 dataset and traffic-tool provenance](#sih26145-dataset-and-traffic-tool-provenance)
 - [What problem does Drastha solve?](#what-problem-does-drastha-solve)
 - [What can it detect?](#what-can-it-detect)
 - [How it works](#how-it-works)

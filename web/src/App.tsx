@@ -161,6 +161,10 @@ function App() {
     const text = `${item.src_ip} ${item.incident_id} ${item.threat_types.join(" ")}`.toLowerCase();
     return text.includes(query.toLowerCase()) && (severity === "all" || item.severity === severity);
   }), [incidents, query, severity]);
+  const priorityIncidents = useMemo(() => incidents
+    .filter((item) => item.status !== "resolved" && item.status !== "false_positive")
+    .sort((left, right) => right.risk_score - left.risk_score || right.last_seen - left.last_seen)
+    .slice(0, 4), [incidents]);
   const openIncident = async (id: string) => {
     const request = ++detailRequest.current;
     setSelected(null); setEvidenceRun(null); setNotes("");
@@ -268,15 +272,30 @@ function App() {
     const link = document.createElement("a"); link.href = url; link.download = `${selected.incident_id}.json`; link.click(); URL.revokeObjectURL(url);
   };
   const stages = demoRun?.stages ?? PIPELINE_TEMPLATE;
+  const sourceMode = stream?.status === "running" ? "Simulated stream running" : uploadResult ? "Uploaded replay" : stream ? "Simulated stream" : "No active source";
+  const lastQuality = uploadResult?.quality.status ?? demoRun?.telemetry_status ?? "Not evaluated";
 
   return <div className="app-shell">
     <header className="topbar">
       <a className="brand" href="#top"><img className="brand-logo" src="/images/drastha-logo-blue.png" alt="Drastha" width={1536} height={1024} /><div><small>Passive threat review</small></div></a>
-      <div className="system-state"><span><i className={health?.status === "healthy" ? "online" : "offline"} />{health?.status === "healthy" ? "Sensor online" : "Checking sensor"}</span><span>{health?.storage || "local"} storage</span><span>One-way monitoring</span></div>
+      <nav className="workspace-nav" aria-label="Workspace"><a href="#soc-overview">Overview</a><a href="#replay-workbench">Replay</a><a href="#investigations">Investigations</a></nav>
+      <div className="system-state"><span><i className={health?.status === "healthy" ? "online" : "offline"} />{health?.status === "healthy" ? "Analysis service ready" : "Checking service"}</span><span>{health?.storage || "local"} storage</span><span>One-way monitoring</span></div>
     </header>
 
     <main id="top">
-      <section className="workbench" aria-labelledby="hero-heading">
+      <section className="soc-overview" id="soc-overview" aria-labelledby="soc-heading">
+        <div className="soc-heading"><div><p className="eyebrow">Analyst workspace / SIH26145</p><h2 id="soc-heading">Security operations overview</h2><p>Prioritise passive detections, then inspect the measurements behind each incident.</p></div><button className="secondary" onClick={() => void refresh(false)} disabled={loading}><RefreshCw size={15} className={loading ? "spin" : ""} />Refresh queue</button></div>
+        <div className="soc-metrics" aria-label="Analyst summary">
+          <article><span>Active incidents</span><b>{metrics?.active_incidents ?? "—"}</b><small>Open or under investigation</small></article>
+          <article className="soc-critical"><span>Critical priority</span><b>{metrics?.critical_incidents ?? "—"}</b><small>Requires analyst triage</small></article>
+          <article><span>Last run quality</span><b className="soc-text-value">{lastQuality}</b><small>Input validation, not sensor health</small></article>
+          <article><span>Analysis source</span><b className="soc-text-value">{sourceMode}</b><small>No production mirror is connected</small></article>
+        </div>
+        <div className="soc-priority"><div className="soc-priority-head"><div><h3>Priority triage</h3><p>Highest-risk active cases from the saved investigation queue</p></div><a href="#investigations">View full queue <ArrowRight size={14} /></a></div>
+          {loading ? <p className="soc-empty">Loading saved incidents…</p> : priorityIncidents.length === 0 ? <p className="soc-empty">No active incidents. Run or upload a replay to populate the queue.</p> : <div className="soc-priority-list">{priorityIncidents.map((item) => <button key={item.incident_id} onClick={() => void openIncident(item.incident_id)}><span className={`severity severity-${item.severity}`}>{item.severity}</span><span className="soc-priority-name"><b>{item.threat_types.map(label).join(" + ")}</b><small>{item.src_ip} · {label(item.status)}</small></span><span className="soc-priority-score">Risk {item.risk_score}/100</span><time>{timeLabel(item.last_seen)}</time><ChevronRight size={16} /></button>)}</div>}
+        </div>
+      </section>
+      <section className="workbench" id="replay-workbench" aria-labelledby="hero-heading">
         <HeroTopology active={running || uploading || stream?.status === "running"} />
         <div className="intro"><p className="eyebrow">Passive near-real-time intelligence</p><h1 id="hero-heading">Watch threats emerge from a one-way IP stream.</h1><p>Drastha passively receives simulated network records, detects and classifies suspicious behaviour, scores the risk and publishes explainable alerts as the stream arrives.</p><div className="intro-actions"><button className="primary" disabled={stream?.status === "running" || running || uploading} onClick={startLiveStream}><Radio size={16} />{stream?.status === "running" ? "Stream running…" : "Start live IP simulation"}<ArrowRight size={17} aria-hidden="true" /></button><button className="text-button" disabled={running || uploading || stream?.status === "running"} onClick={runDemo}><Activity size={14} />Run instant replay</button></div></div>
         <div className="upload-card">
@@ -320,7 +339,7 @@ function App() {
 
       <section className="pipeline-section"><div className="section-head"><div><p className="eyebrow">How the result was produced</p><h2>Replay to insight</h2></div><span>{demoRun ? `${demoRun.telemetry_status} data · ${demoRun.elapsed_ms ?? "—"} ms` : "Ready"}</span></div><ol className="pipeline">{stages.map((stage, index) => { const visible = !running && !uploading || index < visibleStages; const count = stage.alerts !== undefined ? `${stage.alerts} findings` : stage.incidents !== undefined ? `${stage.incidents} incidents` : stage.records !== undefined ? `${stage.records} records` : ""; return <li className={visible ? `step step-${stage.status}` : "step pending"} key={`${stage.name}-${index}`}><span>{visible ? <Check size={13} /> : index + 1}</span><div><b>{stage.name}</b><p>{stage.detail}</p><small>{visible ? count : "Waiting"}{visible && stage.duration_ms !== undefined ? ` · ${stage.duration_ms} ms` : ""}</small></div></li>; })}</ol></section>
 
-      <section className="overview"><div className="section-head"><div><p className="eyebrow">What needs attention</p><h2>Investigation queue</h2></div><div className="plain-metrics"><span><b>{metrics?.active_incidents ?? "—"}</b> active</span><span><b>{metrics?.critical_incidents ?? "—"}</b> critical</span><span><b>{metrics?.feedback_records ?? "—"}</b> reviewed</span></div></div><div className="queue-tools"><label><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search device, incident or behaviour" /></label><label><Filter size={14} /><select value={severity} onChange={(event) => setSeverity(event.target.value)}><option value="all">All priorities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label></div>
+      <section className="overview" id="investigations"><div className="section-head"><div><p className="eyebrow">What needs attention</p><h2>Investigation queue</h2></div><div className="plain-metrics"><span><b>{metrics?.active_incidents ?? "—"}</b> active</span><span><b>{metrics?.critical_incidents ?? "—"}</b> critical</span><span><b>{metrics?.feedback_records ?? "—"}</b> reviewed</span></div></div><div className="queue-tools"><label><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search device, incident or behaviour" /></label><label><Filter size={14} /><select value={severity} onChange={(event) => setSeverity(event.target.value)}><option value="all">All priorities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label></div>
         {loading ? <div className="empty"><RefreshCw className="spin" />Loading incidents…</div> : filtered.length === 0 ? <div className="empty"><Network size={22} /><b>No matching incidents</b><span>Run or upload a replay to analyse network behaviour.</span></div> : <div className="incident-list">{filtered.map((item) => <button key={item.incident_id} onClick={() => void openIncident(item.incident_id)}><div className={`risk risk-${item.severity}`}><b>{item.risk_score}</b><span>risk</span></div><div className="incident-main"><b>{item.threat_types.map(label).join(" + ")}</b><span>{item.src_ip} · {item.detector_ids.length} independent checks</span></div><span className={`severity severity-${item.severity}`}>{item.severity}</span><span className="incident-status">{label(item.status)}</span><time>{timeLabel(item.last_seen)}</time><ChevronRight size={17} /></button>)}</div>}
       </section>
     </main>

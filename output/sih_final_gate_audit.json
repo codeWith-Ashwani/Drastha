@@ -1,0 +1,181 @@
+{
+  "fresh_source_evidence_complete": false,
+  "functional_prototype_verified": true,
+  "gates": {
+    "dashboard_build": true,
+    "fresh_flow_scenarios": true,
+    "fresh_measured_tls_positive": false,
+    "fresh_published_dga_detection": false,
+    "fresh_slow_c2_iodine_scenarios": true,
+    "frontend_tests": true,
+    "prior_replay_stream_safety_schema_throughput": true,
+    "published_dga_quality": true,
+    "python_tests": true,
+    "tls_metadata_measured_without_decryption": true
+  },
+  "limitations": [
+    "Old 452/153-record controlled scores are integration regressions, not independent accuracy.",
+    "The published DGA sample exposes a deployed-model generalization failure.",
+    "The changed TLS lab control is not malware and did not independently deviate in size/timing; a measured positive is still missing.",
+    "Raw binary captures are local/gitignored; a clean clone can verify committed fixture hashes but must regenerate captures for raw checks.",
+    "A private namespace is a lab simulation, not a physical data diode or production mirror."
+  ],
+  "production_ready": false,
+  "ps_evidence_map": [
+    {
+      "proof": "scripts/check_sprint33_release.py; scripts/generate_sih_gate2_flow_capture.sh",
+      "requirement": "read-only passive input and no return action",
+      "status": "verified_lab"
+    },
+    {
+      "proof": "scripts/check_sprint33_release.py; docs/SPRINT_36.md",
+      "requirement": "PCAP and flow-derived incremental ingest",
+      "status": "verified_lab"
+    },
+    {
+      "proof": "output/sih_gate2_flow_audit.json",
+      "requirement": "SYN and UDP volumetric/protocol DDoS",
+      "status": "verified_lab"
+    },
+    {
+      "proof": "docs/SPRINT_36.md; passive source diversity cannot prove spoofing",
+      "requirement": "spoofed-source hypothesis",
+      "status": "limited"
+    },
+    {
+      "proof": "output/sih_gate2_metadata_audit.json",
+      "requirement": "C2 periodicity and inter-arrival",
+      "status": "verified_lab"
+    },
+    {
+      "proof": "output/sih_gate2_dga_audit.json",
+      "requirement": "DGA from published algorithm samples",
+      "status": "failed_fresh_validation"
+    },
+    {
+      "proof": "output/sih_gate2_metadata_audit.json",
+      "requirement": "DNS tunnelling query/type anomalies",
+      "status": "verified_lab"
+    },
+    {
+      "proof": "output/sih_gate2_tls_audit.json",
+      "requirement": "TLS metadata without payload decryption",
+      "status": "measured_positive_missing"
+    },
+    {
+      "proof": "output/sih_gate2_flow_audit.json",
+      "requirement": "reconnaissance fan-out",
+      "status": "verified_lab"
+    },
+    {
+      "proof": "output/sih_gate2_flow_audit.json; volume is not theft proof",
+      "requirement": "exfiltration volume asymmetry",
+      "status": "behaviour_only"
+    },
+    {
+      "proof": "scripts/check_sprint33_release.py; web/tests/replay-evidence.test.mjs",
+      "requirement": "labelled alerts, confidence, evidence and dashboard",
+      "status": "verified_demo"
+    },
+    {
+      "proof": "output/sprint33_release_audit.json (50 records/s, 60 seconds)",
+      "requirement": "bounded latency and stated throughput",
+      "status": "verified_lab"
+    }
+  ],
+  "release_promotion_allowed": false,
+  "results": {
+    "fresh_flow": {
+      "fn": 0,
+      "fp": 0,
+      "records": 768,
+      "tn": 1,
+      "tp": 5
+    },
+    "fresh_slow_c2_iodine": {
+      "fn": 0,
+      "fp": 0,
+      "records": 136,
+      "tp": 3
+    },
+    "prior_release": {
+      "passed": true,
+      "release_id": "drastha-sih-v1.0",
+      "throughput": {
+        "duration_seconds": 60,
+        "max_backlog_records": 8,
+        "peak_disk_mib": 3.076279640197754,
+        "peak_rss_mib": 79.84765625,
+        "producer_lag_max_ms": 99.77600000001985,
+        "record_mix": {
+          "connection": 2400,
+          "dns": 600,
+          "encrypted": 300
+        },
+        "records": 3000,
+        "records_per_second": 50,
+        "visibility_p95_ms": 111.25070000025516
+      }
+    },
+    "published_dga": {
+      "fn": 40,
+      "fp": 2,
+      "tn": 38,
+      "tp": 0
+    },
+    "suites": {
+      "build": {
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "count": null,
+        "exit_code": 0,
+        "output_tail": "vite v8.2.2 building client environment for production...\ntransforming...\n\u00e2\u0153\u201c 1814 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                   0.55 kB \u00e2\u201d\u201a gzip:  0.32 kB\ndist/assets/index-vcldsSrX.css   40.84 kB \u00e2\u201d\u201a gzip:  7.48 kB\ndist/assets/index-C1CxEA0G.js   237.03 kB \u00e2\u201d\u201a gzip: 72.57 kB\n\n\u00e2\u0153\u201c built in 517ms\n",
+        "passed": true
+      },
+      "frontend": {
+        "command": [
+          "node",
+          "--test",
+          "tests/*.test.mjs"
+        ],
+        "count": 19,
+        "exit_code": 0,
+        "output_tail": "n_ms: 0.7911\n  type: 'test'\n  ...\n# Subtest: motion is scoped to active state and disabled for reduced-motion users\nok 19 - motion is scoped to active state and disabled for reduced-motion users\n  ---\n  duration_ms: 0.4104\n  type: 'test'\n  ...\n1..19\n# tests 19\n# suites 0\n# pass 19\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 1231.0014\n",
+        "passed": true
+      },
+      "python": {
+        "command": [
+          "F:\\Drastha\\Drastha\\.venv\\Scripts\\python.exe",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-v"
+        ],
+        "count": 458,
+        "exit_code": 0,
+        "output_tail": "s_translates_paths_and_runs_zeek (test_zeek_runner.ZeekRunnerTests.test_wsl_process_translates_paths_and_runs_zeek) ... ok\ntest_wsl_unc_path_maps_back_to_linux_path (test_zeek_runner.ZeekRunnerTests.test_wsl_unc_path_maps_back_to_linux_path) ... ok\n\n----------------------------------------------------------------------\nRan 458 tests in 30.965s\n\nOK\n",
+        "passed": true
+      }
+    },
+    "tls_changed_handshake_control": {
+      "coverage": {
+        "derived": 16,
+        "insufficient_evidence": 100,
+        "observations": 116,
+        "prevalence_warmup": 100,
+        "sequence_baseline_warmup": 20
+      },
+      "fn": 6,
+      "fp": 0,
+      "tn": 110,
+      "tp": 0
+    }
+  },
+  "schema_version": "drastha-sih-final-gate-v1",
+  "sih_level": "functional_prototype_with_validation_gaps"
+}

@@ -24,6 +24,13 @@ TLS sessions did not have the independent packet-size/timing anomaly needed for
 an alert. These failures are retained as SIH acceptance evidence, not folded
 into the controlled 452-record score.
 
+The [Sprint 37 final acceptance audit](docs/SPRINT_37.md) is fail-closed:
+**458 Python tests, 19 frontend tests and the build pass**, and the functional
+SIH prototype is verified, but fresh-source evidence is **not complete**.
+The DGA and measured TLS-positive gates fail; `scripts/check_sih_final_gate.py`
+returns nonzero and does not promote a new release. This is the current honest
+SIH readiness status, separate from the older controlled-demo release below.
+
 The problem statement's dataset field names **traffic generators and public DGA
 samples**, not one downloadable benchmark that trains all six detectors. The
 visible field ends mid-sentence after “Feature extraction: Extract flow”; we do

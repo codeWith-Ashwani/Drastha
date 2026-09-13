@@ -28,6 +28,11 @@ def _sse(payload: dict[str, Any]) -> str:
 
 def _detection_method(alert: Any) -> str:
     if alert.subtype == "dga_like_domain":
+        names = {item.name for item in alert.evidence}
+        if "distinct_queried_roots" in names:
+            return "DNS failure and destination fan-out analysis"
+        if "distinct_model_positive_roots" in names:
+            return "Character n-gram ML with DNS campaign corroboration"
         return "Character n-gram ML model"
     if alert.subtype == "dns_tunnelling":
         return "DNS volume and entropy analysis"

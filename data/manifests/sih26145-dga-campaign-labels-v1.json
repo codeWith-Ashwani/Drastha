@@ -1,0 +1,14 @@
+{
+  "schema_version": "drastha-sih-dga-campaign-labels-v1",
+  "frozen_before_inference": true,
+  "source_fixture": "examples/sih26145_gate2_dga_v1",
+  "generator": "scripts/build_sih_dga_campaign_fixture.py",
+  "scenarios": [
+    {"name": "published-vawtrak-failed", "source": "dga", "response_code": "NXDOMAIN", "interval_seconds": 0.5, "expected": "dga_like_domain"},
+    {"name": "published-legit-resolved", "source": "benign", "response_code": "NOERROR", "interval_seconds": 0.5, "expected": "benign"},
+    {"name": "published-legit-occasional-misses", "source": "benign", "response_code": "NXDOMAIN", "interval_seconds": 7.0, "expected": "benign"}
+  ],
+  "response_code_origin": "simulated isolated resolver control, not publisher-provided DNS measurements",
+  "malware_identified": false,
+  "claim_boundary": "This checks campaign context, not improved domain-string ML generalization or real resolver outcomes."
+}

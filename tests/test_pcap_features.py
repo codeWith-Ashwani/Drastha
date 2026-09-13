@@ -192,13 +192,14 @@ class PcapFeatureTests(unittest.TestCase):
     def test_late_clienthello_never_available_before_its_capture_time(self):
         records, packets = controlled_fixture(1)
         packet = packets[0][1]
-        # First 128 packets retained; ClientHello first arrives after that prefix.
+        # The latest 128 packets are retained; ClientHello still cannot appear early.
         empty = frame(records[0]["id.orig_h"], records[0]["id.resp_h"], records[0]["id.orig_p"], 443, b"")
         packets = [(1000+i*.001, empty) for i in range(128)] + [(1000.5, packet)]
         prepared = attach_capture(prepare_replay(json.dumps(records[0])), self.write_capture(packets))
         self.assertEqual(prepared.encrypted_events[0].timestamp, 1000.5)
         self.assertEqual(len(prepared.encrypted_events[0].raw["packet_observations"]), 128)
-        self.assertEqual(prepared.input_schema["packet_capture"]["counters"]["sequence_tail_not_retained"], 1)
+        self.assertEqual(prepared.encrypted_events[0].raw["packet_observations"][-1]["ts"], 1000.5)
+        self.assertEqual(prepared.input_schema["packet_capture"]["counters"]["sequence_head_not_retained"], 1)
 
     def test_conflicting_hellos_do_not_produce_guessed_fingerprint(self):
         records, packets = controlled_fixture(1)

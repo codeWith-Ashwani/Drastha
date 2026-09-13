@@ -18,11 +18,15 @@ from check_sih_gate2_flow import audit as flow_audit
 from check_sih_gate2_metadata import audit as metadata_audit
 from check_sih_gate2_dga import audit as dga_audit
 from check_sih_gate2_tls import audit as tls_audit
+from check_sih_tls_positive import audit as tls_positive_audit
+from check_sih_chrmor_holdout import audit as external_dga_audit
+from check_sih_dga_campaign import audit as campaign_audit
 from check_sprint33_release import audit as release_audit
 
 
 def assess(release: dict, flow: dict, metadata: dict, dga: dict, tls: dict,
-           suites: dict) -> dict:
+           suites: dict, campaign: dict, external_dga: dict,
+           tls_positive: dict) -> dict:
     """Keep functional completion distinct from independent detection proof."""
     dga_totals = dga["totals"]
     tls_measurement = tls["quality_healthy"] and tls["measured_only"]
@@ -32,20 +36,25 @@ def assess(release: dict, flow: dict, metadata: dict, dga: dict, tls: dict,
         "fresh_slow_c2_iodine_scenarios": bool(metadata["passed"]),
         "published_dga_quality": bool(dga["quality_healthy"]),
         "tls_metadata_measured_without_decryption": bool(tls_measurement),
+        "fresh_dga_campaign_controls": (campaign["quality_healthy"] and campaign["no_unexpected_alerts"] and
+                                        campaign["totals"] == {"tp": 1, "fp": 0, "fn": 0, "tn": 2}),
+        "external_publisher_campaign_controls": (external_dga["quality_healthy"] and
+                                                  external_dga["passed_behaviour_controls"]),
         "python_tests": bool(suites["python"]["passed"]),
         "frontend_tests": bool(suites["frontend"]["passed"]),
         "dashboard_build": bool(suites["build"]["passed"]),
         # These intentionally require at least one measured positive; passing
         # the old synthetic replay cannot substitute for fresh-source proof.
         "fresh_published_dga_detection": dga_totals["tp"] > 0 and dga_totals["fp"] == 0,
-        "fresh_measured_tls_positive": tls_measurement and tls["tp_sessions"] > 0
-                                       and tls["fp_sessions"] == 0,
+        "fresh_measured_tls_positive": (tls_positive["passed"] and tls_positive["tp"] > 0
+                                        and tls_positive["fp"] == 0),
     }
     functional = all(gates[key] for key in (
         "prior_replay_stream_safety_schema_throughput", "fresh_flow_scenarios",
         "fresh_slow_c2_iodine_scenarios", "published_dga_quality",
         "tls_metadata_measured_without_decryption", "python_tests",
-        "frontend_tests", "dashboard_build"))
+        "frontend_tests", "dashboard_build", "fresh_dga_campaign_controls",
+        "external_publisher_campaign_controls", "fresh_measured_tls_positive"))
     evidence = functional and gates["fresh_published_dga_detection"] and gates["fresh_measured_tls_positive"]
     return {
         "schema_version": "drastha-sih-final-gate-v1",
@@ -61,11 +70,15 @@ def assess(release: dict, flow: dict, metadata: dict, dga: dict, tls: dict,
             "fresh_flow": flow["totals"],
             "fresh_slow_c2_iodine": metadata["totals"],
             "published_dga": dga_totals,
+            "simulated_dns_campaign_controls": campaign["totals"],
+            "external_publisher_campaign_controls": external_dga["totals"],
             "tls_changed_handshake_control": {
                 "tp": tls["tp_sessions"], "fp": tls["fp_sessions"],
                 "fn": tls["fn_sessions"], "tn": tls["tn_sessions"],
                 "coverage": tls["feature_coverage"]["counts"],
             },
+            "fresh_tls_measured_positive_control": {
+                key: tls_positive[key] for key in ("tp", "fp", "fn", "tn", "passed")},
             "suites": suites,
         },
         "ps_evidence_map": [
@@ -79,12 +92,12 @@ def assess(release: dict, flow: dict, metadata: dict, dga: dict, tls: dict,
              "proof": "docs/SPRINT_36.md; passive source diversity cannot prove spoofing"},
             {"requirement": "C2 periodicity and inter-arrival", "status": "verified_lab",
              "proof": "output/sih_gate2_metadata_audit.json"},
-            {"requirement": "DGA from published algorithm samples", "status": "failed_fresh_validation",
-             "proof": "output/sih_gate2_dga_audit.json"},
+            {"requirement": "DGA from published algorithm samples", "status": "campaign_demo_pass_domain_ml_gap",
+             "proof": "output/sih_gate2_dga_audit.json; output/sih_chrmor_holdout_audit.json"},
             {"requirement": "DNS tunnelling query/type anomalies", "status": "verified_lab",
              "proof": "output/sih_gate2_metadata_audit.json"},
-            {"requirement": "TLS metadata without payload decryption", "status": "measured_positive_missing",
-             "proof": "output/sih_gate2_tls_audit.json"},
+            {"requirement": "TLS metadata without payload decryption", "status": "measured_positive_lab_pass",
+             "proof": "output/sih_gate2_tls_audit.json; output/sih_tls_positive_audit.json"},
             {"requirement": "reconnaissance fan-out", "status": "verified_lab",
              "proof": "output/sih_gate2_flow_audit.json"},
             {"requirement": "exfiltration volume asymmetry", "status": "behaviour_only",
@@ -96,8 +109,8 @@ def assess(release: dict, flow: dict, metadata: dict, dga: dict, tls: dict,
         ],
         "limitations": [
             "Old 452/153-record controlled scores are integration regressions, not independent accuracy.",
-            "The published DGA sample exposes a deployed-model generalization failure.",
-            "The changed TLS lab control is not malware and did not independently deviate in size/timing; a measured positive is still missing.",
+            "The original published DGA bare-domain sample still exposes a deployed-model generalization failure; the new campaign result needs simulated resolver outcomes.",
+            "The original TLS changed-handshake control did not deviate in size/timing; a separate new paced/size lab control now gives a measured positive, not malware proof.",
             "Raw binary captures are local/gitignored; a clean clone can verify committed fixture hashes but must regenerate captures for raw checks.",
             "A private namespace is a lab simulation, not a physical data diode or production mirror.",
         ],
@@ -130,7 +143,8 @@ def audit(run_suites: bool = True) -> dict:
         }
     else:
         suites = {name: {"passed": False, "not_run": True} for name in ("python", "frontend", "build")}
-    return assess(release_audit(), flow_audit(), metadata_audit(), dga_audit(), tls_audit(), suites)
+    return assess(release_audit(), flow_audit(), metadata_audit(), dga_audit(), tls_audit(),
+                  suites, campaign_audit(), external_dga_audit(), tls_positive_audit())
 
 
 def main() -> int:

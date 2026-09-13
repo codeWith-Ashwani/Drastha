@@ -1,0 +1,19 @@
+{
+  "schema_version": "drastha-sih-chrmor-holdout-labels-v1",
+  "frozen_before_inference": true,
+  "publisher": "chrmor/DGA_domains_dataset (research use), derived from Netlab DGA and Alexa names",
+  "source_commit": "9dcc29e5cc644fdfd99d82a3abec993c15bbc7bc",
+  "source_url": "https://raw.githubusercontent.com/chrmor/DGA_domains_dataset/9dcc29e5cc644fdfd99d82a3abec993c15bbc7bc/dga_domains_sample.csv",
+  "source_path": "data/raw/Chrmor/dga_domains_sample.csv",
+  "source_sha256": "8e6ed2cce7cf9230c92401748847c3955b53cca355fa568263aadd615e1e1ef1",
+  "seed": "drastha-chrmor-first-use-20260914-v1",
+  "malicious_family": "kraken",
+  "scenarios": [
+    {"name": "kraken-failed-burst", "label": "dga", "family": "kraken", "count": 100, "rcode_name": "NXDOMAIN", "interval_seconds": 0.4},
+    {"name": "alexa-resolved-burst", "label": "legit", "family": "alexa", "count": 100, "rcode_name": "NOERROR", "interval_seconds": 0.4},
+    {"name": "alexa-occasional-failures", "label": "legit", "family": "alexa", "count": 100, "rcode_name": "NXDOMAIN", "interval_seconds": 7.0}
+  ],
+  "response_code_origin": "predeclared simulated isolated-resolver control; publisher does not include DNS response outcomes",
+  "domains_contacted": false,
+  "claim_boundary": "Independent publisher strings for a frozen campaign-context test, not independent live resolver telemetry or domain-only ML accuracy."
+}

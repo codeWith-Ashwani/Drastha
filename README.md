@@ -16,6 +16,15 @@ generalization, continuous-service scale and operational deployment remain open.
 The finite SIH-only delivery gates and stop condition are in
 [SIH closure plan](docs/SIH_CLOSURE_PLAN.md).
 
+**Current follow-up (14 September 2026):** [DGA/TLS validation follow-up](docs/SIH_VALIDATION_FOLLOWUP.md)
+adds a genuine PCAP-derived TLS size/timing-positive control (4 attributed TP,
+0 FP across 114 benign sessions) and two DNS campaign-context controls, including
+a frozen external Kraken/Alexa sample (1 behaviour TP, 0 FP, 2 TN). A separate
+domain-only candidate reached 82% recall but **2% FPR** on its small external
+sample, above the 1% gate, so it was not deployed. The original 40/40 Vawtrak
+domain-only miss remains. The final gate verifies the functional prototype but
+does **not** promote a new SIH release while that generalization gap remains.
+
 [Sprint 36 fresh-source validation](docs/SPRINT_36.md) now checks separate,
 checksum-frozen `iperf3`, `hping3`, Slowloris-mode, iodine, C2-emulator,
 published-DGA and real-TLS sessions. Flow and metadata lab behaviours passed;
@@ -24,12 +33,9 @@ TLS sessions did not have the independent packet-size/timing anomaly needed for
 an alert. These failures are retained as SIH acceptance evidence, not folded
 into the controlled 452-record score.
 
-The [Sprint 37 final acceptance audit](docs/SPRINT_37.md) is fail-closed:
-**458 Python tests, 19 frontend tests and the build pass**, and the functional
-SIH prototype is verified, but fresh-source evidence is **not complete**.
-The DGA and measured TLS-positive gates fail; `scripts/check_sih_final_gate.py`
-returns nonzero and does not promote a new release. This is the current honest
-SIH readiness status, separate from the older controlled-demo release below.
+The [Sprint 37 final acceptance audit](docs/SPRINT_37.md) recorded its historical
+458-test baseline and both then-open gaps. The subsequent follow-up closes the
+measured TLS-positive lab gap, while retaining the failed DGA model-promotion gate.
 
 The problem statement's dataset field names **traffic generators and public DGA
 samples**, not one downloadable benchmark that trains all six detectors. The
@@ -44,7 +50,7 @@ research-only domain corpora.
 | `hping3` SYN/UDP traffic | `hping3` 3.0.0-alpha-2 generated controlled SYN and UDP packets on the same loopback capture. | The same 45-record Zeek fixture verifies the packet-to-metadata-to-upload path. It is **not** a labelled, representative SYN-flood or UDP-reflection accuracy test. |
 | Slowloris / slow HTTP exhaustion | `slowhttptest` 1.9.0 ran in its Slowloris/slow-header mode; the separate Slowloris executable was **not** run. | `scripts/generate_sprint34_real_tool_capture.sh` → isolated private-link PCAP → Zeek → `examples/sih26145_real_tools_v1.jsonl`; the Slow HTTP finding is measured from long-lived, low-byte connections. |
 | `dnscat2` or iodine DNS tunnel | iodine 0.7.0 established a TXT-based tunnel and carried a successful ping; **dnscat2 was not run**. | The same Sprint 34 capture produced 52 native Zeek DNS transactions; the actual upload path emitted a DNS-tunnelling finding. |
-| Published DGA algorithms / DGArchive | **DGArchive was not used.** The bundled `examples/dns_training_demo.csv` trains only the small deployed demonstration n-gram model. Separately, public **UMUDGA** domains were used for guarded DGA research training/validation/final tests, and independent **ExtraHop** domains were used only to test a frozen research candidate. | UMUDGA and ExtraHop research candidates failed promotion gates and **did not replace** the demonstration model. ExtraHop's 40,000-domain evaluation reached 63.36% recall and 6.80% FPR; see `docs/SPRINT_11.md`, `docs/SPRINT_28.md`, `docs/SPRINT_29.md` and `docs/SPRINT_30.md`. No public-domain result is claimed as production accuracy. |
+| Published DGA algorithms / DGArchive | **DGArchive was not used.** The bundled `examples/dns_training_demo.csv` trains only the small deployed demonstration n-gram model. Public **UMUDGA** domains supported guarded training/validation and the failed Vawtrak holdout; **ExtraHop** tested a frozen research candidate; the [Chrmor research sample](https://github.com/chrmor/DGA_domains_dataset) now supplies an additional pinned Kraken/Alexa campaign and domain-only control. | No research candidate replaced the demonstration model. ExtraHop's 40,000-domain evaluation reached 63.36% recall / 6.80% FPR; the new Chrmor 100+100 *domain-only* candidate test reached 82% recall / 2% FPR and also failed promotion. The Chrmor DNS response/timing controls are simulated, not publisher measurements. See `docs/SPRINT_28.md`, `docs/SPRINT_30.md` and `docs/SIH_VALIDATION_FOLLOWUP.md`. |
 | Sandboxed C2 emulator | `scripts/lab_c2_emulator.py` generated eleven real TCP callbacks about three seconds apart inside the isolated Sprint 34 lab; it is a **timing emulator, not malware or a full C2 framework**. | Native Zeek connection records gave a periodic-beacon finding. A separate jittered, variable-size health-check capture stayed alert-free. Both enter the 141-record actual upload replay. |
 
 Before those real-tool captures, `scripts/build_sih_lab_corpus.py` created a
@@ -272,7 +278,7 @@ return connection to the monitored network.
 | SYN flood | Traffic-rate analysis | Attempt count, incomplete ratio and source diversity |
 | UDP flood | Traffic-rate analysis | Packet volume, bytes and source diversity |
 | UDP reflection/amplification | Response-volume and service-pattern analysis | Direction, packet volume and response pattern |
-| DGA-like domain | Character 3-gram Naive Bayes ML model | Uncalibrated model score, domain and entropy context |
+| DGA-like domain/campaign | Character 3-gram Naive Bayes model plus distinct-root/NXDOMAIN campaign context | Uncalibrated model score when present, domain shape, resolver outcome, failed-query ratio and same-client fan-out |
 | DNS tunnelling | Volume and entropy analysis | Query count, unique labels, length and entropy |
 | C2-style callback | Statistical timing analysis | Interval consistency, size consistency and connection count |
 | Encrypted-session metadata anomaly | Passive fingerprint and sequence baselines | JA3/JA4 prevalence, measured packet-size and timing anomalies |
@@ -309,7 +315,7 @@ Simulated stream, Zeek logs or PCAP
  SQLite/PostgreSQL -> API -> dashboard
 ```
 
-The live demonstration streams 67 simulated connection, DNS, and encrypted-
+The live demonstration streams 69 simulated connection, DNS, and encrypted-
 session metadata observations one at a time. It produces ten labelled findings
 and eight incidents spanning every required threat family. The
 highest-priority incident combines a repeated callback with abnormal outbound

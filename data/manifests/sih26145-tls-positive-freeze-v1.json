@@ -1,0 +1,45 @@
+{
+  "artifacts": [
+    {
+      "committed": true,
+      "path": "data/manifests/sih26145-tls-positive-labels-v1.json",
+      "sha256": "468bf54152c4144a753e83fd6e669eb1ee417ccea063ffe944d56adc4570024c"
+    },
+    {
+      "committed": true,
+      "path": "data/manifests/sih26145-tls-positive-uid-labels-v1.json",
+      "sha256": "7a6b1e7ad8fd6bb9337525a1fe624af66da611ebb79c896ca5dd4bf3b86159e5"
+    },
+    {
+      "committed": true,
+      "path": "examples/sih26145_tls_positive_v1.jsonl",
+      "sha256": "c28ed51e4b3f47ad0d2e8398beb45dd926e0f91d4658a9cefe85ae4eaf2e1b8f"
+    },
+    {
+      "committed": false,
+      "path": "data/raw/sih26145-tls-positive-v1/traffic.pcap",
+      "sha256": "645c749fbc306e3e54fff457bf3e455434c834c58fa47ac74b27febf4a20652a"
+    },
+    {
+      "committed": false,
+      "path": "data/raw/sih26145-tls-positive-v1/client.csv",
+      "sha256": "594ddea51c8cb3e1c089d9c61731c64b30fbed6e899ab767e34d35301e9c5fbc"
+    },
+    {
+      "committed": false,
+      "path": "data/raw/sih26145-tls-positive-v1/zeek/conn.log",
+      "sha256": "619424a9c4f72f176826482fd691935a698eb8582f910a758c9e9db2c3ecf884"
+    },
+    {
+      "committed": false,
+      "path": "data/raw/sih26145-tls-positive-v1/zeek/ssl.log",
+      "sha256": "ada1ad419f2e9393b05fa57b88a40813d723d2e83c6d072dd701a247d52fdba6"
+    }
+  ],
+  "capture_id": "sih26145-tls-positive-v1",
+  "inference_run_at_freeze": false,
+  "payload_decrypted_by_analyser": false,
+  "records": 244,
+  "schema_version": "drastha-sih-tls-positive-freeze-v1",
+  "sessions": 122
+}

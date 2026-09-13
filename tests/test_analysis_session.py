@@ -130,7 +130,7 @@ class AnalysisSessionTests(unittest.TestCase):
         self.assertEqual(messages[0]["analysis_provenance"],
                          messages[-1]["analysis_provenance"])
         self.assertEqual(messages[0]["analysis_provenance"]["profile"], STREAM_DEMO.name)
-        self.assertEqual(messages[-1]["processed"], 67)
+        self.assertEqual(messages[-1]["processed"], 69)
         self.assertEqual(messages[-1]["alerts"], 10)
         self.assertEqual(messages[-1]["incidents"], 8)
 

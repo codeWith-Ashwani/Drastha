@@ -14,6 +14,9 @@ MANIFESTS = (
     "sih26145-gate2-dga-freeze-v1.json",
     "sih26145-gate2-tls-freeze-v1.json",
     "sih26145-gate2-tls-freeze-v2.json",
+    "sih26145-tls-positive-freeze-v1.json",
+    "sih26145-dga-campaign-freeze-v1.json",
+    "sih26145-chrmor-holdout-freeze-v1.json",
 )
 
 
@@ -32,6 +35,9 @@ class FrozenGate2EvidenceTests(unittest.TestCase):
                         elif artifact.get("committed"):
                             self.assertEqual(sha256((ROOT / artifact["path"]).read_bytes()).hexdigest(),
                                              artifact["sha256"])
+                        elif artifact.get("path", "").startswith("examples/"):
+                            self.assertEqual(sha256((ROOT / artifact["path"]).read_bytes()).hexdigest(),
+                                             artifact["sha256"])
                 else:
                     self.assertEqual(sha256((ROOT / manifest["fixture"]).read_bytes()).hexdigest(),
                                      manifest["fixture_sha256"])
@@ -46,6 +52,8 @@ class FrozenGate2EvidenceTests(unittest.TestCase):
             fixtures = [item["fixture"] for item in manifest.get("artifacts", []) if "fixture" in item]
             fixtures.extend(item["path"] for item in manifest.get("artifacts", [])
                             if item.get("committed") and item["path"].endswith(".jsonl"))
+            fixtures.extend(item["path"] for item in manifest.get("artifacts", [])
+                            if item.get("path", "").startswith("examples/") and item["path"].endswith(".jsonl"))
             if "fixture" in manifest:
                 fixtures.append(manifest["fixture"])
             for fixture in fixtures:

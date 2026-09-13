@@ -1,0 +1,121 @@
+{
+  "alerts": [
+    {
+      "confidence": 0.96,
+      "evidence": {
+        "baseline_session_count": 114,
+        "capture_sha256": "645c749fbc306e3e54fff457bf3e455434c834c58fa47ac74b27febf4a20652a",
+        "client_fingerprint": "f146948b4a599d4d7ddf071b74696983",
+        "feature_extractor_version": "packet-sequence-tail-robust-v2",
+        "feature_origin": "derived",
+        "fingerprint_prevalence": 0.0,
+        "packet_size_sequence_anomaly": 1.0,
+        "repeated_encrypted_sessions": 4,
+        "sequence_sha256": "7ab25d7fdb175cb364d6722cda7f36ac4c7e5a0a9764f2325eafeea763539c4b",
+        "supporting_sequence_features": "[{\"features\": {\"fingerprint_prevalence\": 0.0, \"packet_size_sequence_anomaly\": 1.0, \"timing_sequence_anomaly\": 1.0}, \"flow_id\": \"CcyfDz4WoXP4BJeOej\", \"observed_at\": 1789328831.393092, \"sequence_sha256\": \"0befdbadb38bd377d5a52a37ea067e0a9d3e27feac16731e401506cc0adb40ce\"}, {\"features\": {\"fingerprint_prevalence\": 0.0, \"packet_size_sequence_anomaly\": 1.0, \"timing_sequence_anomaly\": 1.0}, \"flow_id\": \"CMl0Oi1EvQ5lpyeZtf\", \"observed_at\": 1789328832.124959, \"sequence_sha256\": \"24d5c2f2a7aae72322fbf2bc33790e004fc0adc71003a82cb990570c995e7d50\"}, {\"features\": {\"fingerprint_prevalence\": 0.0, \"packet_size_sequence_anomaly\": 1.0, \"timing_sequence_anomaly\": 1.0}, \"flow_id\": \"CgAhW23bkrbt4SQQg4\", \"observed_at\": 1789328832.857944, \"sequence_sha256\": \"60f6a0b4ef6269efeff162102622d755f6f283272b5b593997cf1ef757c8a042\"}, {\"features\": {\"fingerprint_prevalence\": 0.0, \"packet_size_sequence_anomaly\": 1.0, \"timing_sequence_anomaly\": 1.0}, \"flow_id\": \"CA1iaK2NtVySdK6Yti\", \"observed_at\": 1789328833.589155, \"sequence_sha256\": \"7ab25d7fdb175cb364d6722cda7f36ac4c7e5a0a9764f2325eafeea763539c4b\"}]",
+        "timing_sequence_anomaly": 1.0
+      },
+      "flow_ids": [
+        "CcyfDz4WoXP4BJeOej",
+        "CMl0Oi1EvQ5lpyeZtf",
+        "CgAhW23bkrbt4SQQg4",
+        "CA1iaK2NtVySdK6Yti"
+      ],
+      "subtype": "encrypted_session_metadata_anomaly"
+    }
+  ],
+  "capture": {
+    "application_payload_retained": false,
+    "capture_sha256": "645c749fbc306e3e54fff457bf3e455434c834c58fa47ac74b27febf4a20652a",
+    "counters": {
+      "incomplete_or_unsupported_hello": 350,
+      "matched_packets": 1714,
+      "packets_seen": 1848,
+      "unmatched_packets": 134
+    },
+    "extractor_version": "pcap-header-ja3-recent-sequence-v2",
+    "ja3_scope": "complete cleartext ClientHello in one TCP segment; no TCP reassembly",
+    "join": {
+      "joined_sessions": 122
+    },
+    "payload_decrypted": false,
+    "unsupported": [
+      "PCAPNG",
+      "non-Ethernet",
+      "IP fragmentation/IPv6 extension chains",
+      "QUIC fingerprint extraction"
+    ]
+  },
+  "capture_id": "sih26145-tls-positive-v1",
+  "feature_coverage": {
+    "active_cohorts": 1,
+    "configuration": {
+      "anomaly_scale": 6,
+      "history_seconds": 3600,
+      "learning_ceiling": 0.75,
+      "maximum_cohorts": 128,
+      "maximum_history": 5000,
+      "minimum_baseline_sessions": 20,
+      "minimum_packets": 4,
+      "minimum_prevalence_sessions": 100,
+      "sequence_length": 8,
+      "size_scale_floor": 32,
+      "timing_scale_floor": 0.001
+    },
+    "counts": {
+      "anomalous_sessions_excluded_from_baseline": 8,
+      "derived": 22,
+      "insufficient_evidence": 100,
+      "observations": 122,
+      "prevalence_warmup": 100,
+      "sequence_baseline_warmup": 20
+    },
+    "exfiltration_direction": "configured-boundary-required",
+    "extractor_version": "packet-sequence-tail-robust-v2",
+    "mode": "derived",
+    "network_direction_counts": {
+      "unknown": 122
+    },
+    "network_direction_status": "unconfigured",
+    "normalized_event_counts": {
+      "connection": 122,
+      "dns": 0,
+      "encrypted": 122
+    }
+  },
+  "fn": 4,
+  "fp": 0,
+  "limitations": [
+    "The paced and larger encrypted records are an anomaly control, not identified malware.",
+    "A rare benign TLS fingerprint alone must not trigger an anomaly alert.",
+    "These are completed short lab flows; the analyser itself made no connection or decryption attempt."
+  ],
+  "measured_only": true,
+  "passed": true,
+  "quality": {
+    "conflicting_duplicate_uid_count": 0,
+    "degraded_reasons": [],
+    "duplicate_uid_count": 0,
+    "errors": [],
+    "exact_duplicate_count": 0,
+    "invalid_timestamp_count": 0,
+    "maximum_backward_skew_seconds": 0.0,
+    "out_of_order_records": 0,
+    "quarantined_records": [],
+    "records_accepted": 244,
+    "records_quarantined": 0,
+    "records_received": 244,
+    "records_rejected": 0,
+    "records_seen": 244,
+    "rejection_ratio": 0.0,
+    "source": "sih26145_tls_positive_v1.jsonl",
+    "status": "healthy",
+    "stream": "passive:replay",
+    "unsupported_record_count": 0
+  },
+  "quality_healthy": true,
+  "schema_version": "drastha-sih-tls-positive-audit-v1",
+  "tn": 114,
+  "tp": 4,
+  "unexpected_alert_subtypes": []
+}

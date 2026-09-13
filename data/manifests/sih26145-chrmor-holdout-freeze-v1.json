@@ -1,0 +1,30 @@
+{
+  "actual_dns_responses_captured": false,
+  "artifacts": [
+    {
+      "path": "examples/sih26145_chrmor_holdout_v1/kraken-failed-burst.jsonl",
+      "records": 100,
+      "scenario": "kraken-failed-burst",
+      "sha256": "75eeff554a04fad92ff655e5def7f6915b02f87798f3fdeb67ed140c18decf9d"
+    },
+    {
+      "path": "examples/sih26145_chrmor_holdout_v1/alexa-resolved-burst.jsonl",
+      "records": 100,
+      "scenario": "alexa-resolved-burst",
+      "sha256": "fd3b31942b4cf2453d7b80aedf34cf168fcb2131d3d833c479bfca3c5c24cf1d"
+    },
+    {
+      "path": "examples/sih26145_chrmor_holdout_v1/alexa-occasional-failures.jsonl",
+      "records": 100,
+      "scenario": "alexa-occasional-failures",
+      "sha256": "becaf67727cd316ef30d9eb47c5ca9d5ca5467d584ccbcc47744414d7c612acc"
+    }
+  ],
+  "inference_run_at_freeze": false,
+  "labels": "data/manifests/sih26145-chrmor-holdout-labels-v1.json",
+  "labels_sha256": "1ea319b7fa201ee1cfa92e154dd9c05b1ee572745f57f3017890ce292fa871d0",
+  "schema_version": "drastha-sih-chrmor-holdout-freeze-v1",
+  "source_commit": "9dcc29e5cc644fdfd99d82a3abec993c15bbc7bc",
+  "source_path": "data/raw/Chrmor/dga_domains_sample.csv",
+  "source_sha256": "8e6ed2cce7cf9230c92401748847c3955b53cca355fa568263aadd615e1e1ef1"
+}

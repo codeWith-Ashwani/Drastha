@@ -28,10 +28,12 @@ def event(index, query, source="10.0.0.10"):
 class DNSDetectorTests(unittest.TestCase):
     def test_dga_alert_is_distinct_and_explainable(self):
         detector = DNSDetector(DNSConfig(dga_probability_threshold=0.9), model=_HighRiskModel())
-        alerts = detector.process(event(1, "x8q2m9z7.biz"))
+        self.assertEqual(detector.process(event(1, "x8q2m9z7.biz")), [])
+        self.assertEqual(detector.process(event(2, "z7m4n8q2.biz")), [])
+        alerts = detector.process(event(3, "q2m8x7z9.biz"))
         self.assertEqual(alerts[0].subtype, "dga_like_domain")
         self.assertEqual(alerts[0].threat_type, "dns_threat")
-        self.assertTrue(any(item.name == "model_probability" for item in alerts[0].evidence))
+        self.assertTrue(any(item.name == "maximum_model_score" for item in alerts[0].evidence))
 
     def test_dns_tunnel_window_alert(self):
         config = DNSConfig(

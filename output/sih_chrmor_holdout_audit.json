@@ -1,0 +1,71 @@
+{
+  "actual_dns_responses_captured": false,
+  "domain_only_model_promotion_supported": false,
+  "limitations": [
+    "This is a first-use external publisher string sample; DNS response codes and timing are predeclared simulated controls.",
+    "Behaviour-level campaign scoring is not per-domain accuracy or a live resolver validation.",
+    "The pre-existing Vawtrak bare-domain 0/40 result remains a real model generalization gap."
+  ],
+  "passed_behaviour_controls": true,
+  "quality_healthy": true,
+  "reports": [
+    {
+      "accepted": 100,
+      "dga_findings": 1,
+      "evidence": [
+        {
+          "distinct_queried_roots": 10,
+          "nxdomain_ratio": 1.0,
+          "query_count": 14,
+          "representative_domain": "agwnmyt.mooo.com"
+        }
+      ],
+      "fn": 0,
+      "fp": 0,
+      "quality": "healthy",
+      "records": 100,
+      "rejected": 0,
+      "scenario": "kraken-failed-burst",
+      "tn": 0,
+      "tp": 1,
+      "unexpected_alert_subtypes": []
+    },
+    {
+      "accepted": 100,
+      "dga_findings": 0,
+      "evidence": [],
+      "fn": 0,
+      "fp": 0,
+      "quality": "healthy",
+      "records": 100,
+      "rejected": 0,
+      "scenario": "alexa-resolved-burst",
+      "tn": 1,
+      "tp": 0,
+      "unexpected_alert_subtypes": []
+    },
+    {
+      "accepted": 100,
+      "dga_findings": 0,
+      "evidence": [],
+      "fn": 0,
+      "fp": 0,
+      "quality": "healthy",
+      "records": 100,
+      "rejected": 0,
+      "scenario": "alexa-occasional-failures",
+      "tn": 1,
+      "tp": 0,
+      "unexpected_alert_subtypes": []
+    }
+  ],
+  "schema_version": "drastha-sih-chrmor-holdout-audit-v1",
+  "source_commit": "9dcc29e5cc644fdfd99d82a3abec993c15bbc7bc",
+  "source_sha256": "8e6ed2cce7cf9230c92401748847c3955b53cca355fa568263aadd615e1e1ef1",
+  "totals": {
+    "fn": 0,
+    "fp": 0,
+    "tn": 2,
+    "tp": 1
+  }
+}

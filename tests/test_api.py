@@ -127,14 +127,15 @@ class AnalystAPITests(unittest.TestCase):
         self.assertFalse(messages[0]["return_path_required"])
         traffic = [item for item in messages if item["type"] == "traffic"]
         alerts = [item for item in messages if item["type"] == "alert"]
-        self.assertEqual(len(traffic), 67)
+        self.assertEqual(len(traffic), 69)
         self.assertEqual({item["alert"]["threat_type"] for item in alerts}, {
             "dns_threat", "command_and_control", "data_exfiltration",
             "denial_of_service", "reconnaissance", "encrypted_session_threat",
         })
         ml_alerts = [item for item in alerts if item["alert"]["subtype"] == "dga_like_domain"]
         self.assertTrue(ml_alerts)
-        self.assertEqual(ml_alerts[0]["detection_method"], "Character n-gram ML model")
+        self.assertEqual(ml_alerts[0]["detection_method"],
+                         "Character n-gram ML with DNS campaign corroboration")
         ddos_classes = {
             item["alert"]["subtype"]: item["alert"]["threat_class"]
             for item in alerts if item["alert"]["threat_type"] == "denial_of_service"
@@ -185,7 +186,7 @@ class AnalystAPITests(unittest.TestCase):
         self.assertTrue(messages[-1]["passive"])
         self.assertTrue(messages[-1]["bounded_latency"])
         self.assertFalse(messages[-1]["return_path_required"])
-        self.assertEqual(messages[-1]["telemetry"]["dns_records"], 21)
+        self.assertEqual(messages[-1]["telemetry"]["dns_records"], 23)
         self.assertEqual(messages[-1]["telemetry"]["encrypted_session_records"], 8)
 
 

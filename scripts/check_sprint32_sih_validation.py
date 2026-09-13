@@ -183,7 +183,7 @@ def main() -> int:
             completed = messages[-1]
             stream_gates = {
                 "http_success": stream.status_code == 200,
-                "incremental_records_exact": sum(item["type"] == "traffic" for item in messages) == 67,
+                "incremental_records_exact": sum(item["type"] == "traffic" for item in messages) == 69,
                 "alerts_emitted_before_completion": any(item["type"] == "alert" for item in messages[:-1]),
                 "bounded_near_real_time": (
                     completed.get("type") == "complete" and completed.get("bounded_latency") is True

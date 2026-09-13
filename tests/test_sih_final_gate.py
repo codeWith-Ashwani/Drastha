@@ -21,7 +21,12 @@ class FinalGateTests(unittest.TestCase):
                "fp_sessions": 0, "fn_sessions": 6, "tn_sessions": 110,
                "feature_coverage": {"counts": {"derived": 16, "insufficient_evidence": 100}}}
         suites = {name: {"passed": True} for name in ("python", "frontend", "build")}
-        return release, flow, metadata, dga, tls, suites
+        campaign = {"quality_healthy": True, "no_unexpected_alerts": True,
+                    "totals": {"tp": 1, "fp": 0, "fn": 0, "tn": 2}}
+        external = {"quality_healthy": True, "passed_behaviour_controls": True,
+                    "totals": {"tp": 1, "fp": 0, "fn": 0, "tn": 2}}
+        tls_positive = {"passed": True, "tp": 4, "fp": 0, "fn": 4, "tn": 114}
+        return release, flow, metadata, dga, tls, suites, campaign, external, tls_positive
 
     def test_existing_demo_success_cannot_promote_failed_fresh_holdouts(self):
         report = assess(*self.reports())
@@ -29,16 +34,16 @@ class FinalGateTests(unittest.TestCase):
         self.assertFalse(report["fresh_source_evidence_complete"])
         self.assertFalse(report["release_promotion_allowed"])
         self.assertFalse(report["gates"]["fresh_published_dga_detection"])
-        self.assertFalse(report["gates"]["fresh_measured_tls_positive"])
+        self.assertTrue(report["gates"]["fresh_measured_tls_positive"])
 
     def test_fresh_evidence_and_suites_are_required_separately(self):
-        release, flow, metadata, dga, tls, suites = self.reports()
+        release, flow, metadata, dga, tls, suites, campaign, external, tls_positive = self.reports()
         dga["totals"].update(tp=38, fn=2, fp=0, tn=40)
-        tls.update(tp_sessions=4, fn_sessions=2)
-        report = assess(release, flow, metadata, dga, tls, suites)
+        report = assess(release, flow, metadata, dga, tls, suites, campaign, external, tls_positive)
         self.assertTrue(report["release_promotion_allowed"])
         suites["python"]["passed"] = False
-        self.assertFalse(assess(release, flow, metadata, dga, tls, suites)["release_promotion_allowed"])
+        self.assertFalse(assess(release, flow, metadata, dga, tls, suites,
+                                campaign, external, tls_positive)["release_promotion_allowed"])
 
 
 if __name__ == "__main__":

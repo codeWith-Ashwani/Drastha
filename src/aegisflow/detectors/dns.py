@@ -24,6 +24,11 @@ class DNSConfig:
     dga_lexical_entropy_threshold: float = 3.0
     dga_lexical_digit_ratio_threshold: float = 0.15
     dga_lexical_maximum_vowel_ratio: float = 0.25
+    dga_failed_campaign_query_threshold: int = 12
+    dga_failed_campaign_unique_roots: int = 10
+    dga_failed_campaign_minimum_failure_ratio: float = 0.8
+    dga_model_correlated_failed_roots: int = 2
+    dga_model_correlated_resolved_roots: int = 3
     cooldown_seconds: float = 120.0
 
     def __post_init__(self) -> None:
@@ -33,6 +38,13 @@ class DNSConfig:
             raise ValueError("DNS tunnel thresholds must be at least 2")
         if not 0.0 < self.dga_probability_threshold < 1.0:
             raise ValueError("DGA probability threshold must be between 0 and 1")
+        if (self.dga_failed_campaign_query_threshold < 2 or
+                self.dga_failed_campaign_unique_roots < 2 or
+                not 0 < self.dga_failed_campaign_minimum_failure_ratio <= 1):
+            raise ValueError("Invalid failed-domain campaign thresholds")
+        if min(self.dga_model_correlated_failed_roots,
+               self.dga_model_correlated_resolved_roots) < 2:
+            raise ValueError("Model-positive DNS context needs multiple roots")
 
 
 class DNSDetector:
@@ -61,6 +73,12 @@ class DNSDetector:
             str, tuple[DNSEvent, str, dict[str, float]]
         ] = KeyedSlidingWindow(self.config.window_seconds)
         self._last_alert: dict[tuple[str, str, str], float] = {}
+        self._failed_campaigns: KeyedSlidingWindow[str, tuple[DNSEvent, str]] = KeyedSlidingWindow(
+            self.config.window_seconds
+        )
+        self._model_candidates: KeyedSlidingWindow[
+            str, tuple[DNSEvent, str, float]
+        ] = KeyedSlidingWindow(self.config.window_seconds)
 
     def process(self, event: DNSEvent) -> list[Alert]:
         alerts: list[Alert] = []
@@ -71,8 +89,22 @@ class DNSDetector:
         if self.model and root not in self.allowlisted_base_domains:
             probability = self.model.predict_probability(model_input)
             key = (event.src_ip, "dga_like_domain", model_input)
-            if probability >= self.config.dga_probability_threshold and self._cooldown_ready(key, event.timestamp):
-                alerts.append(self._dga_alert(event, probability, model_input))
+            if probability >= self.config.dga_probability_threshold:
+                if event.response_code and event.response_code.upper() != "UNKNOWN":
+                    candidates = [item.value for item in self._model_candidates.add(
+                        event.src_ip, event.timestamp, (event, root, probability))]
+                    distinct = {item[1] for item in candidates}
+                    failed = sum(item[0].response_code.upper() in {"NXDOMAIN", "3"}
+                                 for item in candidates)
+                    minimum = (self.config.dga_model_correlated_failed_roots if failed >= 2
+                               else self.config.dga_model_correlated_resolved_roots)
+                    correlated_key = (event.src_ip, "dga_like_domain", "model-correlated-campaign")
+                    if len(distinct) >= minimum and self._cooldown_ready(correlated_key, event.timestamp):
+                        alerts.append(self._model_campaign_alert(event, candidates, minimum))
+                elif self._cooldown_ready(key, event.timestamp):
+                    # Legacy no-response feeds retain their earlier model-only
+                    # behaviour, explicitly weaker than resolver-correlated DNS.
+                    alerts.append(self._dga_alert(event, probability, model_input))
 
         label = leftmost_label(root)
         label_features = lexical_features(label)
@@ -98,6 +130,22 @@ class DNSDetector:
                 and self._cooldown_ready(lexical_key, event.timestamp)
             ):
                 alerts.append(self._lexical_dga_alert(event, candidates, distinct_roots))
+
+        # Word-like DGA families can defeat domain-only entropy/n-gram scores.
+        # Require actual passive resolver outcome plus many different failures
+        # from one client; missing response metadata cannot satisfy this path.
+        if root not in self.allowlisted_base_domains:
+            campaign_window = self._failed_campaigns.add(event.src_ip, event.timestamp, (event, root))
+            campaign = [item.value for item in campaign_window]
+            distinct = {item[1] for item in campaign}
+            failures = sum(item[0].response_code.upper() in {"NXDOMAIN", "3"} for item in campaign)
+            ratio = failures / len(campaign)
+            campaign_key = (event.src_ip, "dga_like_domain", "failed-domain-campaign")
+            if (len(campaign) >= self.config.dga_failed_campaign_query_threshold
+                    and len(distinct) >= self.config.dga_failed_campaign_unique_roots
+                    and ratio >= self.config.dga_failed_campaign_minimum_failure_ratio
+                    and self._cooldown_ready(campaign_key, event.timestamp)):
+                alerts.append(self._failed_campaign_alert(event, campaign, distinct, ratio))
 
         window = self._queries.add((event.src_ip, root), event.timestamp, event)
         queries = [item.value for item in window]
@@ -183,6 +231,36 @@ class DNSDetector:
             ),
         )
 
+    def _model_campaign_alert(
+        self, event: DNSEvent, candidates: list[tuple[DNSEvent, str, float]], minimum: int,
+    ) -> Alert:
+        probability = max(item[2] for item in candidates)
+        distinct = {item[1] for item in candidates}
+        return Alert(
+            alert_id=self._identity("dga_like_domain", event, "model-correlated-campaign"),
+            detector_id=self.detector_id, detector_version="0.3.0",
+            threat_type="dns_threat", subtype="dga_like_domain",
+            confidence=round(min(0.9, 0.55 + 0.15 * probability + 0.05 * min(len(distinct), 4)), 3),
+            severity="medium", window_start=candidates[0][0].timestamp,
+            window_end=event.timestamp, src_ip=event.src_ip, dst_ip=event.dst_ip,
+            flow_ids=tuple(dict.fromkeys(item[0].flow_id for item in candidates)),
+            evidence=(
+                Evidence("distinct_model_positive_roots", len(distinct), f">= {minimum}",
+                         "Several DNS roots scored positive within one client window; a single name is insufficient."),
+                Evidence("maximum_model_score", round(probability, 4),
+                         f">= {self.config.dga_probability_threshold}",
+                         "Character n-gram score is supporting evidence, not a calibrated infection probability."),
+                Evidence("observed_failed_responses", sum(
+                    item[0].response_code.upper() in {"NXDOMAIN", "3"} for item in candidates),
+                    "passive resolver context", "Resolver outcomes distinguish failed from successful lookups."),
+            ),
+            limitations=(
+                "Repeated generated-looking domains can be legitimate operational traffic.",
+                "The bundled n-gram model remains weak on unseen word-like DGA families.",
+                "This is a suspicious DNS campaign, not a malware or infection verdict.",
+            ),
+        )
+
     def _lexical_dga_alert(
         self,
         event: DNSEvent,
@@ -203,14 +281,10 @@ class DNSDetector:
             alert_id=self._identity("dga_like_domain", event, "lexical-campaign"),
             detector_id=self.detector_id,
             detector_version=self.detector_version,
-            threat_type="dns_threat",
-            subtype="dga_like_domain",
-            confidence=round(confidence, 3),
-            severity="medium",
-            window_start=candidates[0][0].timestamp,
-            window_end=event.timestamp,
-            src_ip=event.src_ip,
-            dst_ip=event.dst_ip,
+            threat_type="dns_threat", subtype="dga_like_domain",
+            confidence=round(confidence, 3), severity="medium",
+            window_start=candidates[0][0].timestamp, window_end=event.timestamp,
+            src_ip=event.src_ip, dst_ip=event.dst_ip,
             flow_ids=tuple(item[0].flow_id for item in candidates),
             evidence=(
                 Evidence("distinct_suspicious_domains", len(distinct_roots), f">= {self.config.dga_lexical_query_threshold}", "Several independently generated-looking domains appeared from one source inside the window."),
@@ -222,6 +296,40 @@ class DNSDetector:
                 "This lexical fallback requires multiple suspicious domains and remains weaker than a calibrated family-separated ML model.",
                 "CDNs and generated service identifiers can share these lexical characteristics.",
                 "Encrypted DNS that is not visible to the sensor cannot be evaluated.",
+            ),
+        )
+
+    def _failed_campaign_alert(
+        self, event: DNSEvent, campaign: list[tuple[DNSEvent, str]],
+        distinct: set[str], ratio: float,
+    ) -> Alert:
+        confidence = min(0.9, 0.54 + 0.14 * ratio + 0.10 * min(len(distinct) / 20, 1))
+        return Alert(
+            alert_id=self._identity("dga_like_domain", event, "failed-domain-campaign"),
+            detector_id=self.detector_id,
+            detector_version="0.3.0",
+            threat_type="dns_threat", subtype="dga_like_domain",
+            confidence=round(confidence, 3), severity="medium",
+            window_start=campaign[0][0].timestamp, window_end=event.timestamp,
+            src_ip=event.src_ip, dst_ip=event.dst_ip,
+            flow_ids=tuple(dict.fromkeys(item[0].flow_id for item in campaign)),
+            evidence=(
+                Evidence("distinct_queried_roots", len(distinct),
+                         f">= {self.config.dga_failed_campaign_unique_roots}",
+                         "Many distinct DNS roots came from the same passive client window."),
+                Evidence("nxdomain_ratio", round(ratio, 3),
+                         f">= {self.config.dga_failed_campaign_minimum_failure_ratio}",
+                         "Resolver outcomes show repeated failed lookups, not inferred registration status."),
+                Evidence("query_count", len(campaign),
+                         f">= {self.config.dga_failed_campaign_query_threshold}",
+                         "A burst of DNS queries supports a campaign-level hypothesis."),
+                Evidence("representative_domain", event.query, "context only",
+                         "A word-like name can evade lexical DGA models; this query is illustrative, not proof."),
+            ),
+            limitations=(
+                "Bulk legitimate typo, testing or service-discovery failures can resemble a DGA campaign.",
+                "This context path cannot classify isolated domains or traffic without DNS response metadata.",
+                "NXDOMAIN and fan-out support a DGA hypothesis, not malware attribution.",
             ),
         )
 

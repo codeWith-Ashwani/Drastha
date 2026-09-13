@@ -1,4 +1,6 @@
 {"ts":1000.0,"uid":"dga-1","id.orig_h":"10.0.0.25","id.resp_h":"10.0.0.53","query":"v8m2q6z9x4c7n1k5.biz","qtype_name":"A","rcode_name":"NXDOMAIN","answers":[]}
+{"ts":1000.1,"uid":"dga-2","id.orig_h":"10.0.0.25","id.resp_h":"10.0.0.53","query":"v8m2q6z9x4c7n1k6.biz","qtype_name":"A","rcode_name":"NXDOMAIN","answers":[]}
+{"ts":1000.2,"uid":"dga-3","id.orig_h":"10.0.0.25","id.resp_h":"10.0.0.53","query":"z8m2q6z9x4c7n1k5.biz","qtype_name":"A","rcode_name":"NXDOMAIN","answers":[]}
 {"ts":1010.0,"uid":"tun-01","id.orig_h":"10.0.0.99","id.resp_h":"10.0.0.53","query":"a8f3d9c2b7e4a1f6d8c3.tunnel-demo.test","qtype_name":"TXT","rcode_name":"NOERROR","answers":["ok"]}
 {"ts":1011.0,"uid":"tun-02","id.orig_h":"10.0.0.99","id.resp_h":"10.0.0.53","query":"b7e2c8f4a9d1b6e3c5f8.tunnel-demo.test","qtype_name":"TXT","rcode_name":"NOERROR","answers":["ok"]}
 {"ts":1012.0,"uid":"tun-03","id.orig_h":"10.0.0.99","id.resp_h":"10.0.0.53","query":"c6d1f7a3e8b2c9d4f5a7.tunnel-demo.test","qtype_name":"TXT","rcode_name":"NOERROR","answers":["ok"]}

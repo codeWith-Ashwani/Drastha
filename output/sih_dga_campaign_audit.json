@@ -1,0 +1,71 @@
+{
+  "actual_dns_responses_captured": false,
+  "domain_only_generalization_fixed": false,
+  "limitations": [
+    "The publisher supplied domain strings, not DNS response telemetry; resolver outcomes were simulated and disclosed before inference.",
+    "Campaign-context success cannot replace the failed bare-domain Vawtrak holdout or a field DNS capture."
+  ],
+  "no_unexpected_alerts": true,
+  "quality_healthy": true,
+  "reports": [
+    {
+      "accepted": 40,
+      "behaviour_fn": 0,
+      "behaviour_fp": 0,
+      "behaviour_tn": 0,
+      "behaviour_tp": 1,
+      "dga_alerts": 1,
+      "evidence": [
+        {
+          "distinct_queried_roots": 12,
+          "nxdomain_ratio": 1.0,
+          "query_count": 12,
+          "representative_domain": "defonnihas.com"
+        }
+      ],
+      "expected": "dga_like_domain",
+      "quality": "healthy",
+      "records": 40,
+      "rejected": 0,
+      "scenario": "published-vawtrak-failed",
+      "unexpected_alert_subtypes": []
+    },
+    {
+      "accepted": 40,
+      "behaviour_fn": 0,
+      "behaviour_fp": 0,
+      "behaviour_tn": 1,
+      "behaviour_tp": 0,
+      "dga_alerts": 0,
+      "evidence": [],
+      "expected": "benign",
+      "quality": "healthy",
+      "records": 40,
+      "rejected": 0,
+      "scenario": "published-legit-resolved",
+      "unexpected_alert_subtypes": []
+    },
+    {
+      "accepted": 40,
+      "behaviour_fn": 0,
+      "behaviour_fp": 0,
+      "behaviour_tn": 1,
+      "behaviour_tp": 0,
+      "dga_alerts": 0,
+      "evidence": [],
+      "expected": "benign",
+      "quality": "healthy",
+      "records": 40,
+      "rejected": 0,
+      "scenario": "published-legit-occasional-misses",
+      "unexpected_alert_subtypes": []
+    }
+  ],
+  "schema_version": "drastha-sih-dga-campaign-audit-v1",
+  "totals": {
+    "fn": 0,
+    "fp": 0,
+    "tn": 2,
+    "tp": 1
+  }
+}

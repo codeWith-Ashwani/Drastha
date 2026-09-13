@@ -1,0 +1,11 @@
+{
+  "schema_version": "drastha-sih-tls-positive-labels-v1",
+  "frozen_before_inference": true,
+  "capture_id": "sih26145-tls-positive-v1",
+  "generator": "scripts/generate_sih_tls_positive_capture.sh",
+  "analysis_extractor": "packet-sequence-tail-robust-v2",
+  "expected_sessions": {"baseline": 110, "rare-benign": 4, "paced-size-anomaly": 8},
+  "purpose": "Compare real encrypted packet-size/timing sequences after TLS handshakes in a no-default-route lab",
+  "malware_identified": false,
+  "control_limitations": "Paced large records are an anomaly control, not evidence of infection or exfiltration. Rare-benign TLS sessions test fingerprint-only false positives."
+}

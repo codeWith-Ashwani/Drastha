@@ -70,6 +70,11 @@ rejected model learns sparse logistic weights over hashed n-grams and standardiz
 lexical values. None of these scores is a calibrated infection probability.
 A guarded fallback requires several distinct digit-heavy, high-entropy, low-vowel
 domains from one source inside a window; one random-looking domain is insufficient.
+The [SIH validation follow-up](SIH_VALIDATION_FOLLOWUP.md) adds a separate
+high-NXDOMAIN, many-root same-client campaign path for word-like names and requires
+multiple model-positive roots when actual resolver status is known. Missing status
+keeps the old, weaker model-only path. A guarded newly trained research candidate
+failed its external FPR gate and was **not** promoted.
 
 ### Training and validation
 
@@ -118,6 +123,12 @@ endpoint policy acts as a negative signal, never a positive trigger.
 TLS/QUIC payload is never decrypted. A finding requires repeated sessions with the
 same JA3/JA4 identity, low fingerprint prevalence, high packet-size-sequence anomaly,
 and high timing-sequence anomaly. Fingerprint rarity by itself cannot alert.
+For completed packet-attached flows, the versioned extractor scores a final
+observed packet window (including post-handshake encrypted records) against prior
+same-service sequences using robust positional deviations. The event timestamp
+is advanced to the last retained packet; no future observation or payload content
+is used. A new isolated PCAP positive control passes with zero benign alerts;
+see [the measured result and caveats](SIH_VALIDATION_FOLLOWUP.md).
 
 ## Reconnaissance
 

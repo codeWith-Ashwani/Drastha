@@ -6,7 +6,7 @@ from collections import Counter, OrderedDict, deque
 from dataclasses import asdict, dataclass, replace
 from hashlib import sha256
 import json
-from statistics import median
+from statistics import median, quantiles
 
 from aegisflow.models import EncryptedSessionMetadata
 
@@ -65,11 +65,14 @@ def sequence_vectors(event, config):
     if len(sizes) < config.minimum_packets:
         return None, "packet_sequence_too_short"
     count = min(len(sizes), config.sequence_length)
-    return (tuple(sizes[:count]), tuple(b - a for a, b in zip(times[:count], times[1:count]))), None
+    # The first packets of a completed TLS flow are mostly TCP/TLS handshakes.
+    # Retain the final observed window so size and pacing include later encrypted
+    # application records without looking at payload or beyond the flow timestamp.
+    return (tuple(sizes[-count:]), tuple(b - a for a, b in zip(times[-count:], times[-count + 1:]))), None
 
 
 class PassiveFeatureExtractor:
-    version = "packet-sequence-robust-v1"
+    version = "packet-sequence-tail-robust-v2"
 
     def __init__(self, config=None):
         self.config = config or PassiveFeatureConfig()
@@ -86,7 +89,11 @@ class PassiveFeatureExtractor:
             mad = median(abs(x - center) for x in reference)
             scale = max(1.4826 * mad, floor)
             deviations.append(abs(value - center) / scale)
-        return round(min(1.0, median(deviations) / self.config.anomaly_scale), 6)
+        # An entire sequence need not shift: two or more changed encrypted
+        # records can matter. The inclusive upper quartile ignores a lone spike
+        # while retaining a repeated departure from prior comparable flows.
+        upper_quartile = quantiles(deviations, n=4, method="inclusive")[2] if len(deviations) > 1 else deviations[0]
+        return round(min(1.0, upper_quartile / self.config.anomaly_scale), 6)
 
     def enrich(self, event: EncryptedSessionMetadata, *, allow_supplied=False):
         self.counts["observations"] += 1
@@ -136,6 +143,7 @@ class PassiveFeatureExtractor:
         metadata = {"extractor_version": self.version, "status": "derived" if available else "insufficient_evidence",
                     "reasons": statuses, "baseline_sessions": len(baselines), "prevalence_sessions": len(prior),
                     "baseline_scope": list(cohort), "history_seconds": self.config.history_seconds,
+                    "sequence_selection": "last_observed_packets",
                     "flow_id": event.flow_id, "observation_time": event.timestamp,
                     "capture_provenance": event.raw.get("capture_provenance"),
                     "sequence_sha256": sha256(json.dumps(event.raw.get("packet_observations"), sort_keys=True).encode()).hexdigest()}

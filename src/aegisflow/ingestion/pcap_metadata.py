@@ -16,7 +16,7 @@ from pathlib import Path
 import struct
 
 
-VERSION = "pcap-header-ja3-v1"
+VERSION = "pcap-header-ja3-recent-sequence-v2"
 
 
 def client_hello_ja3(payload: bytes):
@@ -212,7 +212,11 @@ def extract_capture(path, connections, *, maximum_packets=5_000_000, sequence_li
             if len(sequence) < sequence_limit:
                 sequence.append({"ts": timestamp, "ip_bytes": ip_bytes, "direction": direction})
             else:
-                counters["sequence_tail_not_retained"] += 1
+                # Keep a bounded *recent* window. An earlier prefix-only cap
+                # silently hid post-handshake TLS application timing and size.
+                sequence.pop(0)
+                sequence.append({"ts": timestamp, "ip_bytes": ip_bytes, "direction": direction})
+                counters["sequence_head_not_retained"] += 1
             if hello and direction == "orig":
                 fingerprint_times[identity] = max(timestamp, fingerprint_times.get(identity, timestamp))
                 if identity in fingerprints and fingerprints[identity] != hello:

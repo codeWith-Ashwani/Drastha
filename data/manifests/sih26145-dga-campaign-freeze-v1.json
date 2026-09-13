@@ -1,0 +1,29 @@
+{
+  "actual_dns_responses_captured": false,
+  "artifacts": [
+    {
+      "path": "examples/sih26145_dga_campaign_v1/published-vawtrak-failed.jsonl",
+      "records": 40,
+      "scenario": "published-vawtrak-failed",
+      "sha256": "fb805bb2ab3f833874ec0bef948a19520ba8b1e441e4cf13a28e34cf2bd320c3"
+    },
+    {
+      "path": "examples/sih26145_dga_campaign_v1/published-legit-resolved.jsonl",
+      "records": 40,
+      "scenario": "published-legit-resolved",
+      "sha256": "a3e854b0571707695b3d6492b5f34d0add5a9e0eab69a3bf4f285276974a35be"
+    },
+    {
+      "path": "examples/sih26145_dga_campaign_v1/published-legit-occasional-misses.jsonl",
+      "records": 40,
+      "scenario": "published-legit-occasional-misses",
+      "sha256": "d98cbc1933a8078bb5ccdbe155c24c5dfc330e075acbf87c68379a2361660140"
+    }
+  ],
+  "inference_run_at_freeze": false,
+  "labels": "data/manifests/sih26145-dga-campaign-labels-v1.json",
+  "labels_sha256": "7c3148e3ae415e8cb0c084534ef5e8d08a9cb96df64a0e2ae9c7f3f8f8b9933a",
+  "schema_version": "drastha-sih-dga-campaign-freeze-v1",
+  "source_freeze": "data/manifests/sih26145-gate2-dga-freeze-v1.json",
+  "source_freeze_sha256": "a200f77f912e247467f1b0913aedee986c9dab174b2605d30b8ebe3cfa30087f"
+}

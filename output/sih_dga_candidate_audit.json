@@ -1,0 +1,333 @@
+{
+  "candidate_sha256": "a68ffad6d3b03a2ffe98644d577bdb3d291aadf8200647d603d9c92bc167f8b2",
+  "deployment_model_changed": false,
+  "external_publisher": {
+    "family_counts": {
+      "alexa": 100,
+      "kraken": 100
+    },
+    "metrics": {
+      "f1": 0.8913043478260869,
+      "fn": 18,
+      "fp": 2,
+      "fpr": 0.02,
+      "fpr_interval_95": [
+        0.00550196755016235,
+        0.07001179072854388
+      ],
+      "per_family": {
+        "alexa": {
+          "f1": 0.0,
+          "fn": 0,
+          "fp": 2,
+          "fpr": 0.02,
+          "fpr_interval_95": [
+            0.00550196755016235,
+            0.07001179072854388
+          ],
+          "precision": 0.0,
+          "recall": null,
+          "recall_interval_95": null,
+          "tn": 98,
+          "tp": 0
+        },
+        "kraken": {
+          "f1": 0.9010989010989011,
+          "fn": 18,
+          "fp": 0,
+          "fpr": null,
+          "fpr_interval_95": null,
+          "precision": 1.0,
+          "recall": 0.82,
+          "recall_interval_95": [
+            0.7333264161369926,
+            0.8829977450105364
+          ],
+          "tn": 0,
+          "tp": 82
+        }
+      },
+      "precision": 0.9761904761904762,
+      "recall": 0.82,
+      "recall_interval_95": [
+        0.7333264161369926,
+        0.8829977450105364
+      ],
+      "records": 200,
+      "score_diagnostics": {
+        "brier": 0.03177879306974644,
+        "ece_10_bins": 0.03850578435511804,
+        "log_loss": 0.2157856625369998,
+        "reliability_bins": [
+          {
+            "bin": 0,
+            "count": 84,
+            "mean_score": 0.005947897747745014,
+            "positive_fraction": 0.0
+          },
+          {
+            "bin": 1,
+            "count": 5,
+            "mean_score": 0.11473604669527923,
+            "positive_fraction": 0.2
+          },
+          {
+            "bin": 2,
+            "count": 2,
+            "mean_score": 0.22286228697537258,
+            "positive_fraction": 0.0
+          },
+          {
+            "bin": 3,
+            "count": 2,
+            "mean_score": 0.3463371333784461,
+            "positive_fraction": 0.0
+          },
+          {
+            "bin": 4,
+            "count": 2,
+            "mean_score": 0.4512633742573693,
+            "positive_fraction": 0.5
+          },
+          {
+            "bin": 5,
+            "count": 3,
+            "mean_score": 0.5353859991348221,
+            "positive_fraction": 0.0
+          },
+          {
+            "bin": 7,
+            "count": 3,
+            "mean_score": 0.7679098396737878,
+            "positive_fraction": 1.0
+          },
+          {
+            "bin": 8,
+            "count": 2,
+            "mean_score": 0.832590279390324,
+            "positive_fraction": 0.5
+          },
+          {
+            "bin": 9,
+            "count": 97,
+            "mean_score": 0.9955848717972451,
+            "positive_fraction": 0.9690721649484536
+          }
+        ]
+      },
+      "threshold": 0.995,
+      "tn": 98,
+      "tp": 82
+    },
+    "sample_records": 200,
+    "source_commit": "9dcc29e5cc644fdfd99d82a3abec993c15bbc7bc"
+  },
+  "limitations": [
+    "Old UMUDGA test families, including Vawtrak, were already inspected and are now training-only.",
+    "The external 100+100 domain sample is too small for the frozen 1,000-positive/negative promotion gates.",
+    "The external publisher has already been used for campaign-context validation, though not for this model's fitting or threshold selection.",
+    "Domain-only scores omit resolver response and client campaign context; no production generalization claim is made."
+  ],
+  "model_type": "character_ngram_multinomial_naive_bayes",
+  "promotion_eligible": false,
+  "research_status": "not_approved",
+  "schema_version": "drastha-sih-dga-domain-candidate-v1",
+  "selection": {
+    "selected_threshold": 0.995,
+    "selected_validation": {
+      "f1": 0.9363040629095675,
+      "fn": 214,
+      "fp": 29,
+      "fpr": 0.005849132714804356,
+      "fpr_interval_95": [
+        0.004075718851018146,
+        0.008387690013196612
+      ],
+      "per_family": {
+        "publisher-legit-validation": {
+          "f1": 0.0,
+          "fn": 0,
+          "fp": 29,
+          "fpr": 0.005849132714804356,
+          "fpr_interval_95": [
+            0.004075718851018146,
+            0.008387690013196612
+          ],
+          "precision": 0.0,
+          "recall": null,
+          "recall_interval_95": null,
+          "tn": 4929,
+          "tp": 0
+        },
+        "sisron": {
+          "f1": 0.8801791713325868,
+          "fn": 214,
+          "fp": 0,
+          "fpr": null,
+          "fpr_interval_95": null,
+          "precision": 1.0,
+          "recall": 0.786,
+          "recall_interval_95": [
+            0.7595111793607143,
+            0.8102999147855483
+          ],
+          "tn": 0,
+          "tp": 786
+        },
+        "symmi": {
+          "f1": 1.0,
+          "fn": 0,
+          "fp": 0,
+          "fpr": null,
+          "fpr_interval_95": null,
+          "precision": 1.0,
+          "recall": 1.0,
+          "recall_interval_95": [
+            0.996173241514445,
+            1
+          ],
+          "tn": 0,
+          "tp": 1000
+        }
+      },
+      "precision": 0.9840220385674932,
+      "recall": 0.893,
+      "recall_interval_95": [
+        0.8786914023121892,
+        0.905801798524746
+      ],
+      "records": 6958,
+      "score_diagnostics": {
+        "brier": 0.03192612331588386,
+        "ece_10_bins": 0.045711546668497374,
+        "log_loss": 0.13044256302112023,
+        "reliability_bins": [
+          {
+            "bin": 0,
+            "count": 4333,
+            "mean_score": 0.006849866012786325,
+            "positive_fraction": 0.0
+          },
+          {
+            "bin": 1,
+            "count": 179,
+            "mean_score": 0.1435663164021809,
+            "positive_fraction": 0.0111731843575419
+          },
+          {
+            "bin": 2,
+            "count": 70,
+            "mean_score": 0.24742451180798503,
+            "positive_fraction": 0.014285714285714285
+          },
+          {
+            "bin": 3,
+            "count": 64,
+            "mean_score": 0.3459609780154158,
+            "positive_fraction": 0.0625
+          },
+          {
+            "bin": 4,
+            "count": 47,
+            "mean_score": 0.4544020997028767,
+            "positive_fraction": 0.0
+          },
+          {
+            "bin": 5,
+            "count": 41,
+            "mean_score": 0.5441177825590333,
+            "positive_fraction": 0.14634146341463414
+          },
+          {
+            "bin": 6,
+            "count": 41,
+            "mean_score": 0.6491256875003509,
+            "positive_fraction": 0.17073170731707318
+          },
+          {
+            "bin": 7,
+            "count": 48,
+            "mean_score": 0.7470009707664942,
+            "positive_fraction": 0.1875
+          },
+          {
+            "bin": 8,
+            "count": 61,
+            "mean_score": 0.8523722198481287,
+            "positive_fraction": 0.22950819672131148
+          },
+          {
+            "bin": 9,
+            "count": 2074,
+            "mean_score": 0.9957040743801678,
+            "positive_fraction": 0.9435872709739633
+          }
+        ]
+      },
+      "threshold": 0.995,
+      "tn": 4929,
+      "tp": 1786
+    },
+    "threshold_grid": [
+      0.5,
+      0.7,
+      0.8,
+      0.9,
+      0.95,
+      0.975,
+      0.99,
+      0.995,
+      0.999,
+      0.9995,
+      0.9999
+    ],
+    "validation_gate_failures": []
+  },
+  "source_audit_sha256": "adcc4dc710a194cb93a0132e8efd22f96cae14f0e262163932b14d931cd4921e",
+  "training_families": [
+    "alureon",
+    "banjori",
+    "bedep",
+    "ccleaner",
+    "chinad",
+    "corebot",
+    "dircrypt",
+    "dyre",
+    "fobber_v1",
+    "fobber_v2",
+    "gozi",
+    "kraken_v1",
+    "kraken_v2",
+    "matsnu",
+    "murofet_v1",
+    "murofet_v2",
+    "murofet_v3",
+    "necurs",
+    "nymaim",
+    "padcrypt",
+    "pizd",
+    "proslikefan",
+    "pushdo",
+    "pykspa",
+    "qadars",
+    "qakbot",
+    "ramdo",
+    "ramnit",
+    "ranbyus",
+    "ranbyus_v1",
+    "rovnix",
+    "shiotob",
+    "simda",
+    "suppobox",
+    "tempedreve",
+    "tinba",
+    "vawtrak",
+    "zeus-newgoz"
+  ],
+  "training_records": 80871,
+  "validation_families": [
+    "sisron",
+    "symmi"
+  ],
+  "validation_records": 6958
+}

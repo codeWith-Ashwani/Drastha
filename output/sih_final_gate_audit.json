@@ -3,8 +3,10 @@
   "functional_prototype_verified": true,
   "gates": {
     "dashboard_build": true,
+    "external_publisher_campaign_controls": true,
+    "fresh_dga_campaign_controls": true,
     "fresh_flow_scenarios": true,
-    "fresh_measured_tls_positive": false,
+    "fresh_measured_tls_positive": true,
     "fresh_published_dga_detection": false,
     "fresh_slow_c2_iodine_scenarios": true,
     "frontend_tests": true,
@@ -15,8 +17,8 @@
   },
   "limitations": [
     "Old 452/153-record controlled scores are integration regressions, not independent accuracy.",
-    "The published DGA sample exposes a deployed-model generalization failure.",
-    "The changed TLS lab control is not malware and did not independently deviate in size/timing; a measured positive is still missing.",
+    "The original published DGA bare-domain sample still exposes a deployed-model generalization failure; the new campaign result needs simulated resolver outcomes.",
+    "The original TLS changed-handshake control did not deviate in size/timing; a separate new paced/size lab control now gives a measured positive, not malware proof.",
     "Raw binary captures are local/gitignored; a clean clone can verify committed fixture hashes but must regenerate captures for raw checks.",
     "A private namespace is a lab simulation, not a physical data diode or production mirror."
   ],
@@ -48,9 +50,9 @@
       "status": "verified_lab"
     },
     {
-      "proof": "output/sih_gate2_dga_audit.json",
+      "proof": "output/sih_gate2_dga_audit.json; output/sih_chrmor_holdout_audit.json",
       "requirement": "DGA from published algorithm samples",
-      "status": "failed_fresh_validation"
+      "status": "campaign_demo_pass_domain_ml_gap"
     },
     {
       "proof": "output/sih_gate2_metadata_audit.json",
@@ -58,9 +60,9 @@
       "status": "verified_lab"
     },
     {
-      "proof": "output/sih_gate2_tls_audit.json",
+      "proof": "output/sih_gate2_tls_audit.json; output/sih_tls_positive_audit.json",
       "requirement": "TLS metadata without payload decryption",
-      "status": "measured_positive_missing"
+      "status": "measured_positive_lab_pass"
     },
     {
       "proof": "output/sih_gate2_flow_audit.json",
@@ -85,6 +87,12 @@
   ],
   "release_promotion_allowed": false,
   "results": {
+    "external_publisher_campaign_controls": {
+      "fn": 0,
+      "fp": 0,
+      "tn": 2,
+      "tp": 1
+    },
     "fresh_flow": {
       "fn": 0,
       "fp": 0,
@@ -97,6 +105,13 @@
       "fp": 0,
       "records": 136,
       "tp": 3
+    },
+    "fresh_tls_measured_positive_control": {
+      "fn": 4,
+      "fp": 0,
+      "passed": true,
+      "tn": 114,
+      "tp": 4
     },
     "prior_release": {
       "passed": true,
@@ -123,6 +138,12 @@
       "tn": 38,
       "tp": 0
     },
+    "simulated_dns_campaign_controls": {
+      "fn": 0,
+      "fp": 0,
+      "tn": 2,
+      "tp": 1
+    },
     "suites": {
       "build": {
         "command": [
@@ -132,7 +153,7 @@
         ],
         "count": null,
         "exit_code": 0,
-        "output_tail": "vite v8.2.2 building client environment for production...\ntransforming...\n\u00e2\u0153\u201c 1814 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                   0.55 kB \u00e2\u201d\u201a gzip:  0.32 kB\ndist/assets/index-vcldsSrX.css   40.84 kB \u00e2\u201d\u201a gzip:  7.48 kB\ndist/assets/index-C1CxEA0G.js   237.03 kB \u00e2\u201d\u201a gzip: 72.57 kB\n\n\u00e2\u0153\u201c built in 517ms\n",
+        "output_tail": "vite v8.2.2 building client environment for production...\ntransforming...\n\u00e2\u0153\u201c 1814 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                   0.55 kB \u00e2\u201d\u201a gzip:  0.32 kB\ndist/assets/index-vcldsSrX.css   40.84 kB \u00e2\u201d\u201a gzip:  7.48 kB\ndist/assets/index-C1CxEA0G.js   237.03 kB \u00e2\u201d\u201a gzip: 72.57 kB\n\n\u00e2\u0153\u201c built in 527ms\n",
         "passed": true
       },
       "frontend": {
@@ -143,7 +164,7 @@
         ],
         "count": 19,
         "exit_code": 0,
-        "output_tail": "n_ms: 0.7911\n  type: 'test'\n  ...\n# Subtest: motion is scoped to active state and disabled for reduced-motion users\nok 19 - motion is scoped to active state and disabled for reduced-motion users\n  ---\n  duration_ms: 0.4104\n  type: 'test'\n  ...\n1..19\n# tests 19\n# suites 0\n# pass 19\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 1231.0014\n",
+        "output_tail": "n_ms: 0.9692\n  type: 'test'\n  ...\n# Subtest: motion is scoped to active state and disabled for reduced-motion users\nok 19 - motion is scoped to active state and disabled for reduced-motion users\n  ---\n  duration_ms: 0.4175\n  type: 'test'\n  ...\n1..19\n# tests 19\n# suites 0\n# pass 19\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 1254.4114\n",
         "passed": true
       },
       "python": {
@@ -156,14 +177,15 @@
           "tests",
           "-v"
         ],
-        "count": 458,
+        "count": 462,
         "exit_code": 0,
-        "output_tail": "s_translates_paths_and_runs_zeek (test_zeek_runner.ZeekRunnerTests.test_wsl_process_translates_paths_and_runs_zeek) ... ok\ntest_wsl_unc_path_maps_back_to_linux_path (test_zeek_runner.ZeekRunnerTests.test_wsl_unc_path_maps_back_to_linux_path) ... ok\n\n----------------------------------------------------------------------\nRan 458 tests in 30.965s\n\nOK\n",
+        "output_tail": "s_translates_paths_and_runs_zeek (test_zeek_runner.ZeekRunnerTests.test_wsl_process_translates_paths_and_runs_zeek) ... ok\ntest_wsl_unc_path_maps_back_to_linux_path (test_zeek_runner.ZeekRunnerTests.test_wsl_unc_path_maps_back_to_linux_path) ... ok\n\n----------------------------------------------------------------------\nRan 462 tests in 32.740s\n\nOK\n",
         "passed": true
       }
     },
     "tls_changed_handshake_control": {
       "coverage": {
+        "anomalous_sessions_excluded_from_baseline": 6,
         "derived": 16,
         "insufficient_evidence": 100,
         "observations": 116,

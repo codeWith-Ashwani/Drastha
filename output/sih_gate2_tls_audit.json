@@ -40,6 +40,7 @@
       "timing_scale_floor": 0.001
     },
     "counts": {
+      "anomalous_sessions_excluded_from_baseline": 6,
       "derived": 16,
       "insufficient_evidence": 100,
       "observations": 116,
@@ -47,7 +48,7 @@
       "sequence_baseline_warmup": 20
     },
     "exfiltration_direction": "configured-boundary-required",
-    "extractor_version": "packet-sequence-robust-v1",
+    "extractor_version": "packet-sequence-tail-robust-v2",
     "mode": "derived",
     "network_direction_counts": {
       "unknown": 116
@@ -73,8 +74,8 @@
       {
         "features": {
           "fingerprint_prevalence": 0.0,
-          "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.005762
+          "packet_size_sequence_anomaly": 1.0,
+          "timing_sequence_anomaly": 0.04216
         },
         "fingerprint": "f146948b4a599d4d7ddf071b74696983",
         "packet_count": 15,
@@ -82,9 +83,9 @@
       },
       {
         "features": {
-          "fingerprint_prevalence": 0.009009009009009009,
-          "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.004371
+          "fingerprint_prevalence": 0.0,
+          "packet_size_sequence_anomaly": 1.0,
+          "timing_sequence_anomaly": 0.034382
         },
         "fingerprint": "f146948b4a599d4d7ddf071b74696983",
         "packet_count": 15,
@@ -92,9 +93,9 @@
       },
       {
         "features": {
-          "fingerprint_prevalence": 0.017857142857142856,
-          "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.005126
+          "fingerprint_prevalence": 0.0,
+          "packet_size_sequence_anomaly": 1.0,
+          "timing_sequence_anomaly": 0.034879
         },
         "fingerprint": "f146948b4a599d4d7ddf071b74696983",
         "packet_count": 15,
@@ -102,9 +103,9 @@
       },
       {
         "features": {
-          "fingerprint_prevalence": 0.02654867256637168,
-          "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.003378
+          "fingerprint_prevalence": 0.0,
+          "packet_size_sequence_anomaly": 1.0,
+          "timing_sequence_anomaly": 0.034044
         },
         "fingerprint": "f146948b4a599d4d7ddf071b74696983",
         "packet_count": 15,
@@ -112,9 +113,9 @@
       },
       {
         "features": {
-          "fingerprint_prevalence": 0.03508771929824561,
-          "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.006517
+          "fingerprint_prevalence": 0.0,
+          "packet_size_sequence_anomaly": 1.0,
+          "timing_sequence_anomaly": 0.035842
         },
         "fingerprint": "f146948b4a599d4d7ddf071b74696983",
         "packet_count": 15,
@@ -122,9 +123,9 @@
       },
       {
         "features": {
-          "fingerprint_prevalence": 0.043478260869565216,
-          "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.003695
+          "fingerprint_prevalence": 0.0,
+          "packet_size_sequence_anomaly": 1.0,
+          "timing_sequence_anomaly": 0.035216
         },
         "fingerprint": "f146948b4a599d4d7ddf071b74696983",
         "packet_count": 15,
@@ -736,7 +737,7 @@
         "features": {
           "fingerprint_prevalence": 1.0,
           "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.003974
+          "timing_sequence_anomaly": 0.008682
         },
         "fingerprint": "d1f47f694f10b1faf653048918492609",
         "packet_count": 13,
@@ -746,7 +747,17 @@
         "features": {
           "fingerprint_prevalence": 1.0,
           "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.002384
+          "timing_sequence_anomaly": 0.002166
+        },
+        "fingerprint": "d1f47f694f10b1faf653048918492609",
+        "packet_count": 13,
+        "status": "derived"
+      },
+      {
+        "features": {
+          "fingerprint_prevalence": 1.0,
+          "packet_size_sequence_anomaly": 0.135417,
+          "timing_sequence_anomaly": 0.007262
         },
         "fingerprint": "d1f47f694f10b1faf653048918492609",
         "packet_count": 13,
@@ -756,7 +767,7 @@
         "features": {
           "fingerprint_prevalence": 1.0,
           "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.000974
+          "timing_sequence_anomaly": 0.009318
         },
         "fingerprint": "d1f47f694f10b1faf653048918492609",
         "packet_count": 13,
@@ -766,7 +777,7 @@
         "features": {
           "fingerprint_prevalence": 1.0,
           "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.004053
+          "timing_sequence_anomaly": 0.002036
         },
         "fingerprint": "d1f47f694f10b1faf653048918492609",
         "packet_count": 13,
@@ -776,7 +787,7 @@
         "features": {
           "fingerprint_prevalence": 1.0,
           "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.003537
+          "timing_sequence_anomaly": 0.011106
         },
         "fingerprint": "d1f47f694f10b1faf653048918492609",
         "packet_count": 13,
@@ -786,7 +797,7 @@
         "features": {
           "fingerprint_prevalence": 1.0,
           "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.002027
+          "timing_sequence_anomaly": 0.008305
         },
         "fingerprint": "d1f47f694f10b1faf653048918492609",
         "packet_count": 13,
@@ -796,7 +807,7 @@
         "features": {
           "fingerprint_prevalence": 1.0,
           "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.006
+          "timing_sequence_anomaly": 0.006835
         },
         "fingerprint": "d1f47f694f10b1faf653048918492609",
         "packet_count": 13,
@@ -806,7 +817,7 @@
         "features": {
           "fingerprint_prevalence": 1.0,
           "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.001629
+          "timing_sequence_anomaly": 0.006268
         },
         "fingerprint": "d1f47f694f10b1faf653048918492609",
         "packet_count": 13,
@@ -816,17 +827,7 @@
         "features": {
           "fingerprint_prevalence": 1.0,
           "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.005921
-        },
-        "fingerprint": "d1f47f694f10b1faf653048918492609",
-        "packet_count": 13,
-        "status": "derived"
-      },
-      {
-        "features": {
-          "fingerprint_prevalence": 1.0,
-          "packet_size_sequence_anomaly": 0.0,
-          "timing_sequence_anomaly": 0.00449
+          "timing_sequence_anomaly": 0.004411
         },
         "fingerprint": "d1f47f694f10b1faf653048918492609",
         "packet_count": 13,

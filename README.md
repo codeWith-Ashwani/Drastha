@@ -244,6 +244,15 @@ reproduction steps](docs/SPRINT_10.md) and the
 - [What problem does Drastha solve?](#what-problem-does-drastha-solve)
 - [What can it detect?](#what-can-it-detect)
 - [How it works](#how-it-works)
+- [Beginner's end-to-end walkthrough](#beginners-end-to-end-walkthrough)
+- [Detection engine: what every detector sees](#detection-engine-what-every-detector-sees)
+- [AI/ML model, training data and libraries](#aiml-model-training-data-and-libraries)
+- [From findings to concluded incidents](#from-findings-to-concluded-incidents)
+- [Data quality and false-positive control](#data-quality-and-false-positive-control)
+- [Database and evidence storage](#database-and-evidence-storage)
+- [Backend APIs and frontend integration](#backend-apis-and-frontend-integration)
+- [Technology stack](#technology-stack)
+- [Dashboard terminology](#dashboard-terminology)
 - [System requirements](#system-requirements)
 - [Clone and run on Windows](#clone-and-run-on-windows)
 - [Clone and run on Linux](#clone-and-run-on-linux)
@@ -284,8 +293,10 @@ return connection to the monitored network.
 | Vertical port scan | Behavioural fan-out analysis | Unique ports, target and time window |
 | Horizontal host scan | Behavioural fan-out analysis | Unique hosts, destination service and time window |
 | SYN flood | Traffic-rate analysis | Attempt count, incomplete ratio and source diversity |
+| Distributed-source SYN flood | Traffic-rate and normalized source-entropy analysis | Incomplete connections, source count and source-IP entropy; spoofing is not claimed |
 | UDP flood | Traffic-rate analysis | Packet volume, bytes and source diversity |
 | UDP reflection/amplification | Response-volume and service-pattern analysis | Direction, packet volume and response pattern |
+| Slow HTTP connection exhaustion | Stateful flow-shape analysis | Long duration, partial state, low bytes/packets and estimated overlap |
 | DGA-like domain/campaign | Character 3-gram Naive Bayes model plus distinct-root/NXDOMAIN campaign context | Uncalibrated model score when present, domain shape, resolver outcome, failed-query ratio and same-client fan-out |
 | DNS tunnelling | Volume and entropy analysis | Query count, unique labels, length and entropy |
 | C2-style callback | Statistical timing analysis | Interval consistency, size consistency and connection count |
@@ -337,6 +348,436 @@ bonus, limited to 100. The corrected accuracy fixture scores **88/100 (critical)
 58 + 15 + 15. This policy score is an investigation priority; it does not establish
 that separate incidents belong to one coordinated attack. The full calculation
 is documented in [Models and features](docs/MODELS_AND_FEATURES.md#overall-replay-risk).
+
+## Beginner's end-to-end walkthrough
+
+This section is the shortest complete explanation of the project. Follow it from
+top to bottom to understand how a file or simulated stream becomes evidence on
+the dashboard.
+
+### 1. Traffic reaches only the monitoring side
+
+The protected network is assumed to feed a network TAP, mirror port or hardware
+data diode. Drastha receives only a copied observation. It has no component that
+scans an endpoint, completes a handshake, sends a packet back, blocks an address,
+or decrypts TLS/QUIC payloads.
+
+Drastha can work with five kinds of monitoring-side input:
+
+| Input | How it enters Drastha | What it provides |
+| --- | --- | --- |
+| JSONL/NDJSON or JSON replay | Browser upload or CLI | Connection, DNS and TLS/QUIC metadata records |
+| Zeek logs | Zeek adapters | `conn.log`, `dns.log`, `ssl.log` and QUIC-style metadata |
+| NetFlow/IPFIX/sFlow-like JSON | Flow-export adapter | Canonical endpoints, ports, protocol, counters and timestamps |
+| Classic PCAP | Local PCAP reader or Zeek runner | Packet-header-derived flow and encrypted-session metadata; payload decryption is never performed |
+| Simulated stream | `GET /api/stream/simulated` | One observation at a time through the same analysis session used by replay processing |
+
+The browser upload accepts `.jsonl`, `.ndjson` and `.json`, up to 5 MB and
+20,000 records. Supported JSON containers are:
+
+- one JSON object per line;
+- one JSON array of record objects;
+- one traffic-record object;
+- a wrapper shaped as `{"records": [...]}`.
+
+A dataset manifest that merely says `"records": 452` is not traffic and is
+rejected with a message asking for the referenced JSONL file.
+
+### 2. Records are parsed and normalized
+
+`ingestion/replay_input.py` identifies the JSON container and preserves original
+line numbers. `ingestion/passive_replay.py` then detects each record family and
+normalizes aliases into one of three typed contracts:
+
+| Internal contract | Important fields | Used by |
+| --- | --- | --- |
+| `NetworkEvent` | timestamp, flow ID, source/destination IP and port, protocol, duration, byte/packet counters, connection state | Recon, DDoS, C2 and exfiltration detectors |
+| `DNSEvent` | timestamp, flow ID, client/resolver IP, query, record type, response code, answers | DGA and DNS-tunnelling detectors |
+| `EncryptedSessionMetadata` | timestamp, flow ID, endpoints, TLS/QUIC transport, SNI, version, cipher, ALPN, JA3/JA3S/JA4-style fingerprints | Encrypted-session anomaly detector and C2 enrichment |
+
+Common Zeek-native connection fields are `ts`, `uid`, `id.orig_h`,
+`id.resp_h` and `proto`; ports and flow statistics provide the features required
+by particular detectors. The normalizer also accepts documented aliases such as
+`timestamp`, `flow_id`, `src_ip` and `dst_ip`. Conflicting aliases are rejected
+instead of silently choosing one.
+
+Uploaded fields such as `evaluation_label`, `ml_label`, `approved_backup`,
+`scheduled_health_check` or a supplied attack name are never trusted as detector
+input. Evaluation labels are retained only for optional post-inference scoring.
+
+### 3. Quality is checked before detector ordering
+
+The quality monitor examines records in their original input order. It counts:
+
+- accepted, rejected and quarantined records;
+- invalid JSON, timestamps, addresses, ports and protocols;
+- timestamps that move backwards and their maximum backward skew;
+- exact and conflicting duplicate flow identifiers;
+- detected schemas, aliases and feature coverage.
+
+After that check, accepted events are ordered by event time for deterministic
+detector processing. Sorting never erases the original out-of-order quality flag.
+Quality is:
+
+- `healthy` when accepted input has no ordering, duplicate or rejection issue;
+- `degraded` when usable input contains any such issue;
+- `unusable` when no supported observation remains or more than 10% is rejected.
+
+### 4. One isolated analysis session processes the stream
+
+Every upload or simulated stream gets a new `AnalysisSession`; detector windows
+and cooldowns are not shared between unrelated runs. At each timestamp the
+session routes the typed event to the applicable detectors. TLS/QUIC metadata at
+the same timestamp is ordered before the related connection so that only already
+observed metadata can enrich the flow. No future look-ahead is used.
+
+Connection records are sent to reconnaissance, DDoS, C2 and exfiltration
+detectors. DNS records go only to DNS analytics. TLS/QUIC metadata goes to the
+encrypted-session detector and can enrich later C2 evidence. When configured,
+internal CIDRs determine inbound/outbound direction before exfiltration analysis.
+
+### 5. Stateful detectors maintain bounded windows
+
+The detectors process records incrementally. A keyed sliding window keeps only
+the recent observations needed for the relevant source, destination or service.
+An alert is produced as soon as a threshold is crossed. Cooldowns stop every
+subsequent packet or flow from creating another identical alert.
+
+At completed-replay time, final reconnaissance snapshots may enrich the evidence,
+but they never replace a threshold-crossing alert that happened earlier. This is
+why a scan cannot disappear merely because it is outside the final ten-second
+window.
+
+### 6. Findings are resolved and deduplicated
+
+`findings.py` applies two important conflict rules:
+
+1. If the same flows form a reconnaissance fan-out, a generic SYN-flood finding
+   on those flows is suppressed. This prevents a port scan from simultaneously
+   appearing as DDoS.
+2. Repeated findings with the same threat type, subtype, source and destination
+   are merged. Their time range and flow IDs are combined and the strongest
+   confidence is retained.
+
+The resulting record is a standardized `drastha-alert-v1` alert with timestamp,
+flow identifier, threat class, confidence, severity and supporting evidence.
+
+### 7. Related alerts become incidents
+
+`IncidentStore` correlates alerts from the same source when their observation
+windows are within 900 seconds. An incident can therefore combine, for example,
+a periodic callback and an outbound-volume anomaly without merging unrelated
+sources.
+
+For every incident Drastha calculates risk, builds an evidence-backed conclusion,
+and records a likely objective, attack stage, potential impact and uncertainty.
+These are cautious hypotheses derived from passive measurements—not claims that
+the attacker's identity or intent has been proven.
+
+### 8. Results are persisted and returned
+
+Alerts, incidents and the complete run snapshot are written through the repository
+layer. The analysis response contains quality, schema, feature coverage, policy
+suppression counts, alerts, incidents, overall risk, stage timings and explicit
+passive-safety flags. A unique `run_id` keeps each replay's full evidence separate
+even if two runs reuse the same IPs or flow IDs.
+
+### 9. The React dashboard renders the response
+
+The frontend posts the selected file to `POST /api/replays/analyse`. It then shows
+the result returned for that exact run, refreshes the saved incident queue through
+`GET /api/incidents`, and opens complete evidence through either the run snapshot
+or `GET /api/incidents/{incident_id}`. It does not reuse a previous run's highest-
+risk incident as the evidence for a new file.
+
+For the simulated stream, the browser opens a server-sent-events connection to
+`GET /api/stream/simulated`. `started`, `traffic`, `alert` and `complete` messages
+update the progress bar, network animation, findings and final incident risk as
+records arrive.
+
+## Detection engine: what every detector sees
+
+The following are code defaults unless a named demo profile is noted. They are
+transparent prototype operating points, not universal production thresholds.
+
+| Detector and final class | Input and grouping | Main decision evidence | Important default operating point |
+| --- | --- | --- | --- |
+| Vertical port scan | Connection events grouped by source, then destination host | Distinct destination ports and attempts inside the window | 20 ports in 10 s; browser upload demo uses 5 |
+| Horizontal host scan | Connection events grouped by source and destination service | Distinct destination hosts on the same port | 20 hosts in 10 s; browser upload demo uses 5 |
+| Multi-host/port scan | One source across several hosts and ports | Overall port fan-out without one host meeting vertical-scan shape | 20 ports and at least 2 hosts; upload demo uses 5 ports |
+| SYN flood | TCP flows grouped by target | Flow count, `S0`/`REJ` incomplete ratio and target-port concentration | 100 attempts in 5 s, at least 80% incomplete and 80% concentrated on one target port; demo uses 5 attempts |
+| Distributed-source SYN flood | Same SYN-flood window | Distinct sources plus normalized source-IP entropy | At least 3 sources and entropy at least 0.85; source diversity does not prove spoofing |
+| UDP flood | UDP flows grouped by target | Aggregate packet volume and target concentration | 1,000 packets in 5 s; demo uses 500 |
+| UDP reflection/amplification | UDP service flows | At least 4 flows, responder/request byte ratio and responder volume | Ratio at least 10:1 and at least 10,000 response bytes; deployment profile also requires reflection-service context |
+| Slow HTTP exhaustion | TCP flows to an HTTP-labelled target | Long-lived partial connections, small transfers, small packet counts and estimated overlap | 20 candidate connections in 15 s; each at least 120 s, at most 2,048 bytes and 16 packets |
+| Botnet C2 beaconing | Completed non-DNS flows grouped by source, destination, port and protocol | Repeated callbacks, mean interval, interval coefficient of variation, size variation, observation span and completion ratio | At least 6 connections; mean interval 2–120 s; interval CV ≤0.15; size CV ≤0.20; span ≥30 s; mean transfer ≤2,048 bytes; completion ≥80% |
+| DGA domain activity | DNS query plus same-client campaign context | 3-gram model score, lexical shape, distinct roots and actual resolver results | Demo model score threshold 0.50; known response status requires multiple model-positive roots; failed campaign requires 12 queries, 10 roots and at least 80% NXDOMAIN in 60 s |
+| DNS tunnelling | DNS queries grouped by client and base domain | Query count, unique subdomain labels, average length, Shannon entropy and TXT ratio | 20 queries, 15 unique labels and length ≥18 or entropy ≥3.5; encoded-TXT path needs 4 queries, ≥75% TXT, length ≥24 and entropy ≥3.5 |
+| Encrypted-session metadata anomaly | TLS/QUIC sessions grouped by source, destination and client fingerprint | Repetition, fingerprint prevalence, packet-size-sequence anomaly and timing-sequence anomaly | 4 sessions in 60 s, prevalence ≤1%, size anomaly ≥0.75 and timing anomaly ≥0.75 |
+| Outbound-volume anomaly | Direction-normalized flows grouped by source/destination with a per-source history | Outbound volume, outbound/inbound ratio and median-baseline multiplier | Stateful path: 3 flows in 300 s, ≥1 MB, ≥8:1 and ≥4× baseline; extreme path: ≥10 MB and ≥20:1 |
+
+All detectors emit the measurements that caused the decision. For example, the
+C2 detector does not alert merely because port 443 or a rare fingerprint exists;
+timing, size, span and completion conditions must agree. Similarly, encrypted-
+session rarity alone cannot produce a malware claim.
+
+## AI/ML model, training data and libraries
+
+### What is actually model-based?
+
+The only deployed supervised ML classifier is the DGA domain classifier. DDoS,
+reconnaissance, C2, DNS tunnelling, encrypted-session anomaly and exfiltration
+are explainable stateful/statistical detectors. This is intentional: flow-rate,
+fan-out, periodicity and byte asymmetry have direct measurable definitions and do
+not require pretending that one opaque model can understand every attack.
+
+### Deployed DGA algorithm
+
+The deployed demonstration artifact is a custom **Multinomial Naive Bayes**
+classifier over boundary-aware normalized domain character **3-grams**:
+
+1. Normalize the domain.
+2. Split it into overlapping three-character tokens.
+3. Count token frequency in benign and DGA training classes.
+4. Apply Laplace smoothing to class/token likelihoods.
+5. Combine the prior and token log-likelihoods.
+6. Convert the two class scores into a bounded model score.
+7. Compare that score with the model operating threshold.
+
+The implementation is pure Python in `src/aegisflow/dns_model.py`; it does not
+use scikit-learn, TensorFlow or PyTorch. This keeps the model JSON inspectable and
+the inference path dependency-light. The score is **not** a calibrated infection
+probability.
+
+Lexical features used by research candidates and campaign context include domain
+length, Shannon entropy, digit ratio, vowel ratio, label count, maximum label
+length, hyphen ratio and unique-character ratio. A bounded signed-hash logistic
+regression implementation also exists for research, but failed candidates cannot
+be loaded by the normal deployment model loader.
+
+### Dataset usage and honest result boundary
+
+| Dataset or source | How it was used | Deployment status |
+| --- | --- | --- |
+| `examples/dns_training_demo.csv` | Small train/test demonstration of normalization, 3-gram Naive Bayes fitting, inference, metrics and model-card generation | Produces the bundled demo model; not a production-accuracy claim |
+| UMUDGA | Family-separated research training, validation and holdouts for n-gram/lexical and hashed-logistic candidates | Candidates failed frozen generalization gates; not deployed |
+| ExtraHop DGA Detection Training Dataset | Independent 40,000-domain evaluation of a frozen candidate | 63.36% recall / 6.80% FPR; failed |
+| Chrmor DGA/Alexa sample | Frozen Kraken/Alexa domain test and simulated resolver-campaign controls | Domain-only candidate reached 82% recall / 2% FPR; failed the 1% FPR gate |
+| Stratosphere DNS Threats Dataset | Official training split for the latest candidate and a prediction-blind 2,000 DGA + 2,000 benign upload-path holdout | 68.8% recall / 0.1% FPR; failed the unchanged 70% recall gate by 1.2 points; not deployed |
+| `iperf3`, `hping3`, `slowhttptest`, iodine and the C2 timing emulator | Lab traffic generation and PCAP/Zeek integration evidence for behavioural detectors | Test evidence only; these tools do not train the DGA model |
+
+Training uses deterministic splits, duplicate and family-leakage guards,
+validation-only threshold selection, checksum-pinned manifests, confusion counts,
+precision/recall/F1/FPR and create-only artifacts. A research artifact is promoted
+only if its frozen gates pass. Failed candidates remain marked
+`research_status: not_approved` and cannot silently replace the bundled model.
+
+Detailed experiments and limitations are recorded in
+[Models and features](docs/MODELS_AND_FEATURES.md), [Sprint 28](docs/SPRINT_28.md),
+[Sprint 30](docs/SPRINT_30.md) and [Sprint 38](docs/SPRINT_38.md).
+
+## From findings to concluded incidents
+
+### Standard alert schema
+
+Every finding is converted to the same public shape regardless of detector:
+
+```json
+{
+  "schema_version": "drastha-alert-v1",
+  "timestamp": 1790000123.4,
+  "flow_identifier": "C8abc123",
+  "threat_class": "Botnet C2 Beaconing",
+  "confidence": 0.87,
+  "confidence_is_probability": false,
+  "severity": "high",
+  "src_ip": "10.0.0.15",
+  "dst_ip": "198.51.100.20",
+  "supporting_evidence": [
+    {
+      "name": "mean_interval_seconds",
+      "observed": 3.0,
+      "comparison": "between 2.0 and 120.0",
+      "explanation": "The average delay is consistent with periodic callback behaviour."
+    }
+  ]
+}
+```
+
+`confidence` is a deterministic evidence-strength score inside the detector. It
+helps rank two findings from the same logic, but it is not “87% probability that
+the host is infected.” Each alert also carries detector/version provenance,
+observation window, related flow IDs, all evidence and scientific limitations.
+
+### Incident correlation and score
+
+Alerts are grouped by source and overlapping/nearby time within 900 seconds.
+The incident risk formula is transparent:
+
+```text
+incident risk = distinct threat-category weights
+              + 8 × additional independent detectors
+              + round(average alert confidence × 20)
+              capped at 100
+```
+
+Threat weights are reconnaissance 15, denial of service 25, DNS threat 25,
+command and control 35, and data exfiltration 40. Severity is low below 35,
+medium from 35, high from 60, and critical from 80.
+
+The replay-wide risk uses the highest incident risk as its base, then adds up to
+15 points for incident breadth and up to 15 for threat-category diversity. It is
+an investigation-priority score, not attack probability and not proof that all
+incidents belong to one campaign.
+
+### Why “Review incident” is a conclusion, not duplicate text
+
+`build_incident_conclusion` maps the actual alert subtypes to cautious security
+objectives. It records:
+
+- `assessment`: what behaviour was observed and where;
+- `likely_objective`: the plausible purpose, such as discovery, availability
+  disruption, command-and-control contact or data movement;
+- `attack_stage`: the inferred stage supported by the findings;
+- `potential_impact`: what could happen if the hypothesis is correct;
+- `confidence_basis`: up to four concrete evidence statements;
+- `uncertainty`: detector limitations and the fact that passive metadata cannot
+  prove operator identity or intent.
+
+The conclusion is created from detector alerts only, never from evaluation labels.
+
+## Data quality and false-positive control
+
+Drastha reduces false alerts at several independent layers:
+
+- **Threat-specific features:** scans use fan-out, floods require target
+  concentration, C2 requires periodic low-variation callbacks, DNS tunnelling
+  uses DNS fields, encrypted anomalies require fingerprint plus two independent
+  sequence anomalies, and exfiltration requires directional volume asymmetry.
+- **Conflict resolution:** reconnaissance evidence suppresses an overlapping
+  generic SYN-flood interpretation.
+- **Exact context policy:** trusted monitoring endpoints, approved bulk-transfer
+  endpoints and authorized scanner sources can suppress only an exact operator-
+  owned rule. Replay-provided “approved” labels are ignored.
+- **Allow-lists and service routing:** DNS traffic is not evaluated as C2; known
+  domain/destination rules are applied from monitoring-side configuration.
+- **Multiple-signal gates:** rare JA3/JA4, HTTPS use, high entropy, one large
+  connection or one failed DNS query is not enough by itself.
+- **Baselines and cooldowns:** source history distinguishes normal transfer size;
+  cooldowns and deduplication prevent repeated copies of the same finding.
+- **Four separate dashboard outcomes:** detected threat, approved context,
+  insufficient evidence and invalid/rejected input are never treated as the same
+  state.
+
+`config/context_policy.json` is a demo policy and must be replaced and change-
+controlled for a real environment. A broad allow rule can hide malicious traffic.
+
+## Database and evidence storage
+
+### Local SQLite mode
+
+By default the API stores data in `output/drastha.db` using Python's built-in
+`sqlite3`. Set `DRASTHA_DB` to another local path. Each write uses a transaction;
+errors roll back and connections close immediately.
+
+| Table | Purpose |
+| --- | --- |
+| `incidents` | Current prioritized incident projection, risk, status and complete JSON payload |
+| `alerts` | Standardized alert payloads linked to incidents |
+| `analyst_feedback` | Analyst disposition, identity, timestamp and notes |
+| `analysis_runs` | Complete run-scoped report used by full-evidence review and SIEM export |
+| `runtime_state` | Checkpointable state for bounded continuous ingestion/recovery |
+
+Incident and alert imports are idempotent upserts. Reprocessing detector evidence
+does not reset analyst-owned status or feedback. Run snapshots are separate from
+the global queue so the evidence for one upload cannot leak into another.
+
+### PostgreSQL and protected mode
+
+Docker deployment includes the equivalent PostgreSQL schema under
+`deploy/postgres/`. The repository is selected from `DRASTHA_DB`. Optional
+protected mode adds access control, HMAC-verified evidence operations, retention
+preview/apply APIs and legal holds. The ordinary local demo is intentionally
+reported as `unsigned-demo`; it must not be described as externally anchored
+forensic custody.
+
+## Backend APIs and frontend integration
+
+The backend is FastAPI. The built React application is served by the same service,
+so browser requests normally use relative `/api/...` URLs.
+
+```text
+Browser file
+   |
+   | POST /api/replays/analyse  { filename, content }
+   v
+FastAPI -> parser -> quality -> AnalysisSession -> findings -> incidents
+   |                                                   |
+   +---------------- SQLite/PostgreSQL <---------------+
+   |
+   +--> JSON run result -> React replay result and full-evidence view
+   +--> GET /api/incidents -> saved SOC investigation queue
+   +--> GET /api/incidents/{id} -> alerts + conclusion + feedback
+```
+
+| Method and endpoint | Role in the system | Main consumer |
+| --- | --- | --- |
+| `GET /api/health` | Service mode, storage type, access mode and last demo state | Header/system status |
+| `GET /api/metrics` | Active/critical counts, review count and average risk | SOC overview cards |
+| `POST /api/replays/analyse` | Validate and analyse a finite uploaded replay | Replay workbench |
+| `GET /api/replays/sample` | Download a safe example replay | Beginner/demo flow |
+| `GET /api/stream/simulated` | Server-sent events for incremental passive simulation | Live visualization |
+| `POST /api/demo/run` | Execute the known instant replay story | Demo button |
+| `POST /api/demo/load` | Load saved demonstration evidence | Offline rehearsal tooling |
+| `GET /api/incidents` | Risk-ordered queue with optional status/severity filters | Investigation queue |
+| `GET /api/incidents/{id}` | Complete incident, member alerts, conclusion and feedback | Incident review drawer |
+| `PATCH /api/incidents/{id}/status` | Set open, investigating, resolved or false-positive status | Analyst workflow |
+| `POST /api/incidents/{id}/feedback` | Record confirmed-malicious, benign or needs-review disposition | Analyst workflow |
+| `GET /api/incidents/{id}/export` | Export one incident with optional integrity metadata | Evidence handoff |
+| `GET /api/analysis-runs/{run_id}` | Retrieve the exact saved replay result | Run-scoped evidence |
+| `GET /api/analysis-runs/{run_id}/export` | Export validated JSON/NDJSON SIEM records | SIEM handoff |
+| `/api/security/*` | Verify signed evidence, preview/apply retention and set holds | Protected administrator mode |
+
+The upload body is validated by Pydantic, domain errors become clear HTTP 422
+responses, missing evidence returns 404, and integrity failures fail closed with
+HTTP 503. FastAPI exposes interactive OpenAPI documentation at `/docs` when the
+dashboard catch-all is not occupying that route in a custom setup.
+
+## Technology stack
+
+| Layer | Technology/library | Why it is used |
+| --- | --- | --- |
+| Detection core | Python 3.11+, standard library | Typed events, sliding windows, statistics, custom ML and deterministic scoring without a heavy runtime |
+| API and validation | FastAPI, Pydantic, Uvicorn | REST/SSE endpoints, request validation and local server |
+| Local database | SQLite through `sqlite3` | Dependency-free transactional demo storage |
+| Team/container database | PostgreSQL through Psycopg | Durable Docker deployment with equivalent logical schema |
+| Network metadata | Zeek 8.x integration and internal PCAP header parser | Passive connection/DNS/TLS metadata extraction |
+| Frontend | React, TypeScript, Vite, Lucide React | Typed SOC dashboard, build tooling and icons |
+| Tests | Python `unittest`, Node's built-in test runner | Backend, detector, ingestion, evidence and frontend regression tests |
+| Packaging/deployment | setuptools, Docker and Docker Compose | Installable `drastha` CLI and reproducible local/container launch |
+
+The Python project's core dependency list is intentionally empty. API/PostgreSQL
+packages are optional dependencies under the `api` extra.
+
+## Dashboard terminology
+
+| Dashboard term | Exact meaning |
+| --- | --- |
+| Record | One accepted passive connection, DNS or encrypted-session observation |
+| Finding / alert | One deduplicated behaviour that crossed a detector threshold |
+| Incident | One or more time-related alerts correlated around the same source |
+| Threat class | Human-readable standardized label such as `Volumetric DDoS - SYN Flood` |
+| Confidence | Detector-specific evidence strength from 0 to 1; not probability |
+| Risk | Transparent incident/replay investigation priority from 0 to 100 |
+| Severity | Policy band derived from evidence/risk: low, medium, high or critical |
+| Evidence | Observed value, comparison/threshold and plain-English explanation |
+| Conclusion | Evidence-backed likely objective, stage, potential impact and uncertainty |
+| Data quality | Whether the input was structurally valid, ordered and non-duplicated |
+| Feature coverage | Which connection, DNS, encrypted and derived measurements were actually available |
+| Approved context | Exact monitoring-side policy match that suppressed evaluation |
+| Insufficient evidence | A detector could not yet score the record; this is not a benign verdict |
+| TP / FP / FN / TN | Evaluation-only comparison against supplied scenario labels, never detector input |
+| Precision / recall / F1 / FPR | Behaviour-level fixture metrics; not automatically real-world accuracy |
 
 ## System requirements
 

@@ -16,7 +16,15 @@ generalization, continuous-service scale and operational deployment remain open.
 The finite SIH-only delivery gates and stop condition are in
 [SIH closure plan](docs/SIH_CLOSURE_PLAN.md).
 
-**Current follow-up (14 September 2026):** [DGA/TLS validation follow-up](docs/SIH_VALIDATION_FOLLOWUP.md)
+**Current follow-up (16 September 2026):** [Sprint 38 independent CTU DGA
+evaluation](docs/SPRINT_38.md) freezes 2,000 DGA and 2,000 benign names from the
+official DNS Threats test split before inference. The deployed demo model reached
+8.95% recall / 1.65% FPR. A new candidate trained only on the official training
+split passed internal validation, then reached **68.8% recall / 0.1% FPR** on the
+frozen upload-path holdout. It missed the unchanged 70% recall gate and was not
+deployed. This is a measured improvement, not a passing accuracy claim.
+
+The earlier [DGA/TLS validation follow-up](docs/SIH_VALIDATION_FOLLOWUP.md)
 adds a genuine PCAP-derived TLS size/timing-positive control (4 attributed TP,
 0 FP across 114 benign sessions) and two DNS campaign-context controls, including
 a frozen external Kraken/Alexa sample (1 behaviour TP, 0 FP, 2 TN). A separate
@@ -50,7 +58,7 @@ research-only domain corpora.
 | `hping3` SYN/UDP traffic | `hping3` 3.0.0-alpha-2 generated controlled SYN and UDP packets on the same loopback capture. | The same 45-record Zeek fixture verifies the packet-to-metadata-to-upload path. It is **not** a labelled, representative SYN-flood or UDP-reflection accuracy test. |
 | Slowloris / slow HTTP exhaustion | `slowhttptest` 1.9.0 ran in its Slowloris/slow-header mode; the separate Slowloris executable was **not** run. | `scripts/generate_sprint34_real_tool_capture.sh` → isolated private-link PCAP → Zeek → `examples/sih26145_real_tools_v1.jsonl`; the Slow HTTP finding is measured from long-lived, low-byte connections. |
 | `dnscat2` or iodine DNS tunnel | iodine 0.7.0 established a TXT-based tunnel and carried a successful ping; **dnscat2 was not run**. | The same Sprint 34 capture produced 52 native Zeek DNS transactions; the actual upload path emitted a DNS-tunnelling finding. |
-| Published DGA algorithms / DGArchive | **DGArchive was not used.** The bundled `examples/dns_training_demo.csv` trains only the small deployed demonstration n-gram model. Public **UMUDGA** domains supported guarded training/validation and the failed Vawtrak holdout; **ExtraHop** tested a frozen research candidate; the [Chrmor research sample](https://github.com/chrmor/DGA_domains_dataset) now supplies an additional pinned Kraken/Alexa campaign and domain-only control. | No research candidate replaced the demonstration model. ExtraHop's 40,000-domain evaluation reached 63.36% recall / 6.80% FPR; the new Chrmor 100+100 *domain-only* candidate test reached 82% recall / 2% FPR and also failed promotion. The Chrmor DNS response/timing controls are simulated, not publisher measurements. See `docs/SPRINT_28.md`, `docs/SPRINT_30.md` and `docs/SIH_VALIDATION_FOLLOWUP.md`. |
+| Published DGA algorithms / DGArchive | **DGArchive was not used.** The bundled `examples/dns_training_demo.csv` trains only the small deployed demonstration n-gram model. Public **UMUDGA** domains supported guarded training/validation and the failed Vawtrak holdout; **ExtraHop** tested a frozen research candidate; the [Chrmor research sample](https://github.com/chrmor/DGA_domains_dataset) supplies a pinned Kraken/Alexa campaign and domain-only control; the [Stratosphere DNS Threats Dataset](https://mcfp.felk.cvut.cz/publicDatasets/DNS-Threats-Dataset/) supplies the latest separated train/test experiment. | No research candidate replaced the demonstration model. ExtraHop reached 63.36% recall / 6.80% FPR; Chrmor reached 82% / 2%; the CTU-trained candidate reached 68.8% / 0.1% on its frozen 4,000-domain test sample and failed the unchanged 70% recall gate. The Chrmor DNS response/timing controls are simulated; CTU supplies domain labels rather than live resolver telemetry. See `docs/SPRINT_28.md`, `docs/SPRINT_30.md`, `docs/SIH_VALIDATION_FOLLOWUP.md` and `docs/SPRINT_38.md`. |
 | Sandboxed C2 emulator | `scripts/lab_c2_emulator.py` generated eleven real TCP callbacks about three seconds apart inside the isolated Sprint 34 lab; it is a **timing emulator, not malware or a full C2 framework**. | Native Zeek connection records gave a periodic-beacon finding. A separate jittered, variable-size health-check capture stayed alert-free. Both enter the 141-record actual upload replay. |
 
 Before those real-tool captures, `scripts/build_sih_lab_corpus.py` created a

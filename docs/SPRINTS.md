@@ -99,6 +99,10 @@ Production follow-on sequence (the original sprint plan below is historical):
   actual slowhttptest Slowloris-mode run, established iodine tunnel, deterministic
   C2 timing emulator and jittered health control traverse tcpdump, Zeek and the
   real upload path with 141 healthy records and exactly three intended findings.
+- Sprint 38: independent CTU DNS Threats train/test experiment delivered (see
+  `SPRINT_38.md`). The candidate improved to 68.8% recall / 0.1% FPR on a frozen
+  4,000-domain upload-path holdout but failed the unchanged 70% recall gate and
+  was not deployed.
 
 Every sprint ends with a demonstrable, testable slice. A detector is complete only when it produces the standard alert contract, includes human-readable evidence, has benign and malicious tests, and records its limitations.
 

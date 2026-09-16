@@ -1,0 +1,27 @@
+{
+  "schema_version": "drastha-sih-ctu-dga-holdout-labels-v1",
+  "frozen_before_inference": true,
+  "publisher": "Stratosphere Laboratory DNS Threats Dataset v1",
+  "citation": "Palau, Catania, Guerra, Garcia and Rigaki (2019), Detecting DNS threats: A deep learning model to rule them all",
+  "source_url": "https://mcfp.felk.cvut.cz/publicDatasets/DNS-Threats-Dataset/test_combined_multiclass.csv.gz",
+  "source_path": "data/raw/DNS-Threats-Dataset/test_combined_multiclass.csv.gz",
+  "source_sha256": "028fd97a4c498e8b6f22b93c2f804e4e0f3afe0c15ff5b3e71f9a12d0ddd4783",
+  "source_size": 6326259,
+  "license": "CC BY-NC-SA 4.0",
+  "dataset_doi": "10.5281/zenodo.6508640",
+  "seed": "drastha-ctu-first-use-20260916-v1",
+  "class_mapping": {
+    "0": "benign",
+    "1": "dga",
+    "2": "dns_tunnelling_excluded"
+  },
+  "sample_records_per_evaluated_class": 2000,
+  "selection": "lowest-sha256(seed|label|normalized-domain), distinct normalized domains",
+  "gates": {
+    "minimum_positives": 1000,
+    "minimum_negatives": 1000,
+    "minimum_recall": 0.7,
+    "maximum_fpr": 0.01
+  },
+  "claim_boundary": "Independent publisher domain-string holdout. It contains no resolver outcome, client campaign or infection telemetry and is not a live-DNS test."
+}

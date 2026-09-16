@@ -1,0 +1,155 @@
+{
+  "candidate_sha256": "66c36d99d91b32157bf74f0ad2582ec0b32c126233a6014da0de7a1d454891fd",
+  "deployment_model_changed": false,
+  "limitations": [
+    "The CTU source supplies domain and class only, not resolver, client or infection telemetry.",
+    "The official test split was already used to evaluate older models, but is not read or used to select this candidate.",
+    "The candidate remains blocked from normal runtime loading until an external evaluation and explicit promotion step pass."
+  ],
+  "research_status": "not_approved",
+  "schema_version": "drastha-sih-ctu-dga-candidate-v1",
+  "search_candidates": 264,
+  "selected": {
+    "count_mode": "binary_presence",
+    "gate_failures": [],
+    "lexical_weight": 0.1,
+    "metrics": {
+      "f1": 0.868753864313417,
+      "fn": 2272,
+      "fp": 63,
+      "fpr": 0.0063,
+      "fpr_interval_95": [
+        0.004927565458326495,
+        0.008051594532879576
+      ],
+      "per_family": {
+        "ctu-benign": {
+          "f1": 0.0,
+          "fn": 0,
+          "fp": 63,
+          "fpr": 0.0063,
+          "fpr_interval_95": [
+            0.004927565458326495,
+            0.008051594532879576
+          ],
+          "precision": 0.0,
+          "recall": null,
+          "recall_interval_95": null,
+          "tn": 9937,
+          "tp": 0
+        },
+        "ctu-dga": {
+          "f1": 0.871841155234657,
+          "fn": 2272,
+          "fp": 0,
+          "fpr": null,
+          "fpr_interval_95": null,
+          "precision": 1.0,
+          "recall": 0.7728,
+          "recall_interval_95": [
+            0.7644834568325718,
+            0.780907033656387
+          ],
+          "tn": 0,
+          "tp": 7728
+        }
+      },
+      "precision": 0.9919137466307277,
+      "recall": 0.7728,
+      "recall_interval_95": [
+        0.7644834568325718,
+        0.780907033656387
+      ],
+      "records": 20000,
+      "score_diagnostics": {
+        "brier": 0.07696413475020387,
+        "ece_10_bins": 0.0690816534559184,
+        "log_loss": 0.7488540637320723,
+        "reliability_bins": [
+          {
+            "bin": 0,
+            "count": 9928,
+            "mean_score": 0.003931238767437015,
+            "positive_fraction": 0.09296937953263497
+          },
+          {
+            "bin": 1,
+            "count": 251,
+            "mean_score": 0.14322176974577566,
+            "positive_fraction": 0.3346613545816733
+          },
+          {
+            "bin": 2,
+            "count": 138,
+            "mean_score": 0.24468964651942998,
+            "positive_fraction": 0.34057971014492755
+          },
+          {
+            "bin": 3,
+            "count": 118,
+            "mean_score": 0.3497084598856529,
+            "positive_fraction": 0.3220338983050847
+          },
+          {
+            "bin": 4,
+            "count": 102,
+            "mean_score": 0.44978861471699955,
+            "positive_fraction": 0.4019607843137255
+          },
+          {
+            "bin": 5,
+            "count": 105,
+            "mean_score": 0.5544974822131163,
+            "positive_fraction": 0.38095238095238093
+          },
+          {
+            "bin": 6,
+            "count": 107,
+            "mean_score": 0.6545056264385509,
+            "positive_fraction": 0.48598130841121495
+          },
+          {
+            "bin": 7,
+            "count": 126,
+            "mean_score": 0.7494338692225321,
+            "positive_fraction": 0.5873015873015873
+          },
+          {
+            "bin": 8,
+            "count": 186,
+            "mean_score": 0.8570335605041175,
+            "positive_fraction": 0.6129032258064516
+          },
+          {
+            "bin": 9,
+            "count": 8939,
+            "mean_score": 0.9971073899342886,
+            "positive_fraction": 0.9606219935115785
+          }
+        ]
+      },
+      "threshold": 0.999,
+      "tn": 9937,
+      "tp": 7728
+    },
+    "ngram_size": 3,
+    "ngram_weight": 1.0,
+    "threshold": 0.999
+  },
+  "source_audit": {
+    "selection_sha256_by_label": {
+      "0": "212cdf463ac4f2dabc2652ad7bfc879cc29e63c5e858bfcf775e4f7afb0e84f5",
+      "1": "45c284a6746901e99d31e1e26fbcc68a328c1b5b5a2d66d1237e509828f0202f"
+    },
+    "source_class_counts": {
+      "benign": 944106,
+      "dga": 1532263,
+      "dns_tunnelling_excluded": 6441
+    }
+  },
+  "test_fixture_read_during_fit": false,
+  "training_manifest_sha256": "c2f2798cdbbc22cd8ea11befd2468bf2d9f0723f515580ade2a365bc07b59590",
+  "training_records": 80000,
+  "validation_passed": true,
+  "validation_records": 20000
+}

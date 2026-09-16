@@ -25,6 +25,7 @@ output/models/*
 !output/models/dns_dga_demo.json
 output/umudga_dns_candidate_*.json
 output/sih_dga_candidate_research.json
+output/sih_ctu_dga_candidate_research.json
 output/real_*
 output/*.db
 # Continuous-ingest journals contain local traffic; never commit SQLite sidecars.

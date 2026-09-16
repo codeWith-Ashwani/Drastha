@@ -1,0 +1,19 @@
+{
+  "class_counts": {
+    "benign": 2000,
+    "dga": 2000
+  },
+  "fixture": "examples/sih26145_ctu_dga_holdout_v1.jsonl",
+  "fixture_sha256": "533ad2b1e6ed5154720515f9a6c0f463b58bb7c15c961ff1b1a7f7ecdac80491",
+  "inference_run_at_freeze": false,
+  "labels": "data/manifests/sih26145-ctu-dga-holdout-labels-v1.json",
+  "labels_sha256": "85f26af0151b3f89e283610bd45271f1de716d3cb74de8155d3d8049e13afaf8",
+  "records": 4000,
+  "schema_version": "drastha-sih-ctu-dga-holdout-freeze-v1",
+  "source_class_counts": {
+    "benign": 236072,
+    "dga": 383072,
+    "dns_tunnelling_excluded": 1559
+  },
+  "source_sha256": "028fd97a4c498e8b6f22b93c2f804e4e0f3afe0c15ff5b3e71f9a12d0ddd4783"
+}

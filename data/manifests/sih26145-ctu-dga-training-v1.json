@@ -1,0 +1,28 @@
+{
+  "schema_version": "drastha-sih-ctu-dga-training-v1",
+  "source_url": "https://mcfp.felk.cvut.cz/publicDatasets/DNS-Threats-Dataset/train_combined_multiclass.csv.gz",
+  "source_path": "data/raw/DNS-Threats-Dataset/train_combined_multiclass.csv.gz",
+  "source_sha256": "9bc7c1e53d67c2b5ad9352a45bc415107521da10e96572d0ed5e4586b80e4de9",
+  "source_size": 23030305,
+  "seed": "drastha-ctu-training-20260916-v1",
+  "class_mapping": {"0": "benign", "1": "dga", "2": "dns_tunnelling_excluded"},
+  "records_per_class": {"train": 40000, "validation": 10000},
+  "selection": "lowest-sha256(seed|label|normalized-domain), distinct normalized domains; train precedes validation",
+  "ngram_sizes": [2, 3, 4],
+  "count_modes": ["frequency", "binary_presence"],
+  "feature_variants": [
+    {"ngram_weight": 1.0, "lexical_weight": 0.0},
+    {"ngram_weight": 1.0, "lexical_weight": 0.1},
+    {"ngram_weight": 0.75, "lexical_weight": 0.25},
+    {"ngram_weight": 0.5, "lexical_weight": 0.5}
+  ],
+  "threshold_grid": [0.5, 0.7, 0.8, 0.9, 0.95, 0.975, 0.99, 0.995, 0.999, 0.9995, 0.9999],
+  "gates": {
+    "minimum_positives": 1000,
+    "minimum_negatives": 1000,
+    "minimum_recall": 0.7,
+    "minimum_family_recall": 0.7,
+    "maximum_fpr": 0.01
+  },
+  "selection_contract": "Only the official training file is available to fitting and operating-threshold selection. The frozen official test fixture is not read by this command."
+}

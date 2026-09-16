@@ -1,0 +1,305 @@
+{
+  "fixture_sha256": "533ad2b1e6ed5154720515f9a6c0f463b58bb7c15c961ff1b1a7f7ecdac80491",
+  "gates": {
+    "maximum_fpr": 0.01,
+    "minimum_negatives": 1000,
+    "minimum_positives": 1000,
+    "minimum_recall": 0.7
+  },
+  "limitations": [
+    "Independent publisher domain-string holdout. It contains no resolver outcome, client campaign or infection telemetry and is not a live-DNS test.",
+    "Passing this holdout alone does not establish operational DGA accuracy.",
+    "The research model remains non-deployable unless the existing cryptographic promotion workflow approves it."
+  ],
+  "models": {
+    "deployed_demo": {
+      "direct_metrics": {
+        "f1": 0.16184448462929477,
+        "fn": 1821,
+        "fp": 33,
+        "fpr": 0.0165,
+        "fpr_interval_95": [
+          0.01177282360725337,
+          0.023080961113718216
+        ],
+        "per_family": {
+          "benign": {
+            "f1": 0.0,
+            "fn": 0,
+            "fp": 33,
+            "fpr": 0.0165,
+            "fpr_interval_95": [
+              0.01177282360725337,
+              0.023080961113718216
+            ],
+            "precision": 0.0,
+            "recall": null,
+            "recall_interval_95": null,
+            "tn": 1967,
+            "tp": 0
+          },
+          "dga": {
+            "f1": 0.1642955484167049,
+            "fn": 1821,
+            "fp": 0,
+            "fpr": null,
+            "fpr_interval_95": null,
+            "precision": 1.0,
+            "recall": 0.0895,
+            "recall_interval_95": [
+              0.07776341044149375,
+              0.10281048537641489
+            ],
+            "tn": 0,
+            "tp": 179
+          }
+        },
+        "precision": 0.8443396226415094,
+        "recall": 0.0895,
+        "recall_interval_95": [
+          0.07776341044149375,
+          0.10281048537641489
+        ],
+        "records": 4000,
+        "score_diagnostics": {
+          "brier": 0.44607725132688436,
+          "ece_10_bins": 0.43262366604675057,
+          "log_loss": 3.5051616173756064,
+          "reliability_bins": [
+            {
+              "bin": 0,
+              "count": 3265,
+              "mean_score": 0.012425557875451753,
+              "positive_fraction": 0.49831546707503827
+            },
+            {
+              "bin": 1,
+              "count": 422,
+              "mean_score": 0.1386916543287067,
+              "positive_fraction": 0.3862559241706161
+            },
+            {
+              "bin": 2,
+              "count": 79,
+              "mean_score": 0.23434014679801624,
+              "positive_fraction": 0.189873417721519
+            },
+            {
+              "bin": 3,
+              "count": 14,
+              "mean_score": 0.35131914484644466,
+              "positive_fraction": 0.7142857142857143
+            },
+            {
+              "bin": 4,
+              "count": 8,
+              "mean_score": 0.44032258057894785,
+              "positive_fraction": 0.75
+            },
+            {
+              "bin": 5,
+              "count": 25,
+              "mean_score": 0.5568932507443589,
+              "positive_fraction": 0.84
+            },
+            {
+              "bin": 6,
+              "count": 38,
+              "mean_score": 0.6548593034124665,
+              "positive_fraction": 0.8421052631578947
+            },
+            {
+              "bin": 7,
+              "count": 54,
+              "mean_score": 0.7661302114343135,
+              "positive_fraction": 0.8888888888888888
+            },
+            {
+              "bin": 8,
+              "count": 44,
+              "mean_score": 0.8536002114636364,
+              "positive_fraction": 0.8636363636363636
+            },
+            {
+              "bin": 9,
+              "count": 51,
+              "mean_score": 0.9265998308360908,
+              "positive_fraction": 0.7843137254901961
+            }
+          ]
+        },
+        "threshold": 0.5,
+        "tn": 1967,
+        "tp": 179
+      },
+      "gate_failures": [
+        "fpr_wilson_upper_bound_exceeds_budget",
+        "recall_below_minimum",
+        "family_recall_below_minimum:dga"
+      ],
+      "model_type": "character_ngram_multinomial_naive_bayes",
+      "passed": false,
+      "threshold": 0.5,
+      "upload_metrics": {
+        "accepted": 4000,
+        "detected_uids": 212,
+        "fn": 1821,
+        "fp": 33,
+        "fpr": 0.0165,
+        "quality": "healthy",
+        "recall": 0.0895,
+        "records": 4000,
+        "rejected": 0,
+        "tn": 1967,
+        "tp": 179
+      }
+    },
+    "research_candidate": {
+      "direct_metrics": {
+        "f1": 0.8146832445233866,
+        "fn": 624,
+        "fp": 2,
+        "fpr": 0.001,
+        "fpr_interval_95": [
+          0.0002742789176520342,
+          0.003638934269038394
+        ],
+        "per_family": {
+          "benign": {
+            "f1": 0.0,
+            "fn": 0,
+            "fp": 2,
+            "fpr": 0.001,
+            "fpr_interval_95": [
+              0.0002742789176520342,
+              0.003638934269038394
+            ],
+            "precision": 0.0,
+            "recall": null,
+            "recall_interval_95": null,
+            "tn": 1998,
+            "tp": 0
+          },
+          "dga": {
+            "f1": 0.8151658767772512,
+            "fn": 624,
+            "fp": 0,
+            "fpr": null,
+            "fpr_interval_95": null,
+            "precision": 1.0,
+            "recall": 0.688,
+            "recall_interval_95": [
+              0.6673507904916167,
+              0.707928399730632
+            ],
+            "tn": 0,
+            "tp": 1376
+          }
+        },
+        "precision": 0.9985486211901307,
+        "recall": 0.688,
+        "recall_interval_95": [
+          0.6673507904916167,
+          0.707928399730632
+        ],
+        "records": 4000,
+        "score_diagnostics": {
+          "brier": 0.0841368323710832,
+          "ece_10_bins": 0.07506849144917763,
+          "log_loss": 0.7824431970090168,
+          "reliability_bins": [
+            {
+              "bin": 0,
+              "count": 2071,
+              "mean_score": 0.0039934201530196405,
+              "positive_fraction": 0.1110574601641719
+            },
+            {
+              "bin": 1,
+              "count": 55,
+              "mean_score": 0.14568039802767097,
+              "positive_fraction": 0.41818181818181815
+            },
+            {
+              "bin": 2,
+              "count": 37,
+              "mean_score": 0.24946508322892424,
+              "positive_fraction": 0.5135135135135135
+            },
+            {
+              "bin": 3,
+              "count": 23,
+              "mean_score": 0.3473457717272746,
+              "positive_fraction": 0.4782608695652174
+            },
+            {
+              "bin": 4,
+              "count": 27,
+              "mean_score": 0.45433849556022843,
+              "positive_fraction": 0.5925925925925926
+            },
+            {
+              "bin": 5,
+              "count": 21,
+              "mean_score": 0.5539163211680129,
+              "positive_fraction": 0.5238095238095238
+            },
+            {
+              "bin": 6,
+              "count": 28,
+              "mean_score": 0.6512469443192422,
+              "positive_fraction": 0.6785714285714286
+            },
+            {
+              "bin": 7,
+              "count": 38,
+              "mean_score": 0.7574529189546355,
+              "positive_fraction": 0.6578947368421053
+            },
+            {
+              "bin": 8,
+              "count": 37,
+              "mean_score": 0.8527183635998596,
+              "positive_fraction": 0.6216216216216216
+            },
+            {
+              "bin": 9,
+              "count": 1663,
+              "mean_score": 0.9959783177134092,
+              "positive_fraction": 0.9759470835838846
+            }
+          ]
+        },
+        "threshold": 0.999,
+        "tn": 1998,
+        "tp": 1376
+      },
+      "gate_failures": [
+        "recall_below_minimum",
+        "family_recall_below_minimum:dga"
+      ],
+      "model_type": "character_ngram_multinomial_naive_bayes",
+      "passed": false,
+      "threshold": 0.999,
+      "upload_metrics": {
+        "accepted": 4000,
+        "detected_uids": 1378,
+        "fn": 624,
+        "fp": 2,
+        "fpr": 0.001,
+        "quality": "healthy",
+        "recall": 0.688,
+        "records": 4000,
+        "rejected": 0,
+        "tn": 1998,
+        "tp": 1376
+      }
+    }
+  },
+  "prediction_blind_freeze": true,
+  "promotion_eligible": false,
+  "provenance_valid": true,
+  "records": 4000,
+  "schema_version": "drastha-sih-ctu-dga-holdout-audit-v1",
+  "source_sha256": "028fd97a4c498e8b6f22b93c2f804e4e0f3afe0c15ff5b3e71f9a12d0ddd4783"
+}

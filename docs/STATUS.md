@@ -1,8 +1,16 @@
 # Drastha build status
 
-Last updated: 10 September 2026
+Last updated: 16 September 2026
 
 ## Production roadmap update
+
+Sprint 38 is complete as a bounded DGA validation attempt, but the model is not
+approved. A checksum-frozen Stratosphere DNS Threats holdout contains 2,000 DGA
+and 2,000 benign domains. The CTU-trained research candidate passed internal
+validation, then reached 68.8% recall and 0.1% FPR through the real upload path.
+It missed the unchanged 70% recall gate, so the deployed demonstration model was
+not replaced. All 465 Python tests, 19 frontend tests and the dashboard build pass.
+See `docs/SPRINT_38.md`.
 
 Sprint 34 is complete. A no-default-route WSL lab captures actual slowhttptest
 Slowloris-mode traffic, an established iodine tunnel with successful ping, eleven

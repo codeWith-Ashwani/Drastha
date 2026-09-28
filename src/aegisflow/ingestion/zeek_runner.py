@@ -73,20 +73,23 @@ class ZeekRunner:
             )
         return resolved
 
-    def process_pcap(self, pcap: str | Path, output_directory: str | Path) -> ZeekRunResult:
+    def process_pcap(self, pcap: str | Path, output_directory: str | Path,
+                     *, timeout_seconds: float | None = None) -> ZeekRunResult:
         executable = self.check_available()
         capture = Path(pcap).resolve()
         if not capture.is_file():
             raise FileNotFoundError(f"PCAP file not found: {capture}")
         output = _prepare_output_directory(output_directory)
         command = [executable, "-C", "-r", str(capture), "LogAscii::use_json=T"]
-        result = subprocess.run(
-            command,
-            cwd=output,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
+        options = {"cwd": output, "text": True, "capture_output": True, "check": False}
+        if timeout_seconds is not None:
+            options["timeout"] = timeout_seconds
+        try:
+            result = subprocess.run(command, **options)
+        except subprocess.TimeoutExpired as exc:
+            raise ZeekExecutionError(
+                f"Zeek exceeded the {timeout_seconds:g}-second processing limit"
+            ) from exc
         if result.returncode != 0:
             raise ZeekExecutionError(
                 f"Zeek exited with code {result.returncode}: {result.stderr.strip()}"
@@ -121,13 +124,14 @@ class WSLZeekRunner:
                 "WSL was not found. Install WSL and Ubuntu before using WSL Zeek mode."
             ) from exc
 
-    def check_available(self) -> str:
-        result = self._run(
-            ["--", self.executable, "--version"],
-            text=True,
-            capture_output=True,
-            check=False,
-        )
+    def check_available(self, *, timeout_seconds: float | None = None) -> str:
+        options = {"text": True, "capture_output": True, "check": False}
+        if timeout_seconds is not None:
+            options["timeout"] = timeout_seconds
+        try:
+            result = self._run(["--", self.executable, "--version"], **options)
+        except subprocess.TimeoutExpired as exc:
+            raise ZeekUnavailableError("Timed out while checking WSL Zeek availability") from exc
         if result.returncode != 0:
             detail = result.stderr.strip() or result.stdout.strip()
             raise ZeekUnavailableError(
@@ -162,8 +166,9 @@ class WSLZeekRunner:
             raise ZeekExecutionError(f"Could not translate Windows path for WSL: {detail}")
         return result.stdout.strip()
 
-    def process_pcap(self, pcap: str | Path, output_directory: str | Path) -> ZeekRunResult:
-        self.check_available()
+    def process_pcap(self, pcap: str | Path, output_directory: str | Path,
+                     *, timeout_seconds: float | None = None) -> ZeekRunResult:
+        self.check_available(timeout_seconds=timeout_seconds)
         capture = Path(pcap).resolve()
         if not capture.is_file():
             raise FileNotFoundError(f"PCAP file not found: {capture}")
@@ -181,12 +186,15 @@ class WSLZeekRunner:
             capture_linux,
             "LogAscii::use_json=T",
         ]
-        result = self._run(
-            command[len(self._base_command()):],
-            text=True,
-            capture_output=True,
-            check=False,
-        )
+        options = {"text": True, "capture_output": True, "check": False}
+        if timeout_seconds is not None:
+            options["timeout"] = timeout_seconds
+        try:
+            result = self._run(command[len(self._base_command()):], **options)
+        except subprocess.TimeoutExpired as exc:
+            raise ZeekExecutionError(
+                f"Zeek exceeded the {timeout_seconds:g}-second processing limit"
+            ) from exc
         if result.returncode != 0:
             raise ZeekExecutionError(
                 f"Zeek exited with code {result.returncode}: {result.stderr.strip()}"

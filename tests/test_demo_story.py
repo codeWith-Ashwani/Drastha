@@ -16,6 +16,12 @@ class DemoAttackStoryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             repository = IncidentRepository(Path(directory) / "demo.db")
             report = run_attack_story(ROOT, repository)
+            saved = repository.get_analysis_run(report["run_id"])
+            self.assertEqual([item["alert_id"] for item in saved["alerts"]],
+                             [item["alert_id"] for item in report["alerts"]])
+            self.assertEqual([item["incident_id"] for item in saved["incidents"]],
+                             [item["incident_id"] for item in report["incidents"]])
+            self.assertEqual(repository.list_analysis_runs()["items"][0]["run_id"], report["run_id"])
         self.assertEqual(report["status"], "completed")
         self.assertEqual(report["telemetry_status"], "healthy")
         self.assertEqual(report["loaded"]["alerts"], 2)

@@ -6,10 +6,10 @@ export function HeroTopology({ active = false }: { active?: boolean }) {
     <svg viewBox="0 0 1440 900" fill="none" preserveAspectRatio="xMidYMid slice" focusable="false">
       <defs>
         <linearGradient id="hero-route-ink" x1="1080" y1="780" x2="1130" y2="170" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#ff5b12" /><stop offset="1" stopColor="#ff874b" />
+          <stop stopColor="var(--accent)" /><stop offset="1" stopColor="var(--accent-bright)" />
         </linearGradient>
         <marker id="hero-route-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
-          <path d="M1 1 9 5 1 9" fill="none" stroke="#ff874b" strokeWidth="1.5" />
+          <path d="M1 1 9 5 1 9" fill="none" stroke="var(--accent-bright)" strokeWidth="1.5" />
         </marker>
       </defs>
       <g className="topology-links" transform="rotate(-32 1080 450)">
@@ -28,18 +28,18 @@ export function HeroTopology({ active = false }: { active?: boolean }) {
           <rect x="1359" y="709" width="22" height="22" rx="3" />
         </g>
       </g>
-      <path d={ROUTE} stroke="#ff5b12" strokeOpacity=".1" strokeWidth="19" />
+      <path d={ROUTE} stroke="var(--accent)" strokeOpacity=".1" strokeWidth="19" />
       <path d={ROUTE} stroke="url(#hero-route-ink)" strokeWidth="5" markerEnd="url(#hero-route-arrow)" />
       {active && <path className="topology-packets" d={ROUTE} pathLength={100} strokeWidth="6" strokeDasharray="2 18" strokeLinecap="round" />}
-      <path d="m1138 183 52 86" stroke="#ff874b" strokeWidth="3" strokeDasharray="2 9" strokeLinecap="round" />
-      <circle className="topology-pulse topology-receiver" cx="1138" cy="183" r="40" fill="#ff5b12" fillOpacity=".06" />
-      <circle cx="1138" cy="183" r="23" fill="#ff5b12" fillOpacity=".1" />
-      <circle cx="1138" cy="183" r="6" fill="#ff5b12" stroke="#ffe7da" strokeWidth="1.5" />
-      <circle cx="1190" cy="269" r="6" fill="#ff5b12" stroke="#ffe7da" strokeWidth="1.5" />
-      <circle className="topology-pulse" cx="1140" cy="776" r="39" stroke="#ff5b12" strokeOpacity=".25" strokeWidth="2" />
-      <circle cx="1140" cy="776" r="53" stroke="#ff5b12" strokeOpacity=".08" strokeWidth="2" />
-      <circle cx="1140" cy="776" r="24" fill="#ff5b12" />
-      <path d="m1130 788 3-25 18 17-11-1-10 9Z" fill="white" />
+      <path d="m1138 183 52 86" stroke="var(--accent-bright)" strokeWidth="3" strokeDasharray="2 9" strokeLinecap="round" />
+      <circle className="topology-pulse topology-receiver" cx="1138" cy="183" r="40" fill="var(--accent)" fillOpacity=".06" />
+      <circle cx="1138" cy="183" r="23" fill="var(--accent)" fillOpacity=".1" />
+      <circle cx="1138" cy="183" r="6" fill="var(--accent)" stroke="var(--surface)" strokeWidth="1.5" />
+      <circle cx="1190" cy="269" r="6" fill="var(--accent)" stroke="var(--surface)" strokeWidth="1.5" />
+      <circle className="topology-pulse" cx="1140" cy="776" r="39" stroke="var(--accent)" strokeOpacity=".25" strokeWidth="2" />
+      <circle cx="1140" cy="776" r="53" stroke="var(--accent)" strokeOpacity=".08" strokeWidth="2" />
+      <circle cx="1140" cy="776" r="24" fill="var(--accent)" />
+      <path d="m1130 788 3-25 18 17-11-1-10 9Z" fill="var(--surface)" />
     </svg>
   </div>;
 }

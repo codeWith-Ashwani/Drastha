@@ -1,4 +1,5 @@
 """File/Zeek-directory adapters for the same analysis used by HTTP uploads."""
+import json
 from pathlib import Path
 
 from aegisflow.analysis_session import DEPLOYMENT_BASELINE
@@ -7,14 +8,33 @@ from aegisflow.telemetry_quality import TelemetryQuality
 from aegisflow.analysis_service import analyse_prepared
 
 
-def prepare_zeek_directory(directory):
+def _chronological_zeek_content(path: Path) -> str:
+    """Order converter-generated Zeek JSON by event time, retaining every line."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+
+    def timestamp(item: tuple[int, str]):
+        index, line = item
+        try:
+            value = json.loads(line).get("ts")
+            return (0, float(value), index)
+        except (AttributeError, TypeError, ValueError, json.JSONDecodeError):
+            # Invalid records remain present and are rejected by normal quality
+            # validation instead of being silently removed by this transform.
+            return (1, 0.0, index)
+
+    return "\n".join(line for _, line in sorted(enumerate(lines), key=timestamp))
+
+
+def prepare_zeek_directory(directory, *, chronological_generated_logs=False):
     directory = Path(directory)
     parts = []
     for name, kind in (("conn.log", "connection"), ("dns.log", "dns"),
                        ("ssl.log", "tls"), ("quic.log", "quic")):
         path = directory / name
         if path.is_file() and path.stat().st_size:
-            parts.append(prepare_replay(path.read_text(encoding="utf-8"), name,
+            content = (_chronological_zeek_content(path) if chronological_generated_logs
+                       else path.read_text(encoding="utf-8"))
+            parts.append(prepare_replay(content, name,
                                        maximum_records=None, source_kind=kind))
     if not parts:
         raise ValueError("No supported Zeek logs found")

@@ -7,6 +7,7 @@ import shutil
 import socket
 import sys
 import time
+from uuid import uuid4
 from pathlib import Path
 from typing import Any
 
@@ -204,7 +205,8 @@ def run_attack_story(root: str | Path, repository: Any) -> dict[str, Any]:
     session = AnalysisSession(AnalysisProfile("instant-replay-v1", enabled=("c2", "exfiltration")))
     c2_ms = exfil_ms = 0.0
     exfil_ids = {event.flow_id for event in exfil_events}
-    for event in sorted([*c2_events, *encrypted_events, *exfil_events], key=event_order):
+    ordered_events = sorted([*c2_events, *encrypted_events, *exfil_events], key=event_order)
+    for event in ordered_events:
         event_started = time.perf_counter()
         session.process(event)
         duration = (time.perf_counter() - event_started) * 1000
@@ -229,8 +231,18 @@ def run_attack_story(root: str | Path, repository: Any) -> dict[str, Any]:
     overall_quality = "degraded" if any(
         item.status == "degraded" for item in quality_reports
     ) else "healthy"
-    return {
+    run_id = uuid4().hex
+    report = {
         "status": "completed",
+        "run_id": run_id,
+        "filename": "instant-attack-replay",
+        "source": "instant_demo",
+        "analysed_at": time.time(),
+        "capture_start": min((event.timestamp for event in ordered_events), default=None),
+        "capture_end": max((event.timestamp for event in ordered_events), default=None),
+        "quality": {"status": overall_quality},
+        "alerts": [alert.to_dict() for alert in alerts],
+        "incidents": [incident.to_dict() for incident in incidents],
         "telemetry_status": overall_quality,
         "analysis_provenance": session.provenance(),
         "elapsed_ms": elapsed_ms,
@@ -265,6 +277,9 @@ def run_attack_story(root: str | Path, repository: Any) -> dict[str, Any]:
         "metrics": repository.metrics(),
         "telemetry": [item.to_dict() for item in quality_reports],
     }
+    if hasattr(repository, "save_analysis_run"):
+        repository.save_analysis_run(run_id, report)
+    return report
 
 
 def rehearse_demo(

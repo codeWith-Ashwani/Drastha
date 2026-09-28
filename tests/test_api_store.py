@@ -125,6 +125,26 @@ class IncidentRepositoryTests(unittest.TestCase):
         self.assertEqual(len(self.store.list_incidents(status="open", severity="high")), 1)
         self.assertEqual(self.store.metrics()["active_incidents"], 1)
 
+    def test_completed_run_history_keeps_capture_time_distinct_from_analysis_time(self) -> None:
+        old = {"status": "completed", "filename": "old.jsonl", "alerts": [ALERT],
+               "incidents": [INCIDENT], "quality": {"status": "healthy"}}
+        new = {**old, "filename": "new.jsonl", "analysed_at": 1_800_000_000.0,
+               "capture_start": 100.0, "capture_end": 120.0}
+        self.store.save_analysis_run("old", old)
+        self.store.save_analysis_run("running", {"status": "running", "alerts": []})
+        self.store.save_analysis_run("new", new)
+        page = self.store.list_analysis_runs(limit=1)
+        self.assertEqual(page["total"], 2)
+        self.assertTrue(page["has_more"])
+        self.assertEqual(page["items"][0]["run_id"], "new")
+        self.assertEqual(page["items"][0]["analysed_at"], 1_800_000_000.0)
+        self.assertEqual(page["items"][0]["capture_start"], 100.0)
+        legacy = self.store.list_analysis_runs(limit=1, offset=1)["items"][0]
+        self.assertEqual(legacy["run_id"], "old")
+        self.assertIsNone(legacy["analysed_at"])
+        self.assertIsNone(legacy["capture_start"])
+        self.assertNotIn("alerts", legacy)
+
     def test_rejects_invalid_workflow_values(self) -> None:
         self.store.import_records([INCIDENT], [ALERT])
         with self.assertRaises(ValueError):

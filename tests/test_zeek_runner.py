@@ -57,6 +57,22 @@ class ZeekRunnerTests(unittest.TestCase):
                 ZeekRunner(str(executable)).process_pcap(pcap, output)
             self.assertEqual(evidence.read_text(encoding="utf-8"), "old-evidence")
 
+    def test_processing_timeout_is_reported_as_bounded_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            executable = root / "zeek.exe"
+            executable.write_bytes(b"placeholder")
+            pcap = root / "capture.pcap"
+            pcap.write_bytes(b"pcap-placeholder")
+            with patch(
+                "aegisflow.ingestion.zeek_runner.subprocess.run",
+                side_effect=subprocess.TimeoutExpired([str(executable)], 30),
+            ):
+                with self.assertRaisesRegex(ZeekExecutionError, "30-second processing limit"):
+                    ZeekRunner(str(executable)).process_pcap(
+                        pcap, root / "zeek-output", timeout_seconds=30
+                    )
+
     def test_wsl_availability_uses_linux_zeek_path(self):
         completed = subprocess.CompletedProcess([], 0, "zeek version 8.0.10", "")
         with patch("aegisflow.ingestion.zeek_runner.subprocess.run", return_value=completed) as run:

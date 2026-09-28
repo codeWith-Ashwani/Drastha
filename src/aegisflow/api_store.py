@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import sqlite3
 from dataclasses import asdict
@@ -290,6 +291,42 @@ class IncidentRepository:
         with self._connect() as connection:
             row = connection.execute("SELECT payload FROM analysis_runs WHERE run_id = ?", (run_id,)).fetchone()
         return json.loads(row["payload"]) if row is not None else None
+
+    def list_analysis_runs(self, *, limit: int = 50, offset: int = 0) -> dict[str, Any]:
+        """Return completed run metadata only; keep full evidence behind the run-id endpoint.
+
+        Legacy runs have no recorded analysis time. They remain browseable but must
+        never be assigned a fabricated wall-clock timestamp from capture events.
+        """
+        with self._connect() as connection:
+            rows = connection.execute("SELECT run_id, payload FROM analysis_runs").fetchall()
+        summaries = []
+        for row in rows:
+            report = json.loads(row["payload"])
+            if report.get("status") != "completed":
+                continue
+            analysed_at = report.get("analysed_at")
+            if not isinstance(analysed_at, (int, float)) or not math.isfinite(analysed_at):
+                analysed_at = None
+            alerts = report.get("alerts") or []
+            incidents = report.get("incidents") or []
+            capture_start = report.get("capture_start")
+            capture_end = report.get("capture_end")
+            summaries.append({
+                "run_id": row["run_id"],
+                "filename": report.get("filename") or "Simulated stream",
+                "source": report.get("source") or "uploaded_replay",
+                "analysed_at": analysed_at,
+                "capture_start": capture_start,
+                "capture_end": capture_end,
+                "quality_status": (report.get("quality") or {}).get("status", "unknown"),
+                "findings": len(alerts),
+                "incidents": len(incidents),
+            })
+        summaries.sort(key=lambda item: (item["analysed_at"] is not None,
+                                         item["analysed_at"] or 0, item["run_id"]), reverse=True)
+        return {"items": summaries[offset:offset + limit], "total": len(summaries),
+                "has_more": offset + limit < len(summaries)}
 
     def set_status(self, incident_id: str, status: str, updated_at: float) -> bool:
         if status not in self.VALID_STATUSES:

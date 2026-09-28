@@ -7,15 +7,20 @@ const base = read("styles.css");
 const hero = read("hero.css");
 const root = base.match(/:root\s*\{([^}]+)\}/)[1];
 const tokens = new Map([...root.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2]]));
+const light = base.match(/:root\[data-theme="light"\]\s*\{([^}]+)\}/)[1];
+const lightTokens = new Map([...light.matchAll(/(--[\w-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2]]));
 
-test("header uses the selected blue glowing logo with accessible text and preserved proportions", () => {
+test("header uses a transparent blue mark with theme-colored, accessible brand text", () => {
   const app = read("App.tsx");
-  assert.match(app, /className="brand-logo" src="\/images\/drastha-logo-blue\.png" alt="Drastha"/);
+  assert.match(app, /className="brand-logo" src="\/images\/drastha-mark-transparent\.png" alt=""/);
+  assert.match(app, /className="brand-wordmark"><b>DRASHTA<\/b>/);
   assert.match(base, /\.brand-logo\s*\{[^}]*height: auto;[^}]*object-fit: contain;/);
-  const png = readFileSync(new URL("../public/images/drastha-logo-blue.png", import.meta.url));
+  assert.doesNotMatch(base.match(/\.brand-logo\s*\{[^}]*\}/)[0], /background:/);
+  const png = readFileSync(new URL("../public/images/drastha-mark-transparent.png", import.meta.url));
   assert.equal(png.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
   assert.equal(png.readUInt32BE(16), 1536);
   assert.equal(png.readUInt32BE(20), 1024);
+  assert.equal(png[25], 6, "Logo asset must contain an alpha channel");
 });
 
 test("hero and analyst surfaces share defined design tokens", () => {
@@ -24,7 +29,7 @@ test("hero and analyst surfaces share defined design tokens", () => {
       assert.ok(tokens.has(match[1]), "Undefined token: " + match[1]);
     }
   }
-  assert.doesNotMatch(base.replace(/:root\s*\{[^}]+\}/, "") + hero, /#[0-9a-f]{3,8}\b/i);
+  assert.doesNotMatch(base.replace(/:root\s*\{[^}]+\}/, "").replace(/:root\[data-theme="light"\]\s*\{[^}]+\}/, "") + hero, /#[0-9a-f]{3,8}\b/i);
   assert.doesNotMatch(base + hero, /--blue|--hero-accent/);
 });
 
@@ -39,7 +44,7 @@ test("regular copy, controls and metadata keep readable minimum sizes", () => {
   assert.match(base, /prefers-reduced-motion: reduce/);
 });
 
-test("text palette meets normal-text contrast on shared surfaces", () => {
+test("text palettes meet normal-text contrast on shared surfaces in both themes", () => {
   const luminance = (hex) => {
     const channels = hex.slice(1).match(/../g).map((v) => {
       const c = parseInt(v, 16) / 255;
@@ -47,11 +52,36 @@ test("text palette meets normal-text contrast on shared surfaces", () => {
     });
     return channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722;
   };
-  for (const foreground of ["--text", "--text-secondary", "--muted", "--accent-bright"]) {
-    for (const background of ["--bg", "--surface", "--surface-2", "--surface-inset", "--surface-hover"]) {
-      const ratio = (luminance(tokens.get(foreground)) + .05) / (luminance(tokens.get(background)) + .05);
-      assert.ok(ratio >= 4.5, foreground + " on " + background + ": " + ratio);
+  for (const palette of [tokens, new Map([...tokens, ...lightTokens])]) {
+    for (const foreground of ["--text", "--text-secondary", "--muted", "--accent-bright"]) {
+      for (const background of ["--bg", "--surface", "--surface-2", "--surface-inset", "--surface-hover"]) {
+        const values = [luminance(palette.get(foreground)), luminance(palette.get(background))];
+        const ratio = (Math.max(...values) + .05) / (Math.min(...values) + .05);
+        assert.ok(ratio >= 4.5, foreground + " on " + background + ": " + ratio);
+      }
     }
+  }
+});
+
+test("theme switch keeps user preference and applies to all dashboard surfaces", () => {
+  const app = read("App.tsx");
+  const topology = read("HeroTopology.tsx");
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(app, /localStorage\.getItem\(THEME_KEY\)/);
+  assert.match(app, /localStorage\.setItem\(THEME_KEY, theme\)/);
+  assert.match(app, /document\.documentElement\.dataset\.theme = theme/);
+  assert.match(html, /document\.documentElement\.dataset\.theme = localStorage\.getItem\("drastha-theme"\) === "dark"/);
+  assert.match(app, /return "light"/);
+  assert.match(app, /aria-label=\{`Switch to/);
+  assert.match(base, /:root\[data-theme="light"\]/);
+  assert.match(base, /color-scheme: light/);
+  assert.match(base, /grid-template-columns: 248px minmax\(0, 1fr\)/);
+  assert.match(base, /--grid-ink:/);
+  assert.match(hero, /\.workbench \{[\s\S]*?box-shadow: var\(--shadow-card\)/);
+  assert.match(topology, /stroke="var\(--accent\)"/);
+  assert.doesNotMatch(topology, /#[0-9a-f]{3,8}\b/i);
+  for (const match of topology.matchAll(/var\((--[\w-]+)\)/g)) {
+    assert.ok(tokens.has(match[1]), "Undefined topology token: " + match[1]);
   }
 });
 
@@ -84,18 +114,20 @@ test("dashboard presents one bounded replay-wide risk without calling it probabi
   assert.match(base, /\.overall-risk/);
 });
 
-test("SOC overview prioritises saved incidents without claiming a live sensor", () => {
+test("SOC overview is removed while the investigation queue and passive status remain", () => {
   const app = read("App.tsx");
-  assert.match(app, /Security operations overview/);
-  assert.match(app, /priorityIncidents = useMemo/);
-  assert.match(app, /Last run quality/);
-  assert.match(app, /No production mirror is connected/);
+  assert.doesNotMatch(app, /Analyst workspace \/ SIH26145|Security operations overview|Priority triage|priorityIncidents|soc-overview|soc-metrics|soc-priority/);
+  assert.doesNotMatch(base, /\.soc-/);
+  assert.match(app, /<main id="top">\s*\{route === "analyst" \? <AnalystRoute/);
+  assert.match(app, /<section className="workbench" id="replay-workbench"/);
+  assert.match(app, /Refresh queue/);
+  assert.match(app, /Investigation queue/);
   assert.match(app, /Analysis service ready/);
   assert.doesNotMatch(app, /Sensor online/);
-  for (const destination of ["soc-overview", "replay-workbench", "investigations"]) {
+  for (const destination of ["replay-workbench", "investigations"]) {
     assert.match(app, new RegExp(`id="${destination}"`));
   }
   assert.match(app, /<ReplayEvidence/);
   assert.match(app, /<IncidentConclusion/);
-  assert.match(base, /\.soc-priority-list/);
+  assert.match(base, /\.incident-list/);
 });

@@ -3,10 +3,27 @@ import { HeroTopology } from "./HeroTopology";
 import { IncidentConclusion, type IncidentConclusionData } from "./IncidentConclusion";
 import { ReplayEvidence } from "./ReplayEvidence";
 import { OverallRisk, type OverallRiskData } from "./OverallRisk";
+import { AnalystRoute } from "./AnalystRoute";
+import { apiErrorMessage } from "./apiError";
 import {
-  Activity, ArrowRight, Check, ChevronRight, CircleAlert, Download, Eye,
-  FileJson, FileUp, Filter, Network, Radio, RefreshCw, Search, X,
+  Activity, ArrowRight, BarChart3, Check, ChevronRight, CircleAlert, Download, Eye,
+  FileJson, FileUp, Filter, Moon, Network, Radio, RefreshCw, Search, Sun, X,
 } from "lucide-react";
+
+type Theme = "dark" | "light";
+const THEME_KEY = "drastha-theme";
+type Route = "workbench" | "analyst";
+const routeFromPath = (): Route => window.location.pathname.replace(/\/$/, "") === "/analyst" ? "analyst" : "workbench";
+
+function initialTheme(): Theme {
+  try {
+    const saved = window.localStorage.getItem(THEME_KEY);
+    if (saved === "dark" || saved === "light") return saved;
+    return "light";
+  } catch {
+    return "light";
+  }
+}
 
 type Evidence = { name: string; observed: number | string; comparison: string; explanation: string };
 type Alert = {
@@ -23,7 +40,7 @@ type Incident = {
 };
 type Metrics = { total_incidents: number; active_incidents: number; critical_incidents: number; feedback_records: number; average_risk_score: number };
 type DemoStage = { name: string; status: string; detail: string; duration_ms?: number; records?: number; rejected?: number; alerts?: number; incidents?: number };
-type DemoRun = { status: string; telemetry_status: string; elapsed_ms?: number; stages: DemoStage[] };
+type DemoRun = { status: string; telemetry_status: string; elapsed_ms?: number; stages: DemoStage[]; run_id?: string };
 type Health = { status: string; mode: string; storage: string; return_path_required: boolean; demo_run?: DemoRun | null };
 type FeatureCoverage = { mode: string; counts: Record<string, number>; network_direction_status: string; exfiltration_direction: string };
 
@@ -33,6 +50,7 @@ function FeatureCoverageNote({ value }: { value?: FeatureCoverage }) {
 }
 export type UploadResult = {
   run_id: string;
+  analysed_at?: number; capture_start?: number | null; capture_end?: number | null;
   verdict: string; headline: string; summary: string; filename: string; file_size_bytes: number;
   analysis_ms: number; quality: {
     status: string; records_received: number; records_accepted: number; records_rejected: number;
@@ -51,6 +69,17 @@ export type UploadResult = {
   };
   evaluation?: { true_positive: number; false_positive: number; false_negative: number; true_negative: number; precision: number; recall: number; f1_score: number; false_positive_rate: number } | null;
 };
+export type RunEvidence = {
+  run_id: string; filename?: string; quality?: { status: string };
+  analysed_at?: number | null; capture_start?: number | null; capture_end?: number | null;
+  alerts: Alert[]; incidents: Incident[]; overall_risk?: OverallRiskData;
+};
+export type RunSummary = {
+  run_id: string; filename: string; source: string; analysed_at: number | null;
+  capture_start: number | null; capture_end: number | null;
+  quality_status: string; findings: number; incidents: number;
+};
+type RunHistory = { items: RunSummary[]; total: number; has_more: boolean };
 type StreamRecord = {
   timestamp: number; flow_id: string; src_ip: string; dst_ip: string; protocol: string;
   dst_port: number; outbound_bytes: number; inbound_bytes: number; record_kind?: string; query?: string;
@@ -111,20 +140,34 @@ function ReplayOutcomeStatus({ result }: { result: UploadResult }) {
 const label = (value: string) => LABELS[value] || value.replaceAll("_", " ");
 const timeLabel = (value: number, origin?: number) => value < 946684800
   ? origin === undefined ? `Capture +${Math.round(value)}s` : `+${Math.max(0, Math.round(value - origin))}s`
-  : new Date(value * 1000).toLocaleString([], { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  : new Date(value * 1000).toLocaleString([], { year: "numeric", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API}${path}`, { headers: { "Content-Type": "application/json", ...options?.headers }, ...options });
-  if (!response.ok) throw new Error((await response.json()).detail || "Request failed");
+  if (!response.ok) {
+    const body: unknown = await response.json().catch(() => null);
+    throw new Error(apiErrorMessage(body, response.status));
+  }
   return response.json();
 }
 
 function App() {
+  const [theme, setTheme] = useState<Theme>(initialTheme);
+  const [route, setRoute] = useState<Route>(routeFromPath);
   const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [queueDetails, setQueueDetails] = useState<Incident[]>([]);
+  const [queueDetailsLoading, setQueueDetailsLoading] = useState(false);
+  const [runHistory, setRunHistory] = useState<RunSummary[]>([]);
+  const [runHistoryHasMore, setRunHistoryHasMore] = useState(false);
+  const [runHistoryLoading, setRunHistoryLoading] = useState(true);
+  const [latestRun, setLatestRun] = useState<RunEvidence | null>(null);
+  const [analystRunId, setAnalystRunId] = useState<string | null>(null);
+  const [analystRun, setAnalystRun] = useState<RunEvidence | null>(null);
+  const [showAllQueue, setShowAllQueue] = useState(false);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
   const [selected, setSelected] = useState<Incident | null>(null);
-  const [evidenceRun, setEvidenceRun] = useState<{ run: UploadResult; incidentId?: string } | null>(null);
+  const [evidenceRun, setEvidenceRun] = useState<{ run: RunEvidence; incidentId?: string } | null>(null);
   const detailRequest = useRef(0);
   const [query, setQuery] = useState("");
   const [severity, setSeverity] = useState("all");
@@ -141,6 +184,21 @@ function App() {
   const [stream, setStream] = useState<StreamState | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const eventSource = useRef<EventSource | null>(null);
+  const historyRequest = useRef(0);
+  const runSelectionRequest = useRef(0);
+  const historySelectionTouched = useRef(false);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#f4f8fb" : "#07131f");
+    try { window.localStorage.setItem(THEME_KEY, theme); } catch { /* Private browsing may disable storage. */ }
+  }, [theme]);
+
+  useEffect(() => {
+    const onPopState = () => { setRoute(routeFromPath()); detailRequest.current += 1; setSelected(null); setEvidenceRun(null); };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   const refresh = async (keepSelection = true) => {
     setLoading(true);
@@ -152,31 +210,105 @@ function App() {
     } catch (error) { setMessage((error as Error).message); }
     finally { setLoading(false); }
   };
+  const loadRunHistory = async (preferred?: RunEvidence) => {
+    const request = ++historyRequest.current;
+    setRunHistoryLoading(true);
+    try {
+      const page = await api<RunHistory>("/analysis-runs?limit=100");
+      if (request !== historyRequest.current) return;
+      setRunHistory(page.items); setRunHistoryHasMore(page.has_more);
+      if (preferred) {
+        historySelectionTouched.current = false;
+        setLatestRun(preferred); setAnalystRunId(preferred.run_id); setAnalystRun(preferred);
+        setShowAllQueue(false);
+      } else {
+        // Legacy snapshots have capture times but no recorded analysis time.
+        // Do not guess which one was analysed most recently.
+        const newest = page.items.find((item) => item.analysed_at !== null);
+        if (newest) {
+          const report = await api<RunEvidence>(`/analysis-runs/${newest.run_id}`);
+          if (request !== historyRequest.current) return;
+          setLatestRun(report);
+          if (!historySelectionTouched.current) { setAnalystRunId(report.run_id); setAnalystRun(report); }
+        }
+      }
+    } catch (error) { if (request === historyRequest.current) setMessage(`Run history could not load: ${(error as Error).message}`); }
+    finally { if (request === historyRequest.current) setRunHistoryLoading(false); }
+  };
+  const loadOlderRuns = async () => {
+    if (!runHistoryHasMore || runHistoryLoading) return;
+    setRunHistoryLoading(true);
+    try {
+      const page = await api<RunHistory>(`/analysis-runs?limit=100&offset=${runHistory.length}`);
+      setRunHistory((current) => [...current, ...page.items]); setRunHistoryHasMore(page.has_more);
+    } catch (error) { setMessage(`Older runs could not load: ${(error as Error).message}`); }
+    finally { setRunHistoryLoading(false); }
+  };
+  const selectAnalystRun = async (runId: string | null) => {
+    const request = ++runSelectionRequest.current;
+    historySelectionTouched.current = true;
+    setAnalystRunId(runId); setAnalystRun(null);
+    if (!runId) return;
+    if (latestRun?.run_id === runId) { setAnalystRun(latestRun); return; }
+    setRunHistoryLoading(true);
+    try {
+      const report = await api<RunEvidence>(`/analysis-runs/${runId}`);
+      if (request === runSelectionRequest.current) setAnalystRun(report);
+    } catch (error) { if (request === runSelectionRequest.current) setMessage(`Saved run could not load: ${(error as Error).message}`); }
+    finally { if (request === runSelectionRequest.current) setRunHistoryLoading(false); }
+  };
   useEffect(() => {
     void refresh(false);
+    void loadRunHistory();
     return () => { eventSource.current?.close(); detailRequest.current += 1; };
   }, []);
 
-  const filtered = useMemo(() => incidents.filter((item) => {
+  useEffect(() => {
+    if (route !== "analyst" || analystRunId || stream?.status === "running" || loading) return;
+    let cancelled = false;
+    setQueueDetails([]);
+    if (!incidents.length) { setQueueDetailsLoading(false); return; }
+    setQueueDetailsLoading(true);
+    const loadDetails = async () => {
+      const details: Incident[] = [];
+      for (let index = 0; index < incidents.length; index += 8) {
+        const batch = await Promise.all(incidents.slice(index, index + 8).map((item) => api<Incident>(`/incidents/${item.incident_id}`)));
+        if (cancelled) return;
+        details.push(...batch);
+      }
+      if (!cancelled) { setQueueDetails(details); setQueueDetailsLoading(false); }
+    };
+    void loadDetails().catch((error) => { if (!cancelled) { setQueueDetailsLoading(false); setMessage(`Analyst evidence could not load: ${(error as Error).message}`); } });
+    return () => { cancelled = true; };
+  }, [route, incidents, analystRunId, stream?.status, loading]);
+
+  const queueItems = latestRun && !showAllQueue ? latestRun.incidents : incidents;
+  const filtered = useMemo(() => queueItems.filter((item) => {
     const text = `${item.src_ip} ${item.incident_id} ${item.threat_types.join(" ")}`.toLowerCase();
     return text.includes(query.toLowerCase()) && (severity === "all" || item.severity === severity);
-  }), [incidents, query, severity]);
-  const priorityIncidents = useMemo(() => incidents
-    .filter((item) => item.status !== "resolved" && item.status !== "false_positive")
-    .sort((left, right) => right.risk_score - left.risk_score || right.last_seen - left.last_seen)
-    .slice(0, 4), [incidents]);
-  const openIncident = async (id: string) => {
+  }), [queueItems, query, severity]);
+  const openIncident = async (id: string, expectedAlertIds?: string[], snapshot?: RunEvidence) => {
     const request = ++detailRequest.current;
     setSelected(null); setEvidenceRun(null); setNotes("");
     try {
       const incident = await api<Incident>(`/incidents/${id}`);
-      if (request === detailRequest.current) setSelected(incident);
+      if (request !== detailRequest.current) return;
+      if (expectedAlertIds && [...incident.alert_ids].sort().join("|") !== [...expectedAlertIds].sort().join("|")) {
+        if (snapshot) openReplayEvidence(snapshot, id);
+        else setMessage("Saved incident membership changed; review the original run snapshot.");
+      } else setSelected(incident);
     } catch (error) { if (request === detailRequest.current) setMessage((error as Error).message); }
   };
   const closeEvidence = () => {
     detailRequest.current += 1; setSelected(null); setEvidenceRun(null); setNotes("");
   };
-  const openReplayEvidence = (run: UploadResult, incidentId?: string) => {
+  const navigate = (destination: Route, anchor?: string) => {
+    const path = destination === "analyst" ? "/analyst" : `/${anchor ? `#${anchor}` : ""}`;
+    window.history.pushState(null, "", path);
+    closeEvidence(); setRoute(destination);
+    window.requestAnimationFrame(() => anchor ? document.getElementById(anchor)?.scrollIntoView() : window.scrollTo(0, 0));
+  };
+  const openReplayEvidence = (run: RunEvidence, incidentId?: string) => {
     closeEvidence(); setEvidenceRun({ run, incidentId });
   };
   const revealStages = async (stages: DemoStage[]) => {
@@ -192,6 +324,11 @@ function App() {
     try {
       const result = await api<DemoRun>("/demo/run", { method: "POST" });
       setDemoRun(result); await revealStages(result.stages); await refresh(false);
+      if (result.run_id) {
+        const report = await api<RunEvidence>(`/analysis-runs/${result.run_id}`);
+        setLatestRun(report); setAnalystRunId(report.run_id); setAnalystRun(report); setShowAllQueue(false);
+        void loadRunHistory(report);
+      }
       setMessage(`Replay complete. A critical incident was created in ${result.elapsed_ms ?? "—"} ms.`);
     } catch (error) { setMessage((error as Error).message); }
     finally { setRunning(false); }
@@ -200,6 +337,7 @@ function App() {
     if (running || uploading || stream?.status === "running") return;
     closeEvidence();
     eventSource.current?.close();
+    setAnalystRunId(null); setAnalystRun(null);
     setUploadResult(null); setStream({ status: "running", processed: 0, total: 0, findings: [], riskScore: 0 });
     setMessage("Listening to the simulated one-way IP stream…");
     let finished = false;
@@ -231,6 +369,13 @@ function App() {
         setVisibleStages(5);
         void Promise.all([api<Incident[]>("/incidents"), api<Metrics>("/metrics")]).then(([queue, summary]) => { setIncidents(queue); setMetrics(summary); });
         setMessage(`Live analysis complete: ${data.alerts} labelled findings, risk ${data.risk_score}/100.`);
+        if (data.run_id) {
+          setAnalystRunId(data.run_id); setAnalystRun(null);
+          void api<RunEvidence>(`/analysis-runs/${data.run_id}`).then((report) => {
+            setLatestRun(report); setAnalystRun(report); setShowAllQueue(false);
+            void loadRunHistory(report);
+          }).catch((error) => setMessage(`Stream saved, but its history could not load: ${(error as Error).message}`));
+        }
       }
     };
     source.onerror = () => {
@@ -245,9 +390,28 @@ function App() {
     closeEvidence(); setStream(null);
     setUploading(true); setUploadResult(null); setMessage(`Analysing ${file.name}…`);
     try {
-      const content = await file.text();
-      const result = await api<UploadResult>("/replays/analyse", { method: "POST", body: JSON.stringify({ filename: file.name, content }) });
+      const isPcap = file.name.toLowerCase().endsWith(".pcap");
+      let payload: { filename: string; content?: string; content_base64?: string };
+      if (isPcap) {
+        const contentBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error("The PCAP file could not be read."));
+          reader.onload = () => {
+            const value = String(reader.result ?? "");
+            const separator = value.indexOf(",");
+            if (separator < 0) reject(new Error("The PCAP file could not be encoded."));
+            else resolve(value.slice(separator + 1));
+          };
+          reader.readAsDataURL(file);
+        });
+        payload = { filename: file.name, content_base64: contentBase64 };
+      } else {
+        payload = { filename: file.name, content: await file.text() };
+      }
+      const result = await api<UploadResult>("/replays/analyse", { method: "POST", body: JSON.stringify(payload) });
       setUploadResult(result);
+      setLatestRun(result); setAnalystRunId(result.run_id); setAnalystRun(result); setShowAllQueue(false);
+      void loadRunHistory(result);
       const run = { status: "completed", telemetry_status: result.quality.status, elapsed_ms: result.analysis_ms, stages: result.stages };
       setDemoRun(run); await revealStages(result.stages); await refresh(false); setUploadResult(result); setMessage(result.headline);
     } catch (error) { setMessage((error as Error).message); }
@@ -272,38 +436,38 @@ function App() {
     const link = document.createElement("a"); link.href = url; link.download = `${selected.incident_id}.json`; link.click(); URL.revokeObjectURL(url);
   };
   const stages = demoRun?.stages ?? PIPELINE_TEMPLATE;
-  const sourceMode = stream?.status === "running" ? "Simulated stream running" : uploadResult ? "Uploaded replay" : stream ? "Simulated stream" : "No active source";
-  const lastQuality = uploadResult?.quality.status ?? demoRun?.telemetry_status ?? "Not evaluated";
-
+  const activeAnalystRun = analystRunId && analystRun?.run_id === analystRunId ? analystRun : null;
+  const liveAnalystStream = stream?.status === "running";
+  const analystSource = liveAnalystStream ? "Current simulated stream" : activeAnalystRun ? `Saved run · ${activeAnalystRun.filename || "simulated stream"}` : analystRunId ? "Loading saved run" : "All stored incidents";
+  const analystScope = liveAnalystStream ? "Provisional findings from the current simulated stream; final evidence is saved on completion." : activeAnalystRun ? `Run ${activeAnalystRun.run_id} only. Capture time and analysis time are shown separately.` : "Stored queue may include incidents from different runs; this is not a single-replay accuracy score.";
+  const analystIncidents = liveAnalystStream ? [...new Map((stream?.findings ?? []).map((item) => [item.incident.incident_id, item.incident])).values()] : activeAnalystRun?.incidents ?? (analystRunId ? [] : queueDetails);
+  const analystAlerts = liveAnalystStream ? (stream?.findings ?? []).map((item) => item.alert) : activeAnalystRun?.alerts ?? (analystRunId ? [] : queueDetails.flatMap((item) => item.alerts ?? []));
+  const reviewAnalystAlert = (alert: Alert) => {
+    if (liveAnalystStream) { setMessage("Full incident evidence is available when the stream completes."); return; }
+    if (activeAnalystRun) openReplayEvidence(activeAnalystRun, activeAnalystRun.incidents.find((item) => item.alert_ids.includes(alert.alert_id))?.incident_id);
+    else { const incident = analystIncidents.find((item) => item.alert_ids.includes(alert.alert_id)); if (incident) void openIncident(incident.incident_id); }
+  };
   return <div className="app-shell">
     <header className="topbar">
-      <a className="brand" href="#top"><img className="brand-logo" src="/images/drastha-logo-blue.png" alt="Drastha" width={1536} height={1024} /><div><small>Passive threat review</small></div></a>
-      <nav className="workspace-nav" aria-label="Workspace"><a href="#soc-overview">Overview</a><a href="#replay-workbench">Replay</a><a href="#investigations">Investigations</a></nav>
+      <a className="brand" href="/" onClick={(event) => { event.preventDefault(); navigate("workbench"); }}><img className="brand-logo" src="/images/drastha-mark-transparent.png" alt="" width={1536} height={1024} /><span className="brand-wordmark"><b>DRASHTA</b><small>Passive threat review</small></span></a>
+      <nav className="workspace-nav" aria-label="Workspace"><span>Workspace</span><a href="/#replay-workbench" aria-current={route === "workbench" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("workbench", "replay-workbench"); }}><Activity size={16} aria-hidden="true" />Replay workbench</a><a href="/analyst" aria-current={route === "analyst" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("analyst"); }}><BarChart3 size={16} aria-hidden="true" />SOC analyst</a><a href="/#investigations" onClick={(event) => { event.preventDefault(); navigate("workbench", "investigations"); }}><Search size={16} aria-hidden="true" />Investigations</a></nav>
+      <button className="theme-toggle" type="button" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`} title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>
+        {theme === "dark" ? <Sun size={17} aria-hidden="true" /> : <Moon size={17} aria-hidden="true" />}<span>{theme === "dark" ? "Light" : "Dark"}</span>
+      </button>
       <div className="system-state"><span><i className={health?.status === "healthy" ? "online" : "offline"} />{health?.status === "healthy" ? "Analysis service ready" : "Checking service"}</span><span>{health?.storage || "local"} storage</span><span>One-way monitoring</span></div>
     </header>
 
     <main id="top">
-      <section className="soc-overview" id="soc-overview" aria-labelledby="soc-heading">
-        <div className="soc-heading"><div><p className="eyebrow">Analyst workspace / SIH26145</p><h2 id="soc-heading">Security operations overview</h2><p>Prioritise passive detections, then inspect the measurements behind each incident.</p></div><button className="secondary" onClick={() => void refresh(false)} disabled={loading}><RefreshCw size={15} className={loading ? "spin" : ""} />Refresh queue</button></div>
-        <div className="soc-metrics" aria-label="Analyst summary">
-          <article><span>Active incidents</span><b>{metrics?.active_incidents ?? "—"}</b><small>Open or under investigation</small></article>
-          <article className="soc-critical"><span>Critical priority</span><b>{metrics?.critical_incidents ?? "—"}</b><small>Requires analyst triage</small></article>
-          <article><span>Last run quality</span><b className="soc-text-value">{lastQuality}</b><small>Input validation, not sensor health</small></article>
-          <article><span>Analysis source</span><b className="soc-text-value">{sourceMode}</b><small>No production mirror is connected</small></article>
-        </div>
-        <div className="soc-priority"><div className="soc-priority-head"><div><h3>Priority triage</h3><p>Highest-risk active cases from the saved investigation queue</p></div><a href="#investigations">View full queue <ArrowRight size={14} /></a></div>
-          {loading ? <p className="soc-empty">Loading saved incidents…</p> : priorityIncidents.length === 0 ? <p className="soc-empty">No active incidents. Run or upload a replay to populate the queue.</p> : <div className="soc-priority-list">{priorityIncidents.map((item) => <button key={item.incident_id} onClick={() => void openIncident(item.incident_id)}><span className={`severity severity-${item.severity}`}>{item.severity}</span><span className="soc-priority-name"><b>{item.threat_types.map(label).join(" + ")}</b><small>{item.src_ip} · {label(item.status)}</small></span><span className="soc-priority-score">Risk {item.risk_score}/100</span><time>{timeLabel(item.last_seen)}</time><ChevronRight size={16} /></button>)}</div>}
-        </div>
-      </section>
+      {route === "analyst" ? <AnalystRoute alerts={analystAlerts} incidents={analystIncidents} source={analystSource} scope={analystScope} loading={runHistoryLoading || (analystRunId ? !activeAnalystRun : queueDetailsLoading || loading)} timelineAvailable={Boolean(liveAnalystStream || activeAnalystRun)} history={runHistory} selectedRunId={analystRunId} hasMoreHistory={runHistoryHasMore} selectedRun={activeAnalystRun} onSelectRun={(id) => void selectAnalystRun(id)} onLoadMore={() => void loadOlderRuns()} onReview={reviewAnalystAlert} /> : <>
       <section className="workbench" id="replay-workbench" aria-labelledby="hero-heading">
         <HeroTopology active={running || uploading || stream?.status === "running"} />
         <div className="intro"><p className="eyebrow">Passive near-real-time intelligence</p><h1 id="hero-heading">Watch threats emerge from a one-way IP stream.</h1><p>Drastha passively receives simulated network records, detects and classifies suspicious behaviour, scores the risk and publishes explainable alerts as the stream arrives.</p><div className="intro-actions"><button className="primary" disabled={stream?.status === "running" || running || uploading} onClick={startLiveStream}><Radio size={16} />{stream?.status === "running" ? "Stream running…" : "Start live IP simulation"}<ArrowRight size={17} aria-hidden="true" /></button><button className="text-button" disabled={running || uploading || stream?.status === "running"} onClick={runDemo}><Activity size={14} />Run instant replay</button></div></div>
         <div className="upload-card">
-          <div className="upload-title"><FileUp size={19} /><div><b>Analyse your own replay</b><span>Zeek connection, DNS and TLS metadata · JSONL or JSON · up to 5 MB</span></div></div>
+          <div className="upload-title"><FileUp size={19} /><div><b>Analyse your own replay or capture</b><span>Classic PCAP, Zeek metadata, JSONL or JSON · up to 5 MB</span></div></div>
           <button className={`dropzone ${dragging ? "dragging" : ""}`} disabled={uploading || running || stream?.status === "running"} onClick={() => fileInput.current?.click()} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={(event) => { event.preventDefault(); setDragging(false); void analyseFile(event.dataTransfer.files[0]); }}>
             <FileJson size={23} /><b>{uploading ? "Checking the replay…" : "Choose or drop a replay file"}</b><span>The file stays on this computer and is used only for this analysis.</span>
           </button>
-          <input ref={fileInput} hidden type="file" accept=".jsonl,.ndjson,.json,application/json" onChange={(event) => void analyseFile(event.target.files?.[0])} />
+          <input ref={fileInput} hidden type="file" accept=".pcap,.jsonl,.ndjson,.json,application/vnd.tcpdump.pcap,application/json" onChange={(event) => void analyseFile(event.target.files?.[0])} />
           <a className="sample-link" href="/api/replays/sample"><Download size={14} />Download a sample attack replay</a>
         </div>
       </section>
@@ -320,6 +484,7 @@ function App() {
         {stream.latest && <div className="latest-record"><span>Latest observation</span><b>{stream.latest.src_ip} <ArrowRight size={12} /> {stream.latest.dst_ip}:{stream.latest.dst_port}</b><small>{stream.latest.record_kind === "dns" ? `DNS query · ${stream.latest.query}` : `${stream.latest.protocol.toUpperCase()} · ${stream.latest.outbound_bytes.toLocaleString()} bytes out · flow ${stream.latest.flow_id}`}</small></div>}
         {stream.findings.length > 0 ? <div className="live-findings">{stream.findings.map((item) => <article key={item.alert.alert_id}><div><span className={`severity severity-${item.alert.severity}`}>{item.alert.severity}</span><b>{item.alert.threat_class || label(item.alert.subtype)}</b></div><strong>{Math.round(item.alert.confidence * 100)}% confidence</strong><p>{item.detection_method}</p><small>{item.alert.evidence[0]?.explanation}</small></article>)}</div> : <div className="listening"><Radio size={15} /><span>{stream.status === "running" ? "Listening for behaviour that crosses a detection threshold…" : "No configured threat behaviour was found."}</span></div>}
         {stream.status === "complete" && stream.topIncidentId && <button className="secondary live-review" onClick={() => void openIncident(stream.topIncidentId!)}><Eye size={15} />Open scored intelligence</button>}
+        {stream.findings.length > 0 && <button className="secondary live-review" onClick={() => navigate("analyst")}><BarChart3 size={15} />Visualise attack patterns</button>}
         <FeatureCoverageNote value={stream.featureCoverage} />
       </section>}
 
@@ -327,6 +492,7 @@ function App() {
         <div className="result-heading"><div className="verdict-icon">{uploadResult.verdict === "threat_detected" ? <CircleAlert size={22} /> : <Check size={22} />}</div><div><p className="eyebrow">Uploaded replay result · {uploadResult.filename}</p><h2>{uploadResult.headline}</h2><p>{uploadResult.summary}</p></div><button className="secondary" onClick={() => openReplayEvidence(uploadResult)}><Eye size={15} />Review full evidence</button></div>
         {uploadResult.overall_risk && <OverallRisk value={uploadResult.overall_risk} label={label} />}
         <ReplayOutcomeStatus result={uploadResult} />
+        <button className="secondary visualise-replay" onClick={() => navigate("analyst")}><BarChart3 size={15} />Visualise attack patterns</button>
         <div className="result-facts"><span><b>{uploadResult.quality.records_accepted}/{uploadResult.quality.records_received}</b> accepted records</span><span><b>{uploadResult.quality.records_rejected}</b> rejected</span><span><b>{uploadResult.quality.out_of_order_records}</b> out of order</span><span><b>{uploadResult.quality.duplicate_uid_count}</b> duplicate UIDs</span><span><b>{uploadResult.alerts.length}</b> findings</span><span><b>{uploadResult.incidents.length}</b> incidents</span><span><b>{uploadResult.analysis_ms} ms</b> analysis time</span><span><b>{uploadResult.quality.status}</b> data quality</span>{uploadResult.telemetry && <><span><b>{uploadResult.telemetry.dns_records}</b> DNS records</span><span><b>{uploadResult.telemetry.encrypted_session_records}</b> TLS records</span></>}{uploadResult.context_policy && <span><b>{uploadResult.context_policy.suppressed_connection_evaluations}</b> policy-approved records</span>}</div>
         {uploadResult.quality.degraded_reasons.length > 0 && <p className="scope-note"><b>Data-quality reason:</b> {uploadResult.quality.degraded_reasons.join("; ")}</p>}
         <FeatureCoverageNote value={uploadResult.feature_coverage} />
@@ -339,9 +505,12 @@ function App() {
 
       <section className="pipeline-section"><div className="section-head"><div><p className="eyebrow">How the result was produced</p><h2>Replay to insight</h2></div><span>{demoRun ? `${demoRun.telemetry_status} data · ${demoRun.elapsed_ms ?? "—"} ms` : "Ready"}</span></div><ol className="pipeline">{stages.map((stage, index) => { const visible = !running && !uploading || index < visibleStages; const count = stage.alerts !== undefined ? `${stage.alerts} findings` : stage.incidents !== undefined ? `${stage.incidents} incidents` : stage.records !== undefined ? `${stage.records} records` : ""; return <li className={visible ? `step step-${stage.status}` : "step pending"} key={`${stage.name}-${index}`}><span>{visible ? <Check size={13} /> : index + 1}</span><div><b>{stage.name}</b><p>{stage.detail}</p><small>{visible ? count : "Waiting"}{visible && stage.duration_ms !== undefined ? ` · ${stage.duration_ms} ms` : ""}</small></div></li>; })}</ol></section>
 
-      <section className="overview" id="investigations"><div className="section-head"><div><p className="eyebrow">What needs attention</p><h2>Investigation queue</h2></div><div className="plain-metrics"><span><b>{metrics?.active_incidents ?? "—"}</b> active</span><span><b>{metrics?.critical_incidents ?? "—"}</b> critical</span><span><b>{metrics?.feedback_records ?? "—"}</b> reviewed</span></div></div><div className="queue-tools"><label><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search device, incident or behaviour" /></label><label><Filter size={14} /><select value={severity} onChange={(event) => setSeverity(event.target.value)}><option value="all">All priorities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label></div>
-        {loading ? <div className="empty"><RefreshCw className="spin" />Loading incidents…</div> : filtered.length === 0 ? <div className="empty"><Network size={22} /><b>No matching incidents</b><span>Run or upload a replay to analyse network behaviour.</span></div> : <div className="incident-list">{filtered.map((item) => <button key={item.incident_id} onClick={() => void openIncident(item.incident_id)}><div className={`risk risk-${item.severity}`}><b>{item.risk_score}</b><span>risk</span></div><div className="incident-main"><b>{item.threat_types.map(label).join(" + ")}</b><span>{item.src_ip} · {item.detector_ids.length} independent checks</span></div><span className={`severity severity-${item.severity}`}>{item.severity}</span><span className="incident-status">{label(item.status)}</span><time>{timeLabel(item.last_seen)}</time><ChevronRight size={17} /></button>)}</div>}
+      <section className="overview" id="investigations"><div className="section-head"><div><p className="eyebrow">What needs attention</p><h2>Investigation queue</h2></div><div className="investigation-actions"><div className="plain-metrics"><span><b>{latestRun && !showAllQueue ? latestRun.incidents.filter((item) => item.status === "open" || item.status === "investigating").length : metrics?.active_incidents ?? "—"}</b> active</span><span><b>{latestRun && !showAllQueue ? latestRun.incidents.filter((item) => item.severity === "critical").length : metrics?.critical_incidents ?? "—"}</b> critical</span><span><b>{metrics?.feedback_records ?? "—"}</b> all-time reviews</span></div><button className="secondary" onClick={() => { void refresh(false); void loadRunHistory(); }} disabled={loading}><RefreshCw size={15} className={loading ? "spin" : ""} />Refresh queue</button></div></div>
+        <div className="queue-scope"><span>{latestRun && !showAllQueue ? <>Latest analysis: <b>{latestRun.analysed_at ? timeLabel(latestRun.analysed_at) : "time unavailable"}</b> · {latestRun.filename || "simulated stream"}. Dates below are <b>capture times</b> from the input, not today's analysis time.</> : "All saved incidents · historical capture times; entries may span separate replays."}</span>{latestRun && <div><button type="button" aria-pressed={!showAllQueue} onClick={() => setShowAllQueue(false)}>Latest run</button><button type="button" aria-pressed={showAllQueue} onClick={() => setShowAllQueue(true)}>All history</button></div>}</div>
+        <div className="queue-tools"><label><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search device, incident or behaviour" /></label><label><Filter size={14} /><select value={severity} onChange={(event) => setSeverity(event.target.value)}><option value="all">All priorities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label></div>
+        {loading || runHistoryLoading ? <div className="empty"><RefreshCw className="spin" />Loading incidents…</div> : filtered.length === 0 ? <div className="empty"><Network size={22} /><b>No matching incidents in this view</b><span>{latestRun && !showAllQueue ? "The latest run raised no incident here. Switch to All history to review older incidents." : "Run or upload a replay to analyse network behaviour."}</span></div> : <div className="incident-list">{filtered.map((item) => <button key={item.incident_id} onClick={() => void openIncident(item.incident_id, latestRun && !showAllQueue ? item.alert_ids : undefined, latestRun && !showAllQueue ? latestRun : undefined)}><div className={`risk risk-${item.severity}`}><b>{item.risk_score}</b><span>risk</span></div><div className="incident-main"><b>{item.threat_types.map(label).join(" + ")}</b><span>{item.src_ip} · {item.detector_ids.length} independent checks</span></div><span className={`severity severity-${item.severity}`}>{item.severity}</span><span className="incident-status">{label(item.status)}</span><time>{latestRun && !showAllQueue && latestRun.analysed_at ? <><b title="When Drastha analysed the replay">Analysed {timeLabel(latestRun.analysed_at)}</b><small title="Timestamp preserved from source traffic">Captured {timeLabel(item.last_seen)}</small></> : <>Captured {timeLabel(item.last_seen)}</>}</time><ChevronRight size={17} /></button>)}</div>}
       </section>
+      </>}
     </main>
 
     {evidenceRun && <ReplayEvidence key={`${evidenceRun.run.run_id}:${evidenceRun.incidentId ?? "all"}`} run={evidenceRun.run} initialIncidentId={evidenceRun.incidentId} label={label} onClose={closeEvidence} />}

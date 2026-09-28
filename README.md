@@ -367,12 +367,12 @@ Drastha can work with five kinds of monitoring-side input:
 | Input | How it enters Drastha | What it provides |
 | --- | --- | --- |
 | JSONL/NDJSON or JSON replay | Browser upload or CLI | Connection, DNS and TLS/QUIC metadata records |
+| Classic `.pcap` capture | Browser upload or `drastha pcap` CLI | Converted locally by Zeek, then analysed through the same shared detector and dashboard path; measured packet timing/size and JA3 metadata are attached without payload decryption |
 | Zeek logs | Zeek adapters | `conn.log`, `dns.log`, `ssl.log` and QUIC-style metadata |
 | NetFlow/IPFIX/sFlow-like JSON | Flow-export adapter | Canonical endpoints, ports, protocol, counters and timestamps |
-| Classic PCAP | Local PCAP reader or Zeek runner | Packet-header-derived flow and encrypted-session metadata; payload decryption is never performed |
 | Simulated stream | `GET /api/stream/simulated` | One observation at a time through the same analysis session used by replay processing |
 
-The browser upload accepts `.jsonl`, `.ndjson` and `.json`, up to 5 MB and
+The browser upload accepts `.pcap`, `.jsonl`, `.ndjson` and `.json`, up to 5 MB and
 20,000 records. Supported JSON containers are:
 
 - one JSON object per line;
@@ -382,6 +382,14 @@ The browser upload accepts `.jsonl`, `.ndjson` and `.json`, up to 5 MB and
 
 A dataset manifest that merely says `"records": 452` is not traffic and is
 rejected with a message asking for the referenced JSONL file.
+
+PCAP browser upload requires Zeek. On Windows the default is the existing WSL
+Zeek installation; `DRASTHA_ZEEK_MODE`, `DRASTHA_ZEEK_BINARY` and
+`DRASTHA_WSL_DISTRO` can select a trusted local installation. Uploaded captures
+are processed in a temporary directory and are not retained by the application.
+Only classic Ethernet PCAP is accepted; PCAPNG must be converted before upload.
+The demo bounds each capture at 5 MB, 20,000 derived records and 30 seconds of
+Zeek processing.
 
 ### 2. Records are parsed and normalized
 
@@ -485,10 +493,21 @@ even if two runs reuse the same IPs or flow IDs.
 ### 9. The React dashboard renders the response
 
 The frontend posts the selected file to `POST /api/replays/analyse`. It then shows
-the result returned for that exact run, refreshes the saved incident queue through
-`GET /api/incidents`, and opens complete evidence through either the run snapshot
-or `GET /api/incidents/{incident_id}`. It does not reuse a previous run's highest-
-risk incident as the evidence for a new file.
+the result returned for that exact run. The investigation queue defaults to the
+latest completed run (including a clean run with zero incidents); **All history**
+switches to the global saved queue. `GET /api/incidents/{incident_id}` retains the
+analyst status/feedback workflow; if that mutable projection no longer has the
+same member alerts, the UI opens the immutable run snapshot instead. It does not
+reuse a previous run's highest-risk incident as the evidence for a new file.
+
+The **SOC analyst** route (`/analyst`) shows the current run's attack mix, full
+capture-window detection timeline, and measured alert evidence. Its Analysis
+history selector loads any completed run via `GET /api/analysis-runs/{run_id}`;
+the cross-run chart uses `analysed_at` (wall-clock analysis time), while each
+run's attack timeline and incident rows use the original traffic/capture time.
+Replays do **not** rewrite source timestamps to make old captures look live.
+Older snapshots made before `analysed_at` was recorded remain browseable, but
+their analysis time is explicitly unknown and they are not plotted on that axis.
 
 For the simulated stream, the browser opens a server-sent-events connection to
 `GET /api/stream/simulated`. `started`, `traffic`, `alert` and `complete` messages
@@ -723,7 +742,7 @@ FastAPI -> parser -> quality -> AnalysisSession -> findings -> incidents
 | Method and endpoint | Role in the system | Main consumer |
 | --- | --- | --- |
 | `GET /api/health` | Service mode, storage type, access mode and last demo state | Header/system status |
-| `GET /api/metrics` | Active/critical counts, review count and average risk | SOC overview cards |
+| `GET /api/metrics` | Active/critical counts, review count and average risk | Investigation queue summary |
 | `POST /api/replays/analyse` | Validate and analyse a finite uploaded replay | Replay workbench |
 | `GET /api/replays/sample` | Download a safe example replay | Beginner/demo flow |
 | `GET /api/stream/simulated` | Server-sent events for incremental passive simulation | Live visualization |
@@ -735,6 +754,7 @@ FastAPI -> parser -> quality -> AnalysisSession -> findings -> incidents
 | `POST /api/incidents/{id}/feedback` | Record confirmed-malicious, benign or needs-review disposition | Analyst workflow |
 | `GET /api/incidents/{id}/export` | Export one incident with optional integrity metadata | Evidence handoff |
 | `GET /api/analysis-runs/{run_id}` | Retrieve the exact saved replay result | Run-scoped evidence |
+| `GET /api/analysis-runs?limit=...&offset=...` | Paginated completed-run summaries with analysis and capture clocks kept separate | SOC history selector |
 | `GET /api/analysis-runs/{run_id}/export` | Export validated JSON/NDJSON SIEM records | SIEM handoff |
 | `/api/security/*` | Verify signed evidence, preview/apply retention and set holds | Protected administrator mode |
 

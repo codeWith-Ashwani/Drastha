@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from aegisflow.api_store import IncidentRepository, read_jsonl, repository_from_url
 from aegisflow.demo import run_attack_story
 from aegisflow.upload_analysis import analyse_uploaded_replay
+from aegisflow.pcap_upload import analyse_uploaded_pcap, MAX_PCAP_BASE64_CHARS
 from aegisflow.streaming_demo import stream_simulated_ip_traffic
 from aegisflow.analysis_session import configured_profile, UPLOAD_DEMO, STREAM_DEMO
 from aegisflow.security import AccessSettings, AccessMiddleware
@@ -34,7 +35,10 @@ class FeedbackRequest(BaseModel):
 
 class ReplayUploadRequest(BaseModel):
     filename: str = Field(min_length=1, max_length=120)
-    content: str = Field(min_length=1, max_length=5_000_000)
+    content: str | None = Field(default=None, min_length=1, max_length=5_000_000)
+    content_base64: str | None = Field(
+        default=None, min_length=1, max_length=MAX_PCAP_BASE64_CHARS
+    )
 
 
 class RetentionRequest(BaseModel):
@@ -134,6 +138,13 @@ def create_app(repository: IncidentRepository | None = None, *, access: AccessSe
     @app.get("/api/metrics")
     def metrics() -> dict[str, Any]:
         return store.metrics()
+
+    @app.get("/api/analysis-runs")
+    def analysis_runs(
+        limit: int = Query(default=50, ge=1, le=100),
+        offset: int = Query(default=0, ge=0),
+    ) -> dict[str, Any]:
+        return store.list_analysis_runs(limit=limit, offset=offset)
 
     @app.get("/api/analysis-runs/{run_id}")
     def analysis_run(run_id: str) -> dict[str, Any]:
@@ -245,8 +256,25 @@ def create_app(repository: IncidentRepository | None = None, *, access: AccessSe
     @app.post("/api/replays/analyse")
     def analyse_replay(request: ReplayUploadRequest) -> dict[str, Any]:
         try:
-            report = analyse_uploaded_replay(request.filename, request.content, store,
-                                             profile=configured_profile(UPLOAD_DEMO))
+            suffix = Path(request.filename).suffix.lower()
+            if suffix == ".pcap":
+                if request.content_base64 is None or request.content is not None:
+                    raise ValueError("A .pcap upload requires only binary capture content.")
+                report = analyse_uploaded_pcap(
+                    request.filename,
+                    request.content_base64,
+                    store,
+                    profile=configured_profile(UPLOAD_DEMO),
+                )
+            else:
+                if request.content is None or request.content_base64 is not None:
+                    raise ValueError("A JSON/JSONL upload requires only replay text content.")
+                report = analyse_uploaded_replay(
+                    request.filename,
+                    request.content,
+                    store,
+                    profile=configured_profile(UPLOAD_DEMO),
+                )
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         app.state.demo_run = {

@@ -82,6 +82,12 @@ class AnalystAPITests(unittest.TestCase):
             "command_and_control", "data_exfiltration",
         })
         self.assertIsNotNone(report["top_incident_id"])
+        self.assertGreater(report["analysed_at"], report["capture_end"])
+        history = self.client.get("/api/analysis-runs").json()
+        self.assertEqual(history["items"][0]["run_id"], report["run_id"])
+        self.assertEqual(history["items"][0]["analysed_at"], report["analysed_at"])
+        self.assertEqual(history["items"][0]["findings"], len(report["alerts"]))
+        self.assertEqual(self.client.get(f"/api/analysis-runs/{report['run_id']}").json()["alerts"], report["alerts"])
 
     def test_upload_rejects_unusable_or_unsupported_files(self) -> None:
         unsupported = self.client.post(

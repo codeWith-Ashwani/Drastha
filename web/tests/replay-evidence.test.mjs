@@ -115,3 +115,11 @@ test("upload button uses run snapshot and incident navigation invalidates stale 
   assert.match(app, /Detection timeline/);
   assert.match(app, /Supporting measurements/);
 });
+
+test("upload workbench accepts PCAP and sends binary data separately from replay text", () => {
+  const app = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+  assert.match(app, /accept="\.pcap,\.jsonl,\.ndjson,\.json/);
+  assert.match(app, /file\.name\.toLowerCase\(\)\.endsWith\("\.pcap"\)/);
+  assert.match(app, /content_base64: contentBase64/);
+  assert.match(app, /Classic PCAP, Zeek metadata, JSONL or JSON/);
+});

@@ -65,6 +65,9 @@ def analyse_prepared(prepared, repository, *, filename="passive-replay", upload_
 
     report = {
         "status": "completed",
+        "analysed_at": time.time(),
+        "capture_start": min((event.timestamp for event in prepared.ordered_events()), default=None),
+        "capture_end": max((event.timestamp for event in prepared.ordered_events()), default=None),
         "verdict": verdict,
         "headline": headline,
         "summary": summary,

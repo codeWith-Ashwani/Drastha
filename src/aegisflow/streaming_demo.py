@@ -182,6 +182,10 @@ def stream_events(root, repository, events, telemetry, quality, *, profile=STREA
     evaluation = score_ground_truth(list(accepted_records), final_alerts)
     if hasattr(repository, "save_analysis_run"):
         repository.save_analysis_run(run_id, {"status": "completed", "quality": quality,
+            "filename": "simulated-ip-stream", "source": "simulated_stream",
+            "analysed_at": time.time(),
+            "capture_start": min((event.timestamp for event in events), default=None),
+            "capture_end": max((event.timestamp for event in events), default=None),
             "feature_coverage": session.feature_summary(),
             "analysis_provenance": session.provenance(), "alerts": final_records,
             "incidents": incidents, "evaluation": evaluation})

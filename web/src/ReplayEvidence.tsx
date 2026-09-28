@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, X } from "lucide-react";
-import type { UploadResult } from "./App";
+import type { RunEvidence } from "./App";
 import { IncidentConclusion } from "./IncidentConclusion";
 import { OverallRisk } from "./OverallRisk";
 import { SiemExport } from "./SiemExport";
 
 // Join only within this completed run. Never hydrate historical evidence from
 // the mutable global incident queue, whose deterministic IDs can be reused.
-export function replayIncidents(run: UploadResult) {
+export function replayIncidents(run: RunEvidence) {
   const alerts = new Map(run.alerts.map((alert) => [alert.alert_id, alert]));
   return run.incidents.map((incident) => ({ ...incident,
     alerts: incident.alert_ids.flatMap((id) => alerts.has(id) ? [alerts.get(id)!] : []),
@@ -15,7 +15,7 @@ export function replayIncidents(run: UploadResult) {
 }
 
 export function ReplayEvidence({ run, initialIncidentId, onClose, label }: {
-  run: UploadResult; initialIncidentId?: string; onClose: () => void;
+  run: RunEvidence; initialIncidentId?: string; onClose: () => void;
   label: (value: string) => string;
 }) {
   const [filter, setFilter] = useState(initialIncidentId ?? "all");
@@ -37,11 +37,11 @@ export function ReplayEvidence({ run, initialIncidentId, onClose, label }: {
   return <dialog ref={dialog} className="replay-evidence-dialog" aria-labelledby="replay-evidence-title"
     onCancel={onClose}>
     <div className="drawer-head"><div><p className="eyebrow">Completed replay evidence</p>
-      <h2 id="replay-evidence-title">{run.filename}</h2><span>Run {run.run_id}</span>
+      <h2 id="replay-evidence-title">{run.filename || "Simulated stream"}</h2><span>Run {run.run_id}</span>
     </div><button aria-label="Close replay evidence" onClick={onClose}><X size={19} /></button></div>
     <p className="scope-note">Evidence from this replay only. The investigation queue holds the latest analyst state and can include other replays.</p>
     <div className="result-facts"><span><b>{run.alerts.length}</b> findings</span>
-      <span><b>{incidents.length}</b> incidents</span><span><b>{run.quality.status}</b> data quality</span></div>
+      <span><b>{incidents.length}</b> incidents</span><span><b>{run.quality?.status ?? "unknown"}</b> data quality</span></div>
     {run.overall_risk && <OverallRisk value={run.overall_risk} label={label} />}
     <div className="drawer-actions"><label><span>Incident evidence</span>
       <select aria-label="Select replay incident" value={filter} onChange={(event) => setFilter(event.target.value)}>
